@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -19,9 +20,34 @@ import systemRouter from './routes/system.js';
 const app = express();
 // Enable trust proxy for Coolify/Traefik
 app.set('trust proxy', 1);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicPath = path.join(__dirname, 'public');
+
+console.log('-------------------------------------------');
+console.log('🚀 [LOUD DEBUG] Startup Sequence');
+console.log('📍 Current Working Dir:', process.cwd());
+console.log('📍 File Location:', __filename);
+console.log('📍 Expected Public Path:', publicPath);
+
+if (fs.existsSync(publicPath)) {
+  const files = fs.readdirSync(publicPath);
+  console.log('✅ Public directory exists. Found ' + files.length + ' files:');
+  console.log('📄 Content:', files.slice(0, 10).join(', ') + (files.length > 10 ? '...' : ''));
+  if (!files.includes('index.html')) {
+    console.error('❌ CRITICAL: index.html is MISSING in public folder!');
+  }
+} else {
+  console.error('❌ CRITICAL: Public directory DOES NOT EXIST at ' + publicPath);
+}
+console.log('-------------------------------------------');
+
 const PORT = process.env.PORT || 3001;
 
-// Log all requests
+
+// Super-simple ping for health check
+app.get('/api/ping', (req, res) => res.json({ msg: 'pong', time: new Date().toISOString() }));
+\n// Log all requests
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
@@ -115,7 +141,7 @@ app.use('/api/system', requireAdmin, systemRouter);
 
 // Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {
-  const publicPath = path.join(process.cwd(), 'public');
+  const publicPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
   app.use(express.static(publicPath));
   
   // SPA fallback
