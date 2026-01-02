@@ -1,0 +1,45 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes hbb-pulse { 
+      0%, 100% { opacity: 1; transform: scale(1); } 
+      50% { opacity: 0.5; transform: scale(0.9); } 
+    }
+    @keyframes bridge-glow { 
+      0%, 100% { opacity: 0.3; transform: scaleX(0.4); } 
+      50% { opacity: 1; transform: scaleX(1); } 
+    }
+    .pulse { transform-origin: center; animation: hbb-pulse 2s infinite ease-in-out; }
+    .pulse1 { animation-delay: 0s; }
+    .pulse2 { animation-delay: 0.3s; }
+    .pulse3 { animation-delay: 0.6s; }
+    .glow { transform-origin: center; animation: bridge-glow 3s infinite ease-in-out; }
+    
+    /* Ensure text is visible and styled */
+    .hbb-text {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-weight: 900;
+      font-size: 8px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+  </style>
+  
+  <!-- Bottom Shadow/Glow Background -->
+  <circle cx="16" cy="28" r="6" fill="#6366f1" fill-opacity="0.1" />
+
+  <!-- Indigo Background Box (Rotated) -->
+  <rect x="5" y="5" width="22" height="22" rx="6" fill="#4f46e5" transform="rotate(3 16 16)" />
+  
+  <!-- Slate Foreground Box (Rotated Opposite) -->
+  <rect x="5" y="5" width="22" height="22" rx="6" fill="#0f172a" stroke="#6366f1" stroke-width="0.5" stroke-opacity="0.4" transform="rotate(-3 16 16)" />
+  
+  <!-- HBB Text Group -->
+  <g class="hbb-text">
+    <text x="10" y="16.5" fill="white" class="pulse pulse1">H</text>
+    <text x="16" y="16.5" fill="#818cf8" class="pulse pulse2">B</text>
+    <text x="22" y="16.5" fill="white" class="pulse pulse3">B</text>
+  </g>
+  
+  <!-- Bridge Glow Bar -->
+  <rect x="10" y="27" width="12" height="1.5" rx="1" fill="#818cf8" class="glow" />
+</svg>

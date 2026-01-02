@@ -1,0 +1,5 @@
+{
+  "name": "HomeBank Bridge",
+  "description": "A technical design and implementation blueprint for a minimalist financial logging application compatible with HomeBank CSV standards.",
+  "requestFramePermissions": []
+}
