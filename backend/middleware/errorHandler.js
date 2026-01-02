@@ -17,9 +17,12 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Default 500
+  // Default 500 (DEBUG MODE: Expose errors in production)
+  console.error('CRITICAL SERVER ERROR:', err);
   res.status(500).json({
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+    message: err.message,
+    stack: err.stack,
+    env: process.env.NODE_ENV
   });
 };
