@@ -17,6 +17,8 @@ import exportLogRouter from './routes/export-log.js';
 import systemRouter from './routes/system.js';
 
 const app = express();
+// Enable trust proxy for Coolify/Traefik
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 // Log all requests
@@ -119,7 +121,12 @@ if (process.env.NODE_ENV === 'production') {
   // SPA fallback
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
-    res.sendFile(path.join(publicPath, 'index.html'));
+    res.sendFile(path.join(publicPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('SERVER_ERROR: Could not send index.html:', err);
+        if (!res.headersSent) res.status(500).send('SERVER_ERROR: Failed to load application.');
+      }
+    });
   });
 }
 
