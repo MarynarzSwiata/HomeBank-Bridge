@@ -47,7 +47,8 @@ const PORT = process.env.PORT || 3001;
 
 // Super-simple ping for health check
 app.get('/api/ping', (req, res) => res.json({ msg: 'pong', time: new Date().toISOString() }));
-\n// Log all requests
+
+// Log all requests
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
