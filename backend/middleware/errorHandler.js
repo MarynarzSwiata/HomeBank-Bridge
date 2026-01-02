@@ -1,5 +1,7 @@
 export const errorHandler = (err, req, res, next) => {
-  console.error(err);
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(err);
+  }
 
   // SQLite constraint violations
   if (err.code && err.code.includes('SQLITE_CONSTRAINT')) {
@@ -17,12 +19,9 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Default 500 (DEBUG MODE: Expose errors in production)
-  console.error('CRITICAL SERVER ERROR:', err);
+  // Default 500
   res.status(500).json({
     error: 'Internal server error',
-    message: err.message,
-    stack: err.stack,
-    env: process.env.NODE_ENV
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
   });
 };

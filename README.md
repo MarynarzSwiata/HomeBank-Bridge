@@ -191,6 +191,47 @@ This is a private project evolving towards a production-ready PWA. Technical dis
 
 ---
 
+
+## 🚀 Deployment
+
+This application is designed to be easily deployed using **Docker** or platforms like **Coolify**.
+
+### 1. Docker Deployment (Standard)
+
+The project includes a multi-stage `Dockerfile` that builds the frontend and serves it via the backend.
+
+```bash
+# Build the image
+docker build -t homebank-bridge .
+
+# Run the container
+docker run -d \
+  -p 3000:3000 \
+  -v ./hb-data:/app/backend/data \
+  -e SESSION_SECRET="your-secure-secret" \
+  -e FRONTEND_URL="https://your-domain.com" \
+  --name homebank-bridge \
+  homebank-bridge
+```
+
+### 2. Coolify Deployment (Recommended)
+
+1.  **Create New Resource**: Choose "Public Repository" and point to your fork.
+2.  **Build Pack**: Select **Dockerfile**.
+3.  **Network Configuration**:
+    *   **Ports Exposes**: `3000`
+    *   **Ports Mappings**: If you are using an external proxy (like Nginx Proxy Manager), set this to `3005:3000` (or any free port on your host). If you let Coolify handle the domain, leave this empty.
+4.  **Environment Variables**:
+    *   `SESSION_SECRET`: Generate a long random string.
+    *   `FRONTEND_URL`: Your full domain (e.g., `https://finance.example.com`).
+    *   `ALLOW_REGISTRATION`: `true` (recommended to set to `false` after creating your first user).
+5.  **Persistent Storage**:
+    *   Add a Volume: `Destination Path: /app/backend/data`. This ensures your database and sessions survive restarts.
+6.  **Proxy Setting**: Ensure `trust proxy` is enabled (it's built-in in this repo) to allow secure session cookies behind Traefik/Caddy.
+
+### 🛡️ Security Note
+After successful registration of the first account, it is highly recommended to set the `ALLOW_REGISTRATION` environment variable to `false` and redeploy to prevent unauthorized access.
+
 ## ☕ Support
 
 If you find this tool useful and would like to support its ongoing development, server costs, or just buy me a coffee, you can donate via PayPal. Every contribution is greatly appreciated and helps keep the bridge strong!
