@@ -28,7 +28,7 @@ const app = express();
 // Required for secure cookies to work behind a proxy
 app.set('trust proxy', 1);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Security & Parsing
 app.use(cors({

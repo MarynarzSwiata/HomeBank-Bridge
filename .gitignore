@@ -23,6 +23,11 @@ build
 *.njsproj
 *.sln
 *.sw?
+_bmad/
+_bmad-output
+.agent/
+.gemini/
+AGENTS.md
 
 # SQLite database files (DO NOT COMMIT)
 backend/data/*.db

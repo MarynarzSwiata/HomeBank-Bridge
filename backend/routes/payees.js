@@ -3,6 +3,20 @@ import { body, param } from 'express-validator';
 import db from '../db/index.js';
 import { validate } from '../middleware/validation.js';
 
+const PAYMENT_LEXICON = {
+    0: { name: "None" },
+    1: { name: "Credit Card" },
+    2: { name: "Check" },
+    3: { name: "Cash" },
+    4: { name: "Bank Transfer (Internal)" },
+    6: { name: "Debit Card" },
+    7: { name: "Standing Order" },
+    8: { name: "Electronic Payment" },
+    9: { name: "Deposit" },
+    10: { name: "Fee" },
+    11: { name: "Direct Debit" },
+};
+
 const router = express.Router();
 
 // GET /api/payees - List all payees
@@ -145,7 +159,9 @@ router.get('/export', async (req, res, next) => {
         ? `${p.parent_category_name}:${p.category_name}` 
         : (p.category_name || '');
       
-      return `${escapeCSV(p.name)};${escapeCSV(fullCategory)}`;
+      const paymentMode = p.default_payment_type !== null ? PAYMENT_LEXICON[p.default_payment_type]?.name || '' : '';
+      
+      return `${escapeCSV(p.name)};${escapeCSV(fullCategory)};${escapeCSV(paymentMode)}`;
     });
 
     const csv = csvLines.join('\r\n');
@@ -173,7 +189,7 @@ router.post('/import',
         // Skip header
         if (line.toLowerCase().startsWith('name;') || line.toLowerCase().startsWith('payee;')) continue;
 
-        const [name, categoryName] = line.split(';').map(s => s.trim());
+        const [name, categoryName, payModeName] = line.split(';').map(s => s.trim());
         if (!name) continue;
 
         let categoryId = null;
@@ -192,19 +208,25 @@ router.post('/import',
           categoryId = parentId;
         }
 
+        let paymentType = null;
+        if (payModeName) {
+            const entry = Object.entries(PAYMENT_LEXICON).find(([_, val]) => val.name.toLowerCase() === payModeName.toLowerCase());
+            if (entry) paymentType = parseInt(entry[0]);
+        }
+
         const existing = await db.get('SELECT id FROM payees WHERE name = ?', name);
         if (existing) {
           if (skipDuplicates) {
             continue; // Skip it
           }
           await db.run(`
-            UPDATE payees SET default_category_id = ? WHERE name = ?
-          `, categoryId, name);
+            UPDATE payees SET default_category_id = ?, default_payment_type = ? WHERE name = ?
+          `, categoryId, paymentType, name);
         } else {
           await db.run(`
-            INSERT INTO payees (name, default_category_id)
-            VALUES (?, ?)
-          `, name, categoryId);
+            INSERT INTO payees (name, default_category_id, default_payment_type)
+            VALUES (?, ?, ?)
+          `, name, categoryId, paymentType);
         }
         importedCount++;
       }
