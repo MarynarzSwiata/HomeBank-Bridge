@@ -36,7 +36,7 @@ COPY backend/ ./
 COPY --from=frontend-builder /app/dist ./public
 
 # Ensure directory for persistent SQLite data exists
-RUN mkdir -p data
+RUN mkdir -p data && apk add --no-cache curl
 
 # Production Environment Settings
 ENV NODE_ENV=production
@@ -44,6 +44,10 @@ ENV PORT=3000
 
 # Default port exposed by the container
 EXPOSE 3000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Run migrations and start the server
 # We use node directly. Migrations are handled by the app on startup.

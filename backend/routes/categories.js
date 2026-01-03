@@ -11,7 +11,8 @@ router.get('/', async (req, res, next) => {
     const allCategories = await db.all(`
       SELECT 
         c.id, c.name, c.type, c.parent_id,
-        (SELECT COUNT(*) FROM transactions t WHERE t.category_id = c.id) as usage_count
+        (SELECT COUNT(*) FROM transactions t WHERE t.category_id = c.id) as usage_count,
+        (SELECT SUM(amount) FROM transactions t WHERE t.category_id = c.id) as total_amount
       FROM categories c
       ORDER BY c.parent_id ASC, c.name ASC
     `);

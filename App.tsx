@@ -280,8 +280,11 @@ const App: React.FC = () => {
           }
         );
         if (success) {
-          // Refresh accounts to update balances
-          await accountsHook.refresh().catch(() => {});
+          await Promise.all([
+            accountsHook.refresh(),
+            categoriesHook.refresh(),
+            payeesHook.refresh(),
+          ]).catch(() => {});
         }
         result = success;
       } else {
@@ -298,30 +301,40 @@ const App: React.FC = () => {
           targetAmount: data.targetAmount,
         });
         if (res) {
-          await accountsHook.refresh().catch(() => {});
+          await Promise.all([
+            accountsHook.refresh(),
+            categoriesHook.refresh(),
+            payeesHook.refresh(),
+          ]).catch(() => {});
         }
         result = res !== null;
       }
       return result;
     },
-    [transactionsHook, accountsHook]
+    [transactionsHook, accountsHook, categoriesHook, payeesHook]
   );
 
   const handleDeleteTransaction = useCallback(
     async (id: number): Promise<boolean> => {
       const success = await transactionsHook.deleteTransaction(id);
       if (success) {
-        await accountsHook.refresh().catch(() => {});
+        await Promise.all([
+          accountsHook.refresh(),
+          categoriesHook.refresh(),
+          payeesHook.refresh(),
+        ]).catch(() => {});
       }
       return success;
     },
-    [transactionsHook, accountsHook]
+    [transactionsHook, accountsHook, categoriesHook, payeesHook]
   );
 
   const handleRefreshTransactions = useCallback(() => {
     transactionsHook.refresh();
     accountsHook.refresh().catch(() => {});
-  }, [transactionsHook, accountsHook]);
+    categoriesHook.refresh().catch(() => {});
+    payeesHook.refresh().catch(() => {});
+  }, [transactionsHook, accountsHook, categoriesHook, payeesHook]);
 
   // Refresh effect removed (handled by useDataBootstrap)
 
@@ -919,7 +932,7 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("changelog")}
               className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-400 transition-colors text-left"
             >
-              Version 1.0.0
+              Version 1.0.1
             </button>
             <a
               href="https://github.com/MarynarzSwiata/HomeBank-Bridge"
@@ -995,7 +1008,7 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab("changelog")}
                 className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-white transition-colors animate-pulse"
               >
-                Version 1.0.0
+                Version 1.0.1
               </button>
             </div>
           </div>
@@ -1033,6 +1046,66 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-12">
+                <div className="relative pl-12 border-l-2 border-emerald-500/30">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/40"></div>
+                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-2xl font-black text-white uppercase italic">
+                        Version 1.0.1
+                      </h3>
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-600/10 px-3 py-1 rounded-full">
+                        Performance & Stats Update
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                      Optimized for scale and deeper insights into your
+                      taxonomy.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Taxonomy Balances:
+                          </strong>{" "}
+                          Real-time balance calculations for all categories,
+                          with recursive summing for hierarchical parents.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Import Engine XL:
+                          </strong>{" "}
+                          Fixed 500 errors and payload limits; optimized
+                          duplicate detection with batch processing for massive
+                          CSV files.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Coolify Optimization:
+                          </strong>{" "}
+                          Container health checks integrated into Docker for
+                          reliable zero-downtime deployments.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">Smart Refresh:</strong>{" "}
+                          Enhanced data synchronization between views; accounts,
+                          categories, and entities now update instantly after
+                          any change.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
                 <div className="relative pl-12 border-l-2 border-indigo-600/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-600 shadow-lg shadow-indigo-600/40"></div>
                   <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">

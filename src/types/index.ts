@@ -19,6 +19,7 @@ export interface Category {
   type: CategoryType;
   parent_id: number | null;
   usage_count?: number;
+  total_amount?: number;
   children?: Category[];
 }
 

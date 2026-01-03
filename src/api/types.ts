@@ -12,6 +12,8 @@ export interface ApiCategory {
   name: string;
   type: '+' | '-' | ' ';
   parent_id: number | null;
+  usage_count?: number;
+  total_amount?: number;
   children?: ApiCategory[];
 }
 

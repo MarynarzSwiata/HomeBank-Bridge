@@ -19,6 +19,8 @@ export const adaptCategory = (apiCategory: ApiCategory): Category => ({
   name: apiCategory.name,
   type: apiCategory.type,
   parent_id: apiCategory.parent_id,
+  usage_count: apiCategory.usage_count,
+  total_amount: apiCategory.total_amount,
   children: apiCategory.children?.map(adaptCategory),
 });
 
