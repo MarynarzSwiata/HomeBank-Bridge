@@ -118,7 +118,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({
         if (candidates.length > 0) {
           setIsCheckingDuplicates(true);
           try {
-            const dups = await transactionsService.checkDuplicates(candidates);
+            const dups = await transactionsService.checkDuplicates(
+              candidates,
+              dateFormat
+            );
             setDuplicates(dups);
           } catch (e) {
             console.error("Duplicate check failed", e);

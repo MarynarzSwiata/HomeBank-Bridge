@@ -272,12 +272,12 @@ export const transactionsService = {
     return api.delete(`/transactions/${id}`);
   },
 
-  async checkDuplicates(candidates: { date: string; payee: string; amount: number }[]): Promise<any[]> {
+  async checkDuplicates(candidates: { date: string; payee: string; amount: number }[], dateFormat?: string): Promise<any[]> {
     const API_BASE = import.meta.env.VITE_API_URL || '/api';
     const response = await fetch(`${API_BASE}/transactions/import-check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidates }),
+        body: JSON.stringify({ candidates, dateFormat }),
     });
     if (!response.ok) throw new Error('Failed to check duplicates');
     const data = await response.json();

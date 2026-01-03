@@ -271,48 +271,91 @@ router.delete('/:id',
   }
 );
 
+// Helper to normalize dates for duplicate checking
+const normalizeDate = (dateStr, dateFormat) => {
+  if (!dateStr || typeof dateStr !== 'string') return dateStr;
+  const clean = dateStr.replace(/\./g, '-');
+  const parts = clean.split('-');
+  if (parts.length !== 3) return dateStr;
+
+  // YYYY-MM-DD
+  if (parts[0].length === 4) {
+    return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+  }
+  // DD-MM-YYYY or MM-DD-YYYY
+  if (parts[2].length === 4) {
+    if (dateFormat === 'MM-DD-YYYY') {
+      return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+    }
+    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+  }
+  return dateStr;
+};
+
 // POST /api/transactions/import-check - Check for potential duplicates
 router.post('/import-check', async (req, res, next) => {
   try {
-    const { candidates } = req.body; // Array of { date, payee, amount }
+    const { candidates, dateFormat } = req.body; // Array of { date, payee, amount }
     if (!Array.isArray(candidates) || candidates.length === 0) {
       return res.json({ duplicates: [] });
     }
 
     // Optimization: Fetch transactions in date range to check in-memory
-    const dates = candidates.map(c => c.date).filter(Boolean).sort();
+    const normalizedCandidates = candidates.map(c => ({
+       ...c,
+       date: normalizeDate(c.date, dateFormat)
+    }));
+
+    const dates = normalizedCandidates
+      .map(c => c.date)
+      .filter(d => typeof d === 'string' && d.length === 10)
+      .sort();
+      
     if (dates.length === 0) return res.json({ duplicates: [] });
 
     const minDate = dates[0];
     const maxDate = dates[dates.length - 1];
 
+    // Only fetch necessary columns and use range
     const existingTransactions = await db.all(`
       SELECT date, payee, amount 
       FROM transactions 
       WHERE date >= ? AND date <= ?
     `, minDate, maxDate);
 
-    // Build a lookup map for faster checking
+    // Build a lookup map for faster checking O(1)
     const existingMap = new Set(
       existingTransactions.map(t => `${t.date}|${t.payee}|${Number(t.amount).toFixed(3)}`)
     );
 
-    const duplicates = candidates.filter(entry => {
-      const key = `${entry.date}|${entry.payee}|${Number(entry.amount).toFixed(3)}`;
-      return existingMap.has(key);
+    const duplicates = normalizedCandidates.filter((entry, idx) => {
+      if (!entry.date || typeof entry.amount !== 'number') return false;
+      const key = `${entry.date}|${entry.payee}|${entry.amount.toFixed(3)}`;
+      const found = existingMap.has(key);
+      if (found) {
+        // Return ORGINAL candidate to client to match their state
+        return true;
+      }
+      return false;
+    }).map((_, i) => candidates[i]); // Mapping back to original strings if needed? No, the client needs the original date string to match rows.
+    
+    // Wait, the client expects the ORIGINAL date string to match their preview rows.
+    const resultDups = candidates.filter((orig, i) => {
+       const norm = normalizedCandidates[i];
+       const key = `${norm.date}|${norm.payee}|${norm.amount.toFixed(3)}`;
+       return existingMap.has(key);
     });
 
-    res.json({ duplicates });
+    res.json({ duplicates: resultDups });
   } catch (err) {
+    console.error('Import Check Error:', err);
     next(err);
   }
 });
 
 // POST /api/transactions/import - Import transactions from CSV
-router.post('/import',
-  express.json(),
-  async (req, res, next) => {
-    try {
+router.post('/import', async (req, res, next) => {
+  try {
       const { csvData, accountId, skipDuplicates, dateFormat } = req.body;
       if (!csvData) return res.status(400).json({ error: 'No CSV data provided' });
       if (!accountId) return res.status(400).json({ error: 'No account ID provided' });
@@ -330,25 +373,26 @@ router.post('/import',
         // Optimization: Pre-fetch existing transactions for duplicate check if skipDuplicates is true
         let existingSet = new Set();
         if (skipDuplicates && lines.length > 0) {
-           // We'll just fetch all for now or range if possible. 
-           // For simplicity and safety in import, we fetch all in the possible range
-           const importedTransactions = [];
+           const importedDates = [];
            
-           // First pass to parse and get range
            for (const line of lines) {
              if (line.toLowerCase().startsWith('date;') || line.toLowerCase().startsWith('data;')) continue;
              const parts = line.split(';');
              if (parts.length < 5) continue;
              const [dateStr] = parts.map(s => s.trim());
-             if (dateStr) importedTransactions.push(dateStr);
+             if (dateStr) importedDates.push(dateStr);
            }
            
-           if (importedTransactions.length > 0) {
-              importedTransactions.sort();
-              const minD = importedTransactions[0];
-              const maxD = importedTransactions[importedTransactions.length - 1];
-              // Use a wider range to be safe with different formats
-              const existing = await db.all('SELECT date, payee, amount FROM transactions');
+           if (importedDates.length > 0) {
+              importedDates.sort();
+              const minD = importedDates[0];
+              const maxD = importedDates[importedDates.length - 1];
+              
+              // Only fetch range to save memory
+              const existing = await db.all(
+                'SELECT date, payee, amount FROM transactions WHERE date >= ? AND date <= ?',
+                minD, maxD
+              );
               existing.forEach(t => {
                 existingSet.add(`${t.date}|${t.payee}|${Number(t.amount).toFixed(3)}`);
               });
