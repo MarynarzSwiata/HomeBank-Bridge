@@ -275,23 +275,32 @@ router.delete('/:id',
 router.post('/import-check', async (req, res, next) => {
   try {
     const { candidates } = req.body; // Array of { date, payee, amount }
-    if (!Array.isArray(candidates)) {
-      return res.status(400).json({ error: 'Invalid candidates list' });
+    if (!Array.isArray(candidates) || candidates.length === 0) {
+      return res.json({ duplicates: [] });
     }
 
-    const duplicates = [];
-    for (const entry of candidates) {
-      const existing = await db.get(`
-        SELECT id, date, payee, amount, memo 
-        FROM transactions 
-        WHERE date = ? AND payee = ? AND ABS(amount - ?) < 0.001
-        LIMIT 1
-      `, entry.date, entry.payee, entry.amount);
-      
-      if (existing) {
-        duplicates.push(entry);
-      }
-    }
+    // Optimization: Fetch transactions in date range to check in-memory
+    const dates = candidates.map(c => c.date).filter(Boolean).sort();
+    if (dates.length === 0) return res.json({ duplicates: [] });
+
+    const minDate = dates[0];
+    const maxDate = dates[dates.length - 1];
+
+    const existingTransactions = await db.all(`
+      SELECT date, payee, amount 
+      FROM transactions 
+      WHERE date >= ? AND date <= ?
+    `, minDate, maxDate);
+
+    // Build a lookup map for faster checking
+    const existingMap = new Set(
+      existingTransactions.map(t => `${t.date}|${t.payee}|${Number(t.amount).toFixed(3)}`)
+    );
+
+    const duplicates = candidates.filter(entry => {
+      const key = `${entry.date}|${entry.payee}|${Number(entry.amount).toFixed(3)}`;
+      return existingMap.has(key);
+    });
 
     res.json({ duplicates });
   } catch (err) {
@@ -318,6 +327,37 @@ router.post('/import',
 
       await db.exec('BEGIN TRANSACTION');
       try {
+        // Optimization: Pre-fetch existing transactions for duplicate check if skipDuplicates is true
+        let existingSet = new Set();
+        if (skipDuplicates && lines.length > 0) {
+           // We'll just fetch all for now or range if possible. 
+           // For simplicity and safety in import, we fetch all in the possible range
+           const importedTransactions = [];
+           
+           // First pass to parse and get range
+           for (const line of lines) {
+             if (line.toLowerCase().startsWith('date;') || line.toLowerCase().startsWith('data;')) continue;
+             const parts = line.split(';');
+             if (parts.length < 5) continue;
+             const [dateStr] = parts.map(s => s.trim());
+             if (dateStr) importedTransactions.push(dateStr);
+           }
+           
+           if (importedTransactions.length > 0) {
+              importedTransactions.sort();
+              const minD = importedTransactions[0];
+              const maxD = importedTransactions[importedTransactions.length - 1];
+              // Use a wider range to be safe with different formats
+              const existing = await db.all('SELECT date, payee, amount FROM transactions');
+              existing.forEach(t => {
+                existingSet.add(`${t.date}|${t.payee}|${Number(t.amount).toFixed(3)}`);
+              });
+           }
+        }
+
+        // Cache for categories to avoid repeat lookups
+        const categoryCache = new Map();
+
         for (const line of lines) {
           // Skip header if present
           if (line.toLowerCase().startsWith('date;') || line.toLowerCase().startsWith('data;')) continue;
@@ -328,16 +368,15 @@ router.post('/import',
 
           const [dateStr, payType, num, payee, memo, amountStr, catName] = parts.map(s => s.trim());
           
-          // Improved Date Parsing with dynamic format support
+          // Improved Date Parsing
           let date = dateStr;
           const cleanDate = dateStr.replace(/\./g, '-');
           const dparts = cleanDate.split('-');
           
           if (dparts.length === 3) {
-            // Try to guess or use provided format
-            if (dparts[0].length === 4) { // YYYY-MM-DD
+            if (dparts[0].length === 4) {
                 date = `${dparts[0]}-${dparts[1].padStart(2, '0')}-${dparts[2].padStart(2, '0')}`;
-            } else if (dparts[2].length === 4) { // DD-MM-YYYY or MM-DD-YYYY
+            } else if (dparts[2].length === 4) {
                 if (dateFormat === 'MM-DD-YYYY') {
                     date = `${dparts[2]}-${dparts[0].padStart(2, '0')}-${dparts[1].padStart(2, '0')}`;
                 } else {
@@ -346,47 +385,45 @@ router.post('/import',
             }
           }
 
-          // Robust amount parsing
           let amount = parseFloat(amountStr?.replace(',', '.') || '0');
           if (isNaN(amount)) continue;
 
           if (skipDuplicates) {
-            const existing = await db.get(`
-                SELECT id FROM transactions 
-                WHERE date = ? AND payee = ? AND ABS(amount - ?) < 0.001
-                LIMIT 1
-            `, date, payee, amount);
-            if (existing) continue;
+            const key = `${date}|${payee}|${Number(amount).toFixed(3)}`;
+            if (existingSet.has(key)) continue;
           }
 
           // Resolve Category ID Hierarchically
           let categoryId = null;
           if (catName) {
-            const catParts = catName.split(':').map(p => p.trim()).filter(Boolean);
-            let parentId = null;
-            
-            for (const name of catParts) {
-              let category = await db.get(
-                'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) AND (parent_id = ? OR (parent_id IS NULL AND ? IS NULL)) LIMIT 1',
-                name, parentId, parentId
-              );
+            if (categoryCache.has(catName)) {
+              categoryId = categoryCache.get(catName);
+            } else {
+              const catParts = catName.split(':').map(p => p.trim()).filter(Boolean);
+              let parentId = null;
               
-              if (!category) {
-                // Determine type based on amount
-                const type = amount < 0 ? '-' : '+';
-                const result = await db.run(
-                  'INSERT INTO categories (name, type, parent_id) VALUES (?, ?, ?)',
-                  name, type, parentId
+              for (const name of catParts) {
+                let category = await db.get(
+                  'SELECT id FROM categories WHERE LOWER(name) = LOWER(?) AND (parent_id = ? OR (parent_id IS NULL AND ? IS NULL)) LIMIT 1',
+                  name, parentId, parentId
                 );
-                categoryId = result.lastID;
-              } else {
-                categoryId = category.id;
+                
+                if (!category) {
+                  const type = amount < 0 ? '-' : '+';
+                  const result = await db.run(
+                    'INSERT INTO categories (name, type, parent_id) VALUES (?, ?, ?)',
+                    name, type, parentId
+                  );
+                  categoryId = result.lastID;
+                } else {
+                  categoryId = category.id;
+                }
+                parentId = categoryId;
               }
-              parentId = categoryId;
+              categoryCache.set(catName, categoryId);
             }
           }
 
-          // Resolve Payment Type
           const paymentType = parseInt(payType) || 0;
 
           await db.run(`

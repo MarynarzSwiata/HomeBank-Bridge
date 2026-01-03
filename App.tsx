@@ -5,11 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import {
-  ApiError,
-  accountsService,
-  systemService,
-} from "./src/api";
+import { ApiError, accountsService, systemService } from "./src/api";
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import type {
@@ -21,17 +17,20 @@ import type {
 } from "./src/types";
 
 import { useDataBootstrap } from "./src/hooks";
-import { TransactionsView, TransactionSaveData } from "./src/components/transactions";
+import {
+  TransactionsView,
+  TransactionSaveData,
+} from "./src/components/transactions";
 import { AccountsView } from "./src/components/accounts/AccountsView";
 import { CategoriesView } from "./src/components/categories/CategoriesView";
 import { PayeesView } from "./src/components/payees/PayeesView";
 import { ExportHistoryView } from "./src/components/export/ExportHistoryView";
-import { 
-  PAYMENT_LEXICON, 
-  PAYMENT_OPTIONS, 
-  TRANSACTION_TYPES, 
-  FLOW_TYPE_OPTIONS, 
-  DATE_FORMATS 
+import {
+  PAYMENT_LEXICON,
+  PAYMENT_OPTIONS,
+  TRANSACTION_TYPES,
+  FLOW_TYPE_OPTIONS,
+  DATE_FORMATS,
 } from "./src/constants";
 import SearchableSelect from "./src/components/shared/SearchableSelect";
 
@@ -98,13 +97,13 @@ const App: React.FC = () => {
     | "options"
     | "changelog"
   >("how_to_use");
-  
+
   // Helpers
   const getTodayISO = () => new Date().toISOString().split("T")[0];
-  
+
   // API Loading & Error States
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // --- New Hooks Integration ---
   const {
     isBootstrapping,
@@ -117,10 +116,7 @@ const App: React.FC = () => {
     exportLog: exportLogHook,
   } = useDataBootstrap(auth.isAuthenticated);
 
-
-
   // --- Legacy State (kept for other tabs) ---
-
 
   // Currency State - derived from accounts only
   const availableCurrencies = useMemo(() => {
@@ -140,7 +136,8 @@ const App: React.FC = () => {
   // Options view state
   const [editingCurrency, setEditingCurrency] = useState<string | null>(null);
   const [editCurrencyValue, setEditCurrencyValue] = useState("");
-  const [isAddDefaultCurrenciesModalOpen, setIsAddDefaultCurrenciesModalOpen] = useState(false);
+  const [isAddDefaultCurrenciesModalOpen, setIsAddDefaultCurrenciesModalOpen] =
+    useState(false);
 
   // System Modal States
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -148,7 +145,8 @@ const App: React.FC = () => {
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
 
   // Transactions filter state (for navigation from account view)
-  const [transactionsAccountFilter, setTransactionsAccountFilter] = useState('');
+  const [transactionsAccountFilter, setTransactionsAccountFilter] =
+    useState("");
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
 
   // App Settings State (admin only)
@@ -156,15 +154,20 @@ const App: React.FC = () => {
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
 
   // Toast State
-  const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'error' | 'info' }[]>([]);
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; type: "success" | "error" | "info" }[]
+  >([]);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
-  }, []);
+  const showToast = useCallback(
+    (message: string, type: "success" | "error" | "info" = "info") => {
+      const id = Math.random().toString(36).substring(2, 9);
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 4000);
+    },
+    []
+  );
 
   // Legacy form/deletion state removed (moved to View components)
 
@@ -232,78 +235,93 @@ const App: React.FC = () => {
 
   // Load app settings when admin views Options
   useEffect(() => {
-    if (activeTab === 'options' && auth.user?.isAdmin) {
+    if (activeTab === "options" && auth.user?.isAdmin) {
       setIsLoadingSettings(true);
-      systemService.getSettings()
-        .then(settings => setAppSettings(settings))
-        .catch(err => console.error('Failed to load settings:', err))
+      systemService
+        .getSettings()
+        .then((settings) => setAppSettings(settings))
+        .catch((err) => console.error("Failed to load settings:", err))
         .finally(() => setIsLoadingSettings(false));
     }
   }, [activeTab, auth.user?.isAdmin]);
 
   // Toggle registration setting
   const toggleRegistration = useCallback(async () => {
-    const newValue = appSettings.allow_registration === 'true' ? 'false' : 'true';
+    const newValue =
+      appSettings.allow_registration === "true" ? "false" : "true";
     try {
-      await systemService.updateSetting('allow_registration', newValue);
-      setAppSettings(prev => ({ ...prev, allow_registration: newValue }));
-      showToast(newValue === 'true' ? 'Registration enabled' : 'Registration disabled', 'success');
+      await systemService.updateSetting("allow_registration", newValue);
+      setAppSettings((prev) => ({ ...prev, allow_registration: newValue }));
+      showToast(
+        newValue === "true" ? "Registration enabled" : "Registration disabled",
+        "success"
+      );
     } catch (err) {
-      showToast('Failed to update setting', 'error');
+      showToast("Failed to update setting", "error");
     }
   }, [appSettings.allow_registration, showToast]);
 
-  const handleSaveTransaction = useCallback(async (data: TransactionSaveData): Promise<boolean> => {
-    let result = false;
-    if (data.editingId) {
-      const success = await transactionsHook.updateTransaction(data.editingId, {
-        accountId: data.accountId,
-        amount: data.amount,
-        date: data.date,
-        payee: data.payee,
-        memo: data.memo,
-        categoryId: data.categoryId,
-        paymentType: data.paymentType,
-        targetAccountId: data.targetAccountId,
-        targetAmount: data.targetAmount,
-      });
-      if (success) {
-        // Refresh accounts to update balances
-        await accountsHook.refresh().catch(() => {});
+  const handleSaveTransaction = useCallback(
+    async (data: TransactionSaveData): Promise<boolean> => {
+      let result = false;
+      if (data.editingId) {
+        const success = await transactionsHook.updateTransaction(
+          data.editingId,
+          {
+            accountId: data.accountId,
+            amount: data.amount,
+            date: data.date,
+            payee: data.payee,
+            memo: data.memo,
+            categoryId: data.categoryId,
+            paymentType: data.paymentType,
+            targetAccountId: data.targetAccountId,
+            targetAmount: data.targetAmount,
+          }
+        );
+        if (success) {
+          // Refresh accounts to update balances
+          await accountsHook.refresh().catch(() => {});
+        }
+        result = success;
+      } else {
+        const res = await transactionsHook.createTransaction({
+          type: data.type,
+          accountId: data.accountId,
+          amount: data.amount,
+          date: data.date,
+          payee: data.payee,
+          memo: data.memo,
+          categoryId: data.categoryId,
+          paymentType: data.paymentType,
+          targetAccountId: data.targetAccountId,
+          targetAmount: data.targetAmount,
+        });
+        if (res) {
+          await accountsHook.refresh().catch(() => {});
+        }
+        result = res !== null;
       }
-      result = success;
-    } else {
-      const res = await transactionsHook.createTransaction({
-        type: data.type,
-        accountId: data.accountId,
-        amount: data.amount,
-        date: data.date,
-        payee: data.payee,
-        memo: data.memo,
-        categoryId: data.categoryId,
-        paymentType: data.paymentType,
-        targetAccountId: data.targetAccountId,
-        targetAmount: data.targetAmount,
-      });
-      if (res) {
-        await accountsHook.refresh().catch(() => {});
-      }
-      result = res !== null;
-    }
-    return result;
-  }, [transactionsHook, accountsHook]);
+      return result;
+    },
+    [transactionsHook, accountsHook]
+  );
 
-  const handleDeleteTransaction = useCallback(async (id: number): Promise<boolean> => {
-    const success = await transactionsHook.deleteTransaction(id);
-    if (success) {
-      await accountsHook.refresh().catch(() => {});
-    }
-    return success;
-  }, [transactionsHook, accountsHook]);
+  const handleDeleteTransaction = useCallback(
+    async (id: number): Promise<boolean> => {
+      const success = await transactionsHook.deleteTransaction(id);
+      if (success) {
+        await accountsHook.refresh().catch(() => {});
+      }
+      return success;
+    },
+    [transactionsHook, accountsHook]
+  );
 
   const handleRefreshTransactions = useCallback(() => {
     transactionsHook.refresh();
-  }, [transactionsHook]);
+    accountsHook.refresh().catch(() => {});
+  }, [transactionsHook, accountsHook]);
 
   // Refresh effect removed (handled by useDataBootstrap)
 
@@ -334,10 +352,10 @@ const App: React.FC = () => {
       await accountsService.renameCurrency(oldCur, cleanNew);
       // Refresh data from backend to sync - this will update availableCurrencies via useMemo
       await refreshAll();
-      showToast(`Successfully renamed ${oldCur} to ${cleanNew}`, 'success');
+      showToast(`Successfully renamed ${oldCur} to ${cleanNew}`, "success");
     } catch (err) {
-      console.error('Failed to rename currency:', err);
-      showToast('Failed to rename currency. Please check console.', 'error');
+      console.error("Failed to rename currency:", err);
+      showToast("Failed to rename currency. Please check console.", "error");
     } finally {
       setIsSaving(false);
       setEditingCurrency(null);
@@ -346,11 +364,11 @@ const App: React.FC = () => {
 
   const handleBackup = async () => {
     try {
-      showToast('Preparing database snapshot...', 'info');
+      showToast("Preparing database snapshot...", "info");
       await systemService.backup();
-      showToast('Backup successful!', 'success');
+      showToast("Backup successful!", "success");
     } catch (err) {
-      showToast('Backup failed: ' + err.message, 'error');
+      showToast("Backup failed: " + err.message, "error");
     }
   };
 
@@ -364,9 +382,9 @@ const App: React.FC = () => {
       await systemService.reset();
       await refreshAll();
       setIsResetModalOpen(false);
-      showToast('System successfully reset to factory defaults.', 'success');
+      showToast("System successfully reset to factory defaults.", "success");
     } catch (err) {
-      showToast('Reset failed: ' + err.message, 'error');
+      showToast("Reset failed: " + err.message, "error");
     } finally {
       setIsSaving(false);
     }
@@ -381,17 +399,13 @@ const App: React.FC = () => {
       await refreshAll();
       setIsRestoreModalOpen(false);
       setRestoreFile(null);
-      showToast('Database restored successfully!', 'success');
+      showToast("Database restored successfully!", "success");
     } catch (err) {
-      showToast('Restore failed: ' + err.message, 'error');
+      showToast("Restore failed: " + err.message, "error");
     } finally {
       setIsSaving(false);
     }
   };
-
-
-
-
 
   // Logic Handlers for Views moved to components
 
@@ -405,7 +419,6 @@ const App: React.FC = () => {
   // --- Import Logic ---
   // handleFileImport removed (Import logic moved to Views/Phase 7)
   // handleFileImport fully removed
-
 
   // executeImport removed
 
@@ -503,7 +516,7 @@ const App: React.FC = () => {
                 Connection Failed
               </h2>
               <p className="text-slate-400 text-sm font-medium leading-relaxed">
-                {auth.error || 'Unable to connect to authentication server'}
+                {auth.error || "Unable to connect to authentication server"}
               </p>
             </div>
             <button
@@ -576,9 +589,7 @@ const App: React.FC = () => {
               {bootstrapError}
             </p>
             <div className="pt-4 space-y-2">
-              <p className="text-xs text-slate-500">
-                check backend logs
-              </p>
+              <p className="text-xs text-slate-500">check backend logs</p>
             </div>
             <button
               onClick={() => refreshAll()}
@@ -976,17 +987,17 @@ const App: React.FC = () => {
         <header className="md:hidden flex justify-between items-center p-6 border-b border-slate-900 bg-slate-900/80 backdrop-blur-2xl sticky top-0 z-[100]">
           <div className="flex items-center gap-3">
             <AnimatedLogo />
-          <div className="flex flex-col gap-0.5">
-            <h1 className="font-black text-lg tracking-[-0.05em] uppercase text-white leading-none">
-              HomeBank Bridge
-            </h1>
-            <button 
-              onClick={() => setActiveTab('changelog')}
-              className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-white transition-colors animate-pulse"
-            >
-              Version 1.0.0
-            </button>
-          </div>
+            <div className="flex flex-col gap-0.5">
+              <h1 className="font-black text-lg tracking-[-0.05em] uppercase text-white leading-none">
+                HomeBank Bridge
+              </h1>
+              <button
+                onClick={() => setActiveTab("changelog")}
+                className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-white transition-colors animate-pulse"
+              >
+                Version 1.0.0
+              </button>
+            </div>
           </div>
           <button
             onClick={auth.logout}
@@ -1117,7 +1128,8 @@ const App: React.FC = () => {
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm max-w-2xl mx-auto">
                   Welcome to HomeBank Bridge. This tool is designed to bridge
                   the gap between your daily logging and the powerful HomeBank
-                  analysis suite. Now featuring a fully responsive mobile-first design.
+                  analysis suite. Now featuring a fully responsive mobile-first
+                  design.
                 </p>
               </div>
 
@@ -1144,23 +1156,24 @@ const App: React.FC = () => {
                   <p className="text-slate-400 text-sm leading-relaxed">
                     The{" "}
                     <span className="text-indigo-400 font-bold">Entries</span>{" "}
-                    tab is your main hub, now fully optimized for mobile devices with{" "}
-                    <span className="text-white font-bold">Card View</span> and a 
-                    bottom navigation bar.
+                    tab is your main hub, now fully optimized for mobile devices
+                    with <span className="text-white font-bold">Card View</span>{" "}
+                    and a bottom navigation bar.
                     <br />
                     <br />
                     <span className="text-white font-bold block mb-1">
                       Smart Autofill:
                     </span>{" "}
-                    When you type a payee, the system predicts the category, account, 
-                    and payment mode based on your history.
+                    When you type a payee, the system predicts the category,
+                    account, and payment mode based on your history.
                     <br />
                     <br />
                     <span className="text-white font-bold block mb-1">
                       Atomic Transfers:
                     </span>{" "}
-                    Transfers automatically create two linked records (Debit/Credit) 
-                    that stay synchronized as one logical operation.
+                    Transfers automatically create two linked records
+                    (Debit/Credit) that stay synchronized as one logical
+                    operation.
                   </p>
                 </div>
 
@@ -1184,16 +1197,24 @@ const App: React.FC = () => {
                     Export & Archives
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
-                    Generate <span className="text-emerald-400 font-bold">HomeBank-compliant CSVs</span>{" "}
-                    perfectly formatted with custom date formats and separators defined in Options.
+                    Generate{" "}
+                    <span className="text-emerald-400 font-bold">
+                      HomeBank-compliant CSVs
+                    </span>{" "}
+                    perfectly formatted with custom date formats and separators
+                    defined in Options.
                     <br />
                     <br />
                     <span className="text-white font-bold block mb-1">
                       Export Logs:
                     </span>{" "}
-                    Every export is archived in the <span className="text-emerald-400 font-bold">Export Logs</span> tab. 
-                    You can view past manifests or re-download them anytime without re-generating data. 
-                    The system automatically groups multi-account exports into structured zipped bundles.
+                    Every export is archived in the{" "}
+                    <span className="text-emerald-400 font-bold">
+                      Export Logs
+                    </span>{" "}
+                    tab. You can view past manifests or re-download them anytime
+                    without re-generating data. The system automatically groups
+                    multi-account exports into structured zipped bundles.
                   </p>
                 </div>
 
@@ -1217,16 +1238,19 @@ const App: React.FC = () => {
                     Vault & Advanced Import
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
-                    Manage multi-currency <span className="text-amber-400 font-bold">Accounts</span>{" "}
-                    and hierarchical Taxonomy. Real-time liquidity calculation keeps you informed.
+                    Manage multi-currency{" "}
+                    <span className="text-amber-400 font-bold">Accounts</span>{" "}
+                    and hierarchical Taxonomy. Real-time liquidity calculation
+                    keeps you informed.
                     <br />
                     <br />
                     <span className="text-white font-bold block mb-1">
                       Smart CSV Import:
                     </span>{" "}
-                    The Import Wizard features intelligent duplicate detection (Date + Payee + Amount) 
-                    and advanced header filtering. It handles multiple date formats and automatically 
-                    skips existing records to prevent data pollution.
+                    The Import Wizard features intelligent duplicate detection
+                    (Date + Payee + Amount) and advanced header filtering. It
+                    handles multiple date formats and automatically skips
+                    existing records to prevent data pollution.
                   </p>
                 </div>
 
@@ -1250,22 +1274,24 @@ const App: React.FC = () => {
                     Security & System
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
-                    Secured by a <span className="text-rose-400 font-bold">Single-Admin</span> system 
-                    with encrypted sessions. Use the <span className="text-white font-bold">Anonymize</span>{" "}
+                    Secured by a{" "}
+                    <span className="text-rose-400 font-bold">
+                      Single-Admin
+                    </span>{" "}
+                    system with encrypted sessions. Use the{" "}
+                    <span className="text-white font-bold">Anonymize</span>{" "}
                     toggle in the sidebar to hide sensitive numbers in public.
                     <br />
                     <br />
                     <span className="text-white font-bold block mb-1">
                       System Options:
                     </span>{" "}
-                    Access the Options tab to perform full database backups, factory resets, 
-                    or manage User Registration settings. The system is container-ready for 
-                    secure self-hosted deployment.
+                    Access the Options tab to perform full database backups,
+                    factory resets, or manage User Registration settings. The
+                    system is container-ready for secure self-hosted deployment.
                   </p>
                 </div>
               </div>
-
-
 
               {/* Mobile-only Links (Desktop has sidebar) */}
               <div className="md:hidden space-y-4 pt-4 border-t border-slate-800/50">
@@ -1318,17 +1344,32 @@ const App: React.FC = () => {
               {isBootstrapping ? (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                   <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                  <p className="text-slate-400 text-sm font-bold">Loading Transactions...</p>
+                  <p className="text-slate-400 text-sm font-bold">
+                    Loading Transactions...
+                  </p>
                 </div>
-              ) : bootstrapError && transactionsHook.transactions.length === 0 ? (
+              ) : bootstrapError &&
+                transactionsHook.transactions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                   <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
-                    <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <svg
+                      className="w-8 h-8 text-red-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
                     </svg>
                   </div>
-                  <p className="text-red-400 text-sm font-bold text-center max-w-md">{bootstrapError}</p>
-                  <button 
+                  <p className="text-red-400 text-sm font-bold text-center max-w-md">
+                    {bootstrapError}
+                  </p>
+                  <button
                     onClick={refreshAll}
                     className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg"
                   >
@@ -1349,19 +1390,25 @@ const App: React.FC = () => {
                     decimalSeparator={decimalSeparator}
                     isAnonymized={isAnonymized}
                     initialAccountFilter={transactionsAccountFilter}
-                    onClearAccountFilter={() => setTransactionsAccountFilter('')}
+                    onClearAccountFilter={() =>
+                      setTransactionsAccountFilter("")
+                    }
                     onSaveTransaction={handleSaveTransaction}
                     onDeleteTransaction={handleDeleteTransaction}
                     onRefresh={handleRefreshTransactions}
                     onClearError={() => {}} // Error cleared automatically on actions
                     onToggleAnonymize={() => setIsAnonymized(!isAnonymized)}
                     onCategoryCreate={async (name, parentId) => {
-                      const id = await categoriesHook.createCategory({ name, type: '-', parentId });
+                      const id = await categoriesHook.createCategory({
+                        name,
+                        type: "-",
+                        parentId,
+                      });
                       return id;
                     }}
                     onExportLogged={exportLogHook.refresh}
                   />
-                  
+
                   {/* Import Button (Temporary location until ImportView is refactored) */}
                 </div>
               )}
@@ -1417,9 +1464,7 @@ const App: React.FC = () => {
 
           {/* ... Rest of the file content (export_log, options) ... */}
           {activeTab === "export_log" && (
-            <ExportHistoryView
-              exportLogHook={exportLogHook}
-            />
+            <ExportHistoryView exportLogHook={exportLogHook} />
           )}
 
           {activeTab === "options" && (
@@ -1456,8 +1501,13 @@ const App: React.FC = () => {
                       Database Management
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
-                      Download a complete replica of your application database or restore from a previously saved snapshot. 
-                      Snapshots are named <span className="text-indigo-400 font-bold">database-data</span>.
+                      Download a complete replica of your application database
+                      or restore from a previously saved snapshot. Snapshots are
+                      named{" "}
+                      <span className="text-indigo-400 font-bold">
+                        database-data
+                      </span>
+                      .
                     </p>
                   </div>
                   <div className="flex flex-col gap-3">
@@ -1535,7 +1585,10 @@ const App: React.FC = () => {
                         placeholder="Select Date Format"
                         value={dateFormat}
                         onChange={setDateFormat}
-                        options={DATE_FORMATS.map(fmt => ({ id: fmt.id, name: fmt.name }))}
+                        options={DATE_FORMATS.map((fmt) => ({
+                          id: fmt.id,
+                          name: fmt.name,
+                        }))}
                         searchable={false}
                       />
                       <p className="text-[8px] text-slate-600 font-bold italic px-2 -mt-4">
@@ -1549,12 +1602,13 @@ const App: React.FC = () => {
                         onChange={setDecimalSeparator}
                         options={[
                           { id: ",", name: 'Comma: "," (default)' },
-                          { id: ".", name: 'Dot: "."' }
+                          { id: ".", name: 'Dot: "."' },
                         ]}
                         searchable={false}
                       />
                       <p className="text-[8px] text-slate-600 font-bold italic px-2 -mt-4">
-                        Example Amount: {(1234.56).toFixed(2).replace('.', decimalSeparator)}
+                        Example Amount:{" "}
+                        {(1234.56).toFixed(2).replace(".", decimalSeparator)}
                       </p>
                     </div>
                   </div>
@@ -1599,31 +1653,48 @@ const App: React.FC = () => {
                           {availableCurrencies.length === 0 ? (
                             <tr>
                               <td colSpan={3} className="py-8 text-center">
-                                <p className="text-slate-500 text-sm">No currencies yet.</p>
-                                <p className="text-slate-600 text-xs mt-1">Create an account to add currencies.</p>
+                                <p className="text-slate-500 text-sm">
+                                  No currencies yet.
+                                </p>
+                                <p className="text-slate-600 text-xs mt-1">
+                                  Create an account to add currencies.
+                                </p>
                               </td>
                             </tr>
                           ) : (
                             availableCurrencies.map((cur) => {
-                              const accountCount = accountsHook.accounts.filter((a) => a.currency === cur).length;
+                              const accountCount = accountsHook.accounts.filter(
+                                (a) => a.currency === cur
+                              ).length;
                               const isEditing = editingCurrency === cur;
-                              
+
                               return (
-                                <tr key={cur} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                                <tr
+                                  key={cur}
+                                  className="border-b border-slate-800/50 hover:bg-slate-800/30"
+                                >
                                   <td className="py-2 px-2">
                                     {isEditing ? (
                                       <input
                                         autoFocus
                                         value={editCurrencyValue}
                                         onChange={(e) =>
-                                          setEditCurrencyValue(e.target.value.toUpperCase())
+                                          setEditCurrencyValue(
+                                            e.target.value.toUpperCase()
+                                          )
                                         }
                                         onBlur={() =>
-                                          applyCurrencyRename(cur, editCurrencyValue)
+                                          applyCurrencyRename(
+                                            cur,
+                                            editCurrencyValue
+                                          )
                                         }
                                         onKeyDown={(e) =>
                                           e.key === "Enter" &&
-                                          applyCurrencyRename(cur, editCurrencyValue)
+                                          applyCurrencyRename(
+                                            cur,
+                                            editCurrencyValue
+                                          )
                                         }
                                         className="px-2 py-1 bg-indigo-600 text-white rounded text-[10px] font-black uppercase outline-none w-16"
                                       />
@@ -1635,7 +1706,10 @@ const App: React.FC = () => {
                                   </td>
                                   <td className="py-2 px-2">
                                     <span className="text-[9px] font-bold text-emerald-500 uppercase">
-                                      {accountCount} {accountCount === 1 ? 'account' : 'accounts'}
+                                      {accountCount}{" "}
+                                      {accountCount === 1
+                                        ? "account"
+                                        : "accounts"}
                                     </span>
                                   </td>
                                   <td className="py-2 px-2 text-right">
@@ -1735,7 +1809,8 @@ const App: React.FC = () => {
                         User Management
                       </h3>
                       <p className="text-slate-400 text-sm leading-relaxed">
-                        Control user registration settings. When enabled, new users can create accounts via the login screen.
+                        Control user registration settings. When enabled, new
+                        users can create accounts via the login screen.
                       </p>
                     </div>
                     <div className="space-y-4">
@@ -1745,25 +1820,25 @@ const App: React.FC = () => {
                             Allow Registration
                           </span>
                           <p className="text-[10px] text-slate-500 font-medium">
-                            {appSettings.allow_registration === 'true' 
-                              ? 'New users can create accounts' 
-                              : 'Registration is disabled'}
+                            {appSettings.allow_registration === "true"
+                              ? "New users can create accounts"
+                              : "Registration is disabled"}
                           </p>
                         </div>
                         <button
                           onClick={toggleRegistration}
                           disabled={isLoadingSettings}
                           className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
-                            appSettings.allow_registration === 'true'
-                              ? 'bg-purple-600'
-                              : 'bg-slate-700'
+                            appSettings.allow_registration === "true"
+                              ? "bg-purple-600"
+                              : "bg-slate-700"
                           }`}
                         >
                           <span
                             className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg transition-all duration-300 ${
-                              appSettings.allow_registration === 'true'
-                                ? 'left-7'
-                                : 'left-1'
+                              appSettings.allow_registration === "true"
+                                ? "left-7"
+                                : "left-1"
                             }`}
                           />
                         </button>
@@ -1794,7 +1869,8 @@ const App: React.FC = () => {
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
                     This instance is connected to a persistent SQLite backend.
-                    All changes are synchronized in real-time. This action will permanently delete all your records.
+                    All changes are synchronized in real-time. This action will
+                    permanently delete all your records.
                   </p>
                   <button
                     onClick={() => setIsResetModalOpen(true)}
@@ -1847,14 +1923,28 @@ const App: React.FC = () => {
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-slate-900 border-2 border-rose-500/30 rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8">
               <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-white uppercase italic">Hard Reset?</h3>
+                <h3 className="text-2xl font-black text-white uppercase italic">
+                  Hard Reset?
+                </h3>
                 <p className="text-slate-400 text-sm">
-                  This action is irreversible! All transactions, accounts, and categories will be permanently deleted from the backend database.
+                  This action is irreversible! All transactions, accounts, and
+                  categories will be permanently deleted from the backend
+                  database.
                 </p>
               </div>
               <div className="flex flex-col gap-3">
@@ -1886,14 +1976,28 @@ const App: React.FC = () => {
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-slate-900 border-2 border-indigo-500/30 rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8">
               <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 mx-auto">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                <svg
+                  className="w-8 h-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
                 </svg>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-white uppercase italic">Restore System?</h3>
+                <h3 className="text-2xl font-black text-white uppercase italic">
+                  Restore System?
+                </h3>
                 <p className="text-slate-400 text-sm">
-                  Uploading a database file will completely replace your current system state. Make sure you have a backup of your current work.
+                  Uploading a database file will completely replace your current
+                  system state. Make sure you have a backup of your current
+                  work.
                 </p>
               </div>
               <div className="space-y-4">
@@ -1901,12 +2005,16 @@ const App: React.FC = () => {
                   <input
                     type="file"
                     accept=".db"
-                    onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      setRestoreFile(e.target.files?.[0] || null)
+                    }
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   />
                   <div className="bg-slate-950/50 border-2 border-dashed border-slate-700 group-hover:border-indigo-500 transition-colors p-6 rounded-2xl text-center">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      {restoreFile ? restoreFile.name : "Choose .db file to restore"}
+                      {restoreFile
+                        ? restoreFile.name
+                        : "Choose .db file to restore"}
                     </p>
                   </div>
                 </div>
@@ -1915,8 +2023,8 @@ const App: React.FC = () => {
                     disabled={!restoreFile || isSaving}
                     onClick={handleRestore}
                     className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all active:scale-95 ${
-                      !restoreFile || isSaving 
-                        ? "bg-slate-800 text-slate-600 grayscale cursor-not-allowed" 
+                      !restoreFile || isSaving
+                        ? "bg-slate-800 text-slate-600 grayscale cursor-not-allowed"
                         : "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20"
                     }`}
                   >
@@ -1924,8 +2032,8 @@ const App: React.FC = () => {
                   </button>
                   <button
                     onClick={() => {
-                        setIsRestoreModalOpen(false);
-                        setRestoreFile(null);
+                      setIsRestoreModalOpen(false);
+                      setRestoreFile(null);
                     }}
                     className="w-full py-5 bg-slate-800 text-slate-300 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] active:scale-95 transition-all"
                   >
@@ -1938,50 +2046,73 @@ const App: React.FC = () => {
         )}
         {/* Donate Modal */}
         {isDonateModalOpen && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={() => setIsDonateModalOpen(false)}>
-            <div className="bg-slate-900 border-2 border-indigo-500/30 rounded-[3rem] p-10 max-w-md w-full shadow-2xl space-y-8 relative" onClick={e => e.stopPropagation()}>
-               <button 
-                  onClick={() => setIsDonateModalOpen(false)}
-                  className="absolute top-6 right-6 p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
-               >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-               </button>
-
-               <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400 mx-auto">
-                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                       <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.016.393 5.464 0 5.972 0h10.362c3.567 0 5.166 1.765 4.88 4.417-.168 1.551-.838 3.13-1.927 4.544-1.22 1.587-2.863 2.628-4.75 3.023l-.116.024c-.754.148-1.206.561-1.34 1.23l-1.35 6.757c-.085.424-.455.742-.887.742h-3.955l.82-4.102c.022-.112.12-.193.234-.193h2.32c.321 0 .58-.26.58-.582a.582.582 0 0 0-.012-.117l-.582-2.91a.583.583 0 0 0-.57-.468h-2.32c-.322 0-.58.26-.58.582a.58.58 0 0 0 .012.117l-.82 4.1z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-black text-white uppercase italic">Support the Bridge</h3>
-                  <p className="text-slate-400 text-sm">
-                    Scan the QR code below to donate via PayPal. Your support helps keep the bridge strong!
-                  </p>
-               </div>
-               
-               <div className="bg-white p-4 rounded-3xl mx-auto w-fit shadow-inner">
-                  <img 
-                    src="/donate-qr.png" 
-                    alt="Donate QR Code" 
-                    className="w-48 h-48 object-contain"
+          <div
+            className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300"
+            onClick={() => setIsDonateModalOpen(false)}
+          >
+            <div
+              className="bg-slate-900 border-2 border-indigo-500/30 rounded-[3rem] p-10 max-w-md w-full shadow-2xl space-y-8 relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsDonateModalOpen(false)}
+                className="absolute top-6 right-6 p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
                   />
-               </div>
-               
-               <div className="text-center space-y-1">
-                 <a 
-                   href="https://paypal.me/newbes" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="text-indigo-400 text-xs font-bold hover:text-white transition-colors uppercase tracking-widest"
-                 >
-                   paypal.me/newbes
-                 </a>
-                 <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-                    Thank You!
-                 </p>
-               </div>
+                </svg>
+              </button>
+
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400 mx-auto">
+                  <svg
+                    className="w-8 h-8"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.016.393 5.464 0 5.972 0h10.362c3.567 0 5.166 1.765 4.88 4.417-.168 1.551-.838 3.13-1.927 4.544-1.22 1.587-2.863 2.628-4.75 3.023l-.116.024c-.754.148-1.206.561-1.34 1.23l-1.35 6.757c-.085.424-.455.742-.887.742h-3.955l.82-4.102c.022-.112.12-.193.234-.193h2.32c.321 0 .58-.26.58-.582a.582.582 0 0 0-.012-.117l-.582-2.91a.583.583 0 0 0-.57-.468h-2.32c-.322 0-.58.26-.58.582a.58.58 0 0 0 .012.117l-.82 4.1z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black text-white uppercase italic">
+                  Support the Bridge
+                </h3>
+                <p className="text-slate-400 text-sm">
+                  Scan the QR code below to donate via PayPal. Your support
+                  helps keep the bridge strong!
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-3xl mx-auto w-fit shadow-inner">
+                <img
+                  src="/donate-qr.png"
+                  alt="Donate QR Code"
+                  className="w-48 h-48 object-contain"
+                />
+              </div>
+
+              <div className="text-center space-y-1">
+                <a
+                  href="https://paypal.me/newbes"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-400 text-xs font-bold hover:text-white transition-colors uppercase tracking-widest"
+                >
+                  paypal.me/newbes
+                </a>
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                  Thank You!
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -1993,22 +2124,64 @@ const App: React.FC = () => {
           <div
             key={toast.id}
             className={`p-4 md:p-6 rounded-2xl md:rounded-[2rem] shadow-2xl border backdrop-blur-3xl animate-toast-in flex items-center gap-4 md:gap-5 pointer-events-auto ${
-              toast.type === 'success' 
-                ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' 
-                : toast.type === 'error'
-                ? 'bg-rose-950/40 border-rose-500/30 text-rose-400'
-                : 'bg-indigo-950/40 border-indigo-500/30 text-indigo-400'
+              toast.type === "success"
+                ? "bg-emerald-950/40 border-emerald-500/30 text-emerald-400"
+                : toast.type === "error"
+                ? "bg-rose-950/40 border-rose-500/30 text-rose-400"
+                : "bg-indigo-950/40 border-indigo-500/30 text-indigo-400"
             }`}
           >
-            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 ${
-              toast.type === 'success' ? 'bg-emerald-500/10' : toast.type === 'error' ? 'bg-rose-500/10' : 'bg-indigo-500/10'
-            }`}>
-              {toast.type === 'success' ? (
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-              ) : toast.type === 'error' ? (
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+            <div
+              className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 ${
+                toast.type === "success"
+                  ? "bg-emerald-500/10"
+                  : toast.type === "error"
+                  ? "bg-rose-500/10"
+                  : "bg-indigo-500/10"
+              }`}
+            >
+              {toast.type === "success" ? (
+                <svg
+                  className="w-4 h-4 md:w-5 md:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : toast.type === "error" ? (
+                <svg
+                  className="w-4 h-4 md:w-5 md:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
               ) : (
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg
+                  className="w-4 h-4 md:w-5 md:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
               )}
             </div>
             <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.1em] leading-relaxed">
