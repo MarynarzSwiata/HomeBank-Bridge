@@ -101,7 +101,16 @@ HomeBank Bridge includes a local authentication system:
 
 ## 🚀 Deployment
 
-### 1. Docker Deployment (Standard)
+HomeBank Bridge supports **two main deployment options**:
+
+1. **Traditional Web Server** (VPS with Node.js)
+2. **Containerized Deployment** (Docker, Coolify)
+
+📖 **For detailed deployment instructions, see:**
+- 🇬🇧 [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide (English)
+- 🇵🇱 [DEPLOYMENT-PL.md](DEPLOYMENT-PL.md) - Pełny przewodnik wdrożenia (Polski)
+
+### Quick Start: Docker Deployment
 
 ```bash
 docker build -t homebank-bridge .
@@ -115,7 +124,27 @@ docker run -d \
   homebank-bridge
 ```
 
-### 2. Coolify Deployment (Recommended)
+### Quick Start: Traditional Server
+
+```bash
+# Install dependencies
+npm install
+cd backend && npm install && cd ..
+
+# Build frontend
+npm run build
+
+# Copy and configure environment
+cp .env.example .env
+nano .env  # Edit configuration
+
+# Run with PM2
+cd backend
+npm install -g pm2
+pm2 start server.js --name homebank-bridge
+```
+
+### Coolify Deployment
 
 1.  **Source**: Add a new resource from **Git Repository**.
 2.  **Build Pack**: Select **Dockerfile**.
@@ -125,6 +154,25 @@ docker run -d \
 4.  **Environment Variables**: Set `SESSION_SECRET`, `FRONTEND_URL`, and `ALLOW_REGISTRATION`.
 5.  **Persistent Storage**: Mount path `/app/backend/data`.
 6.  **Deploy**: Click "Deploy".
+
+---
+
+## ❓ Deployment FAQ
+
+### Can I run this on a regular web server?
+**Yes!** HomeBank Bridge can run on any VPS or server with Node.js 18+. You don't need Docker - a traditional server setup works perfectly. See [DEPLOYMENT.md](DEPLOYMENT.md) for details.
+
+### Do I need a separate database server?
+**No!** The application uses SQLite, a file-based database. No MySQL, PostgreSQL, or other database server is required.
+
+### What are my deployment options?
+- **Traditional Server**: Direct Node.js installation on VPS/dedicated server
+- **Docker**: Containerized deployment for easier management
+- **Coolify/PaaS**: Managed deployment platforms
+
+See the comprehensive guides:
+- [DEPLOYMENT.md](DEPLOYMENT.md) (English)
+- [DEPLOYMENT-PL.md](DEPLOYMENT-PL.md) (Polish)
 
 ---
 
