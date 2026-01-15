@@ -146,6 +146,8 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 
 ### Version 1.0.3 (2026-01-15)
 - **🔔 Interactive Notifications**: Implemented a global toast system for instant feedback on all data operations (success and errors).
+- **👯 Transaction Duplication**: Added a "Duplicate" button in ledger actions to quickly clone existing records.
+- **🔄 Save & Repeat Mode**: Added a "Finalize & Repeat" button to the transaction form to streamline bulk data entries.
 - **💾 Persistent UX**: Key settings like "Privacy Mode" and "Date Format" are now synchronized with the backend database for a persistent cross-device experience.
 - **🛠️ Bugfix: Category Engine**: Resolved a critical validation error that caused UI crashes during category creation with null parent IDs.
 - **📊 Export State Tracking**: Transactions are now visually marked and tracked when included in CSV manifests.

@@ -1195,9 +1195,27 @@ const App: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
-                      Notifications, persistent settings, and critical bugfixes.
+                      Duplication features, notifications, and persistent settings.
                     </p>
                     <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Transaction Duplication:
+                          </strong>{" "}
+                          Instantly clone records using the new duplicate button in ledger actions.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Multi-Entry Mode:
+                          </strong>{" "}
+                          New "Finalize & Repeat" button keeps form data populated for rapid sequential logging.
+                        </span>
+                      </li>
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
