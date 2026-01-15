@@ -51,7 +51,7 @@ router.post('/',
   [
     body('name').trim().notEmpty().withMessage('Category name is required'),
     body('type').isIn(['+', '-', ' ']).withMessage('Invalid category type'),
-    body('parentId').optional().isInt(),
+    body('parentId').optional({ nullable: true }).isInt(),
     validate
   ],
   async (req, res, next) => {
@@ -76,7 +76,7 @@ router.put('/:id',
     param('id').isInt(),
     body('name').optional().trim().notEmpty(),
     body('type').optional().isIn(['+', '-', ' ']),
-    body('parentId').optional(),
+    body('parentId').optional({ nullable: true }).isInt(),
     validate
   ],
   async (req, res, next) => {

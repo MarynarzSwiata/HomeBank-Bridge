@@ -455,7 +455,7 @@ export function TransactionsView({
                         const groups = result as Record<number, { name: string; csv: string; count: number }>;
                         const dateStr = new Date().toISOString().split('T')[0];
                         
-                        for (const [, data] of Object.entries(groups)) {
+                        for (const [accId, data] of Object.entries(groups)) {
                             const safeName = data.name.replace(/[/\\?%*:|"<>]/g, '-');
                             const filename = `${safeName}-${dateStr}.csv`;
                             
@@ -473,12 +473,16 @@ export function TransactionsView({
                             await exportLogService.createLog({
                                 filename,
                                 count: data.count,
-                                csv_content: data.csv
+                                csv_content: data.csv,
+                                transactionIds: selectedItems
+                                    .filter(t => t.account_id === Number(accId))
+                                    .map(t => t.id)
                             }).catch(err => console.error('Failed to log grouped export', err));
                         }
                       }
                       
                       if (onExportLogged) await onExportLogged();
+                      setSelectedIds(new Set());
                     } catch (err) {
                       console.error('Export failed', err);
                     }
@@ -756,7 +760,9 @@ export function TransactionsView({
                     <div className="text-sm font-black text-slate-100 uppercase tracking-tighter">
                       {formatDateForDisplay(t.date, dateFormat)}
                     </div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-slate-600 mt-1">Manifest Logged</div>
+                    <div className={`text-[9px] font-black uppercase tracking-widest mt-1 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
+                      {t.exported ? 'Transaction Exported' : 'Manifest Logged'}
+                    </div>
                   </div>
 
                   {/* Payee */}
@@ -824,8 +830,13 @@ export function TransactionsView({
                         onChange={() => toggleSelection(t.id)}
                         className="w-6 h-6 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 focus:ring-offset-slate-900 transition-all cursor-pointer"
                       />
-                      <div className="text-xs font-black text-indigo-400 uppercase tracking-tighter">
-                        {formatDateForDisplay(t.date, dateFormat)}
+                      <div>
+                        <div className="text-xs font-black text-indigo-400 uppercase tracking-tighter">
+                          {formatDateForDisplay(t.date, dateFormat)}
+                        </div>
+                        <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
+                          {t.exported ? 'Transaction Exported' : 'Manifest Logged'}
+                        </div>
                       </div>
                     </div>
                     <div className={`text-lg font-black tracking-tighter ${

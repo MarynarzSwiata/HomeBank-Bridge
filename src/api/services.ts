@@ -348,7 +348,8 @@ export const transactionsService = {
     await exportLogService.createLog({
         filename: finalFilename,
         count,
-        csv_content
+        csv_content,
+        transactionIds: filters.ids
     }).catch(err => console.error('Failed to log export', err));
   },
 };
@@ -358,7 +359,7 @@ export const exportLogService = {
     return api.get('/export-log');
   },
 
-  async createLog(data: { filename: string; count: number; csv_content: string }): Promise<{ id: number }> {
+  async createLog(data: { filename: string; count: number; csv_content: string; transactionIds?: number[] }): Promise<{ id: number }> {
     const API_BASE = import.meta.env.VITE_API_URL || '/api';
     const response = await fetch(`${API_BASE}/export-log`, {
       method: 'POST',

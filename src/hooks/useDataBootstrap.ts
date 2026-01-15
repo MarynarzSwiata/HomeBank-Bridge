@@ -58,19 +58,24 @@ export function useDataBootstrap(isAuthenticated: boolean) {
     }
   }, [isAuthenticated, refreshAll]);
 
-  // Aggregate errors from individual hooks (for display after bootstrap)
-  const combinedError = bootstrapError
-    || accountsHook.error
-    || categoriesHook.error
-    || payeesHook.error
-    || transactionsHook.error
-    || exportLogHook.error;
+  // Aggregate errors from individual hooks (excluding bootstrap error itself)
+  const runtimeErrors = {
+    accounts: accountsHook.error,
+    categories: categoriesHook.error,
+    payees: payeesHook.error,
+    transactions: transactionsHook.error,
+    exportLog: exportLogHook.error,
+  };
 
   return {
     // Bootstrap state
     isBootstrapping,
-    bootstrapError: combinedError,
+    bootstrapError, // Only reflects failures during refreshAll()
     refreshAll,
+
+    // Combined runtime error status
+    runtimeError: accountsHook.error || categoriesHook.error || payeesHook.error || transactionsHook.error || exportLogHook.error,
+    runtimeErrors,
 
     // Individual hooks for fine-grained control
     accounts: accountsHook,

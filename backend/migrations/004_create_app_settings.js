@@ -6,8 +6,10 @@ export const up = async (db) => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Default: registration disabled after first user
+    -- Default settings
     INSERT OR IGNORE INTO app_settings (key, value) VALUES ('allow_registration', 'false');
+    INSERT OR IGNORE INTO app_settings (key, value) VALUES ('privacy_mode', 'true');
+    INSERT OR IGNORE INTO app_settings (key, value) VALUES ('date_format', 'DD-MM-YYYY');
   `);
 };
 
