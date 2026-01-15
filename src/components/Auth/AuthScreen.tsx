@@ -28,6 +28,13 @@ export function AuthScreen({
   // Allow user to toggle to registration when multi-user mode is enabled
   const [showRegister, setShowRegister] = useState(false);
 
+  // Force back to login mode if registration becomes disabled
+  React.useEffect(() => {
+    if (!registrationAllowed && hasUsers) {
+      setShowRegister(false);
+    }
+  }, [registrationAllowed, hasUsers]);
+
   // First user registration (mandatory) OR user chose to register in multi-user mode
   const isRegisterMode = (!hasUsers && registrationAllowed) || (hasUsers && registrationAllowed && showRegister);
   const canShowRegisterToggle = hasUsers && registrationAllowed;

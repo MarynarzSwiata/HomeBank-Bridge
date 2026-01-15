@@ -66,14 +66,14 @@ router.get('/status', async (req, res, next) => {
     let registrationAllowed = !hasUsers; // Always allow if no users
     
     if (hasUsers) {
-      // Check database setting
       const dbSetting = await db.get("SELECT value FROM app_settings WHERE key = 'allow_registration'");
-      const dbAllows = dbSetting?.value === 'true';
-      
-      // Env var can override (for backwards compatibility)
-      const envAllows = process.env.ALLOW_REGISTRATION === 'true';
-      
-      registrationAllowed = dbAllows || envAllows;
+      if (dbSetting) {
+        // DB setting has priority
+        registrationAllowed = dbSetting.value === 'true';
+      } else {
+        // Fallback to environment variable if setting not in DB
+        registrationAllowed = process.env.ALLOW_REGISTRATION === 'true';
+      }
     }
     
     res.json({ hasUsers, registrationAllowed });
@@ -150,9 +150,11 @@ router.post(
         let registrationAllowed = !hasUsers;
         if (hasUsers) {
           const dbSetting = await db.get("SELECT value FROM app_settings WHERE key = 'allow_registration'");
-          const dbAllows = dbSetting?.value === 'true';
-          const envAllows = process.env.ALLOW_REGISTRATION === 'true';
-          registrationAllowed = dbAllows || envAllows;
+          if (dbSetting) {
+            registrationAllowed = dbSetting.value === 'true';
+          } else {
+            registrationAllowed = process.env.ALLOW_REGISTRATION === 'true';
+          }
         }
         
         if (!registrationAllowed) {
