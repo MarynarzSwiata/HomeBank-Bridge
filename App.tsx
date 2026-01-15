@@ -932,7 +932,7 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("changelog")}
               className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-400 transition-colors text-left"
             >
-              Version 1.0.1
+              Version 1.0.2
             </button>
             <a
               href="https://github.com/MarynarzSwiata/HomeBank-Bridge"
@@ -1008,7 +1008,7 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab("changelog")}
                 className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-white transition-colors animate-pulse"
               >
-                Version 1.0.1
+                Version 1.0.2
               </button>
             </div>
           </div>
@@ -1051,9 +1051,55 @@ const App: React.FC = () => {
                   <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
                       <h3 className="text-2xl font-black text-white uppercase italic">
-                        Version 1.0.1
+                        Version 1.0.2
                       </h3>
                       <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-600/10 px-3 py-1 rounded-full">
+                        Security & Stability
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                      Hardened registration enforcement and resolved IDE configuration issues.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Registration Shield:
+                          </strong>{" "}
+                          Strict backend enforcement of registration settings to prevent unauthorized account creation via API.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            TypeScript Guard:
+                          </strong>{" "}
+                          Resolved project-wide type definition errors for Node and Vite, ensuring a stable development environment.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Dependency Sync:
+                          </strong>{" "}
+                          Fixed missing package states in both root and backend ecosystems.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="relative pl-12 border-l-2 border-slate-800/50">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-slate-800 shadow-lg shadow-slate-800/40"></div>
+                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-2xl font-black text-white uppercase italic">
+                        Version 1.0.1
+                      </h3>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-800/40 px-3 py-1 rounded-full">
                         Performance & Stats Update
                       </span>
                     </div>
@@ -1063,7 +1109,7 @@ const App: React.FC = () => {
                     </p>
                     <ul className="space-y-4 text-sm text-slate-300">
                       <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
+                        <span className="text-slate-500 font-black">★</span>
                         <span>
                           <strong className="text-white">
                             Taxonomy Balances:
@@ -1073,7 +1119,7 @@ const App: React.FC = () => {
                         </span>
                       </li>
                       <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
+                        <span className="text-slate-500 font-black">★</span>
                         <span>
                           <strong className="text-white">
                             Import Engine XL:
@@ -1081,25 +1127,6 @@ const App: React.FC = () => {
                           Fixed 500 errors and payload limits; optimized
                           duplicate detection with batch processing for massive
                           CSV files.
-                        </span>
-                      </li>
-                      <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
-                        <span>
-                          <strong className="text-white">
-                            Coolify Optimization:
-                          </strong>{" "}
-                          Container health checks integrated into Docker for
-                          reliable zero-downtime deployments.
-                        </span>
-                      </li>
-                      <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
-                        <span>
-                          <strong className="text-white">Smart Refresh:</strong>{" "}
-                          Enhanced data synchronization between views; accounts,
-                          categories, and entities now update instantly after
-                          any change.
                         </span>
                       </li>
                     </ul>

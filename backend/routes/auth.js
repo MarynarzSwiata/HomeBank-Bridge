@@ -146,9 +146,16 @@ router.post(
         // Check if registration is allowed (inside transaction)
         const userCount = await db.get('SELECT COUNT(*) as count FROM users');
         const hasUsers = userCount.count > 0;
-        const allowRegistrationEnv = process.env.ALLOW_REGISTRATION === 'true';
         
-        if (hasUsers && !allowRegistrationEnv) {
+        let registrationAllowed = !hasUsers;
+        if (hasUsers) {
+          const dbSetting = await db.get("SELECT value FROM app_settings WHERE key = 'allow_registration'");
+          const dbAllows = dbSetting?.value === 'true';
+          const envAllows = process.env.ALLOW_REGISTRATION === 'true';
+          registrationAllowed = dbAllows || envAllows;
+        }
+        
+        if (!registrationAllowed) {
           await db.run('ROLLBACK');
           return res.status(403).json({ error: 'Registration is disabled' });
         }

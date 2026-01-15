@@ -138,6 +138,23 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 
 ---
 
+## 📜 Changelog
+
+### Version 1.0.2 (2026-01-15)
+- **🛡️ Registration Shield**: Hardened backend API to strictly enforce registration toggle settings, preventing unauthorized account creation.
+- **🛠️ IDE Stability**: Resolved critical TypeScript definition errors for Node.js and Vite.
+- **📦 Ecosystem Sync**: Fixed missing `node_modules` states across root and backend directories.
+
+### Version 1.0.1 (2025-12-30)
+- **📈 Taxonomy Balances**: Integrated recursive balance calculations for hierarchical categories.
+- **🚀 Import Engine XL**: Batch processing for massive CSV files and enhanced duplicate detection.
+- **🐳 Docker Health**: Integrated container health checks for zero-downtime deployments.
+
+### Version 1.0.0 (2025-12-20)
+- **🎉 Initial Release**: Core transaction engine, multi-account support, and HomeBank CSV compliance.
+
+---
+
 ## 🤝 Contributing
 
 This is an open-source project evolving towards a production-ready financial tool. Contributions and technical discussions are welcome via GitHub Issues.
