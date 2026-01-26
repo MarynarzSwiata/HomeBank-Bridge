@@ -46,8 +46,8 @@ router.get('/', async (req, res, next) => {
 router.post('/',
   [
     body('name').trim().notEmpty().withMessage('Payee name is required'),
-    body('defaultCategoryId').optional().isInt(),
-    body('defaultPaymentType').optional().isInt(),
+    body('defaultCategoryId').optional({ nullable: true }).isInt(),
+    body('defaultPaymentType').optional({ nullable: true }).isInt(),
     validate
   ],
   async (req, res, next) => {

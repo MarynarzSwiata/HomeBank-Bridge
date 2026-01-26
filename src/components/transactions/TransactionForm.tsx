@@ -16,7 +16,7 @@ export interface TransactionFormProps {
   payees: Payee[];
   transactions: Transaction[]; // For finding transfer pairs
   isSaving: boolean;
-  onSave: (data: TransactionSaveData) => Promise<boolean>;
+  onSave: (data: TransactionSaveData, keepOpen?: boolean) => Promise<boolean>;
   onCancel: () => void;
   onCategoryCreate?: (name: string, parentId?: number) => Promise<number | null>;
   key?: React.Key;
@@ -262,7 +262,7 @@ export function TransactionForm({
   const isCurrencyMismatch = selectedCurrency && targetCurrency && selectedCurrency !== targetCurrency;
 
   // Handle save
-  const handleSave = useCallback(async () => {
+  const handleSaveInternal = useCallback(async (keepOpen: boolean = false) => {
     if (!validate()) return;
     
     const numAmount = Math.abs(parseFloat(amount.replace(',', '.')));
@@ -310,8 +310,8 @@ export function TransactionForm({
       };
     }
     
-    const success = await onSave(saveData);
-    if (success) {
+    const success = await onSave(saveData, keepOpen);
+    if (success && !keepOpen) {
       // Form will be reset by parent via onCancel or re-render
     }
   }, [validate, amount, entryType, accountId, targetAccountId, date, memo, payee, mainCategoryId, subCategoryId, paymentType, editingId, onSave, targetAmount, isCurrencyMismatch]);
@@ -541,17 +541,32 @@ export function TransactionForm({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 pt-4">
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={handleSave}
-          isLoading={isSaving}
-          className="flex-1 h-[60px]"
-          icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>}
-        >
-          {mode === 'edit' ? 'Commit Update' : 'Finalize Record'}
-        </Button>
+    <div className="flex flex-col sm:flex-row gap-4 pt-4">
+        <div className="flex-1 flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => handleSaveInternal(false)}
+            isLoading={isSaving}
+            className="flex-1 h-[60px]"
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>}
+          >
+            {mode === 'edit' ? 'Commit Update' : 'Finalize Record'}
+          </Button>
+          
+          {mode === 'create' && (
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={() => handleSaveInternal(true)}
+              isLoading={isSaving}
+              className="flex-1 h-[60px] border-2 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500"
+              icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
+            >
+              Finalize & Repeat
+            </Button>
+          )}
+        </div>
         <Button
           variant="ghost"
           size="lg"

@@ -11,6 +11,7 @@ import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import type {
   Account,
   Category,
+  CategoryType,
   Payee,
   Transaction,
   ExportLog,
@@ -149,9 +150,19 @@ const App: React.FC = () => {
     useState("");
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
 
-  // App Settings State (admin only)
+  // App Settings State
   const [appSettings, setAppSettings] = useState<Record<string, string>>({});
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+
+  // Sync state with settings
+  useEffect(() => {
+    if (appSettings.privacy_mode !== undefined) {
+      setIsAnonymized(appSettings.privacy_mode === "true");
+    }
+    if (appSettings.date_format !== undefined) {
+      setDateFormat(appSettings.date_format);
+    }
+  }, [appSettings.privacy_mode, appSettings.date_format]);
 
   // Toast State
   const [toasts, setToasts] = useState<
@@ -233,9 +244,9 @@ const App: React.FC = () => {
     }
   };
 
-  // Load app settings when admin views Options
+  // Load app settings on bootstrap
   useEffect(() => {
-    if (activeTab === "options" && auth.user?.isAdmin) {
+    if (auth.isAuthenticated) {
       setIsLoadingSettings(true);
       systemService
         .getSettings()
@@ -243,7 +254,7 @@ const App: React.FC = () => {
         .catch((err) => console.error("Failed to load settings:", err))
         .finally(() => setIsLoadingSettings(false));
     }
-  }, [activeTab, auth.user?.isAdmin]);
+  }, [auth.isAuthenticated]);
 
   // Toggle registration setting
   const toggleRegistration = useCallback(async () => {
@@ -260,6 +271,28 @@ const App: React.FC = () => {
       showToast("Failed to update setting", "error");
     }
   }, [appSettings.allow_registration, showToast]);
+
+  const toggleAnonymize = useCallback(async () => {
+    const newValue = !isAnonymized;
+    setIsAnonymized(newValue); // Optimistic update
+    try {
+      await systemService.updateSetting("privacy_mode", String(newValue));
+      setAppSettings((prev) => ({ ...prev, privacy_mode: String(newValue) }));
+    } catch (err) {
+      console.error("Failed to save privacy setting:", err);
+      // Revert on error if needed, but usually minor enough to skip revert
+    }
+  }, [isAnonymized]);
+
+  const updateDateFormat = useCallback(async (newFormat: string) => {
+    setDateFormat(newFormat);
+    try {
+      await systemService.updateSetting("date_format", newFormat);
+      setAppSettings((prev) => ({ ...prev, date_format: newFormat }));
+    } catch (err) {
+      console.error("Failed to save date format:", err);
+    }
+  }, []);
 
   const handleSaveTransaction = useCallback(
     async (data: TransactionSaveData): Promise<boolean> => {
@@ -285,6 +318,9 @@ const App: React.FC = () => {
             categoriesHook.refresh(),
             payeesHook.refresh(),
           ]).catch(() => {});
+          showToast("Transaction updated successfully", "success");
+        } else {
+          showToast(transactionsHook.error || "Failed to update transaction", "error");
         }
         result = success;
       } else {
@@ -306,12 +342,15 @@ const App: React.FC = () => {
             categoriesHook.refresh(),
             payeesHook.refresh(),
           ]).catch(() => {});
+          showToast("Transaction created successfully", "success");
+        } else {
+          showToast(transactionsHook.error || "Failed to create transaction", "error");
         }
         result = res !== null;
       }
       return result;
     },
-    [transactionsHook, accountsHook, categoriesHook, payeesHook]
+    [transactionsHook, accountsHook, categoriesHook, payeesHook, showToast]
   );
 
   const handleDeleteTransaction = useCallback(
@@ -323,18 +362,114 @@ const App: React.FC = () => {
           categoriesHook.refresh(),
           payeesHook.refresh(),
         ]).catch(() => {});
+        showToast("Transaction deleted successfully", "success");
+      } else {
+        showToast(transactionsHook.error || "Failed to delete transaction", "error");
       }
       return success;
     },
-    [transactionsHook, accountsHook, categoriesHook, payeesHook]
+    [transactionsHook, accountsHook, categoriesHook, payeesHook, showToast]
   );
 
-  const handleRefreshTransactions = useCallback(() => {
-    transactionsHook.refresh();
-    accountsHook.refresh().catch(() => {});
-    categoriesHook.refresh().catch(() => {});
-    payeesHook.refresh().catch(() => {});
-  }, [transactionsHook, accountsHook, categoriesHook, payeesHook]);
+  const handleCreateAccount = useCallback(async (data: { name: string; currency: string; initialBalance?: number }) => {
+    const id = await accountsHook.createAccount(data);
+    if (id) {
+      showToast(`Account "${data.name}" created successfully`, "success");
+    } else {
+      showToast(accountsHook.error || "Failed to create account", "error");
+    }
+    return id;
+  }, [accountsHook, showToast]);
+
+  const handleUpdateAccount = useCallback(async (id: number, data: { name?: string; currency?: string; initialBalance?: number }) => {
+    const success = await accountsHook.updateAccount(id, data);
+    if (success) {
+      showToast("Account updated successfully", "success");
+    } else {
+      showToast(accountsHook.error || "Failed to update account", "error");
+    }
+    return success;
+  }, [accountsHook, showToast]);
+
+  const handleDeleteAccount = useCallback(async (id: number) => {
+    const success = await accountsHook.deleteAccount(id);
+    if (success) {
+      showToast("Account deleted successfully", "success");
+    } else {
+      showToast(accountsHook.error || "Failed to delete account", "error");
+    }
+    return success;
+  }, [accountsHook, showToast]);
+
+  const handleCreateCategory = useCallback(async (data: { name: string; type: CategoryType; parentId?: number | null }) => {
+    const id = await categoriesHook.createCategory(data);
+    if (id) {
+      showToast(`Category "${data.name}" created successfully`, "success");
+    } else {
+      showToast(categoriesHook.error || "Failed to create category", "error");
+    }
+    return id;
+  }, [categoriesHook, showToast]);
+
+  const handleUpdateCategory = useCallback(async (id: number, data: { name?: string; type?: CategoryType; parentId?: number | null }) => {
+    const success = await categoriesHook.updateCategory(id, data);
+    if (success) {
+      showToast("Category updated successfully", "success");
+    } else {
+      showToast(categoriesHook.error || "Failed to update category", "error");
+    }
+    return success;
+  }, [categoriesHook, showToast]);
+
+  const handleDeleteCategory = useCallback(async (id: number) => {
+    const success = await categoriesHook.deleteCategory(id);
+    if (success) {
+      showToast("Category deleted successfully", "success");
+    } else {
+      showToast(categoriesHook.error || "Failed to delete category", "error");
+    }
+    return success;
+  }, [categoriesHook, showToast]);
+
+  const handleCreatePayee = useCallback(async (data: { name: string; categoryId?: number | null }) => {
+    const id = await payeesHook.createPayee(data);
+    if (id) {
+      showToast(`Payee "${data.name}" created successfully`, "success");
+    } else {
+      showToast(payeesHook.error || "Failed to create payee", "error");
+    }
+    return id;
+  }, [payeesHook, showToast]);
+
+  const handleUpdatePayee = useCallback(async (id: number, data: { name?: string; categoryId?: number | null }) => {
+    const success = await payeesHook.updatePayee(id, data);
+    if (success) {
+      showToast("Payee updated successfully", "success");
+    } else {
+      showToast(payeesHook.error || "Failed to update payee", "error");
+    }
+    return success;
+  }, [payeesHook, showToast]);
+
+  const handleDeletePayee = useCallback(async (id: number) => {
+    const success = await payeesHook.deletePayee(id);
+    if (success) {
+      showToast("Payee deleted successfully", "success");
+    } else {
+      showToast(payeesHook.error || "Failed to delete payee", "error");
+    }
+    return success;
+  }, [payeesHook, showToast]);
+
+  const handleRefreshTransactions = useCallback(async () => {
+    await Promise.all([
+      transactionsHook.refresh(),
+      accountsHook.refresh(),
+      categoriesHook.refresh(),
+      payeesHook.refresh(),
+      exportLogHook.refresh(),
+    ]).catch(() => {});
+  }, [transactionsHook, accountsHook, categoriesHook, payeesHook, exportLogHook]);
 
   // Refresh effect removed (handled by useDataBootstrap)
 
@@ -676,7 +811,7 @@ const App: React.FC = () => {
               Anonymize
             </span>
             <button
-              onClick={() => setIsAnonymized(!isAnonymized)}
+              onClick={toggleAnonymize}
               className={`w-11 h-6 rounded-full transition-all relative flex items-center shadow-inner ${
                 isAnonymized ? "bg-indigo-600" : "bg-slate-800"
               }`}
@@ -932,7 +1067,7 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("changelog")}
               className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-400 transition-colors text-left"
             >
-              Version 1.0.1
+              Version 1.0.3
             </button>
             <a
               href="https://github.com/MarynarzSwiata/HomeBank-Bridge"
@@ -997,6 +1132,8 @@ const App: React.FC = () => {
           </button>
         )}
 
+
+
         <header className="md:hidden flex justify-between items-center p-6 border-b border-slate-900 bg-slate-900/80 backdrop-blur-2xl sticky top-0 z-[100]">
           <div className="flex items-center gap-3">
             <AnimatedLogo />
@@ -1008,7 +1145,7 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab("changelog")}
                 className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-white transition-colors animate-pulse"
               >
-                Version 1.0.1
+                Version 1.0.3
               </button>
             </div>
           </div>
@@ -1046,14 +1183,133 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-12">
+                <div className="relative pl-12 border-l-2 border-indigo-500/30">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
+                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-2xl font-black text-white uppercase italic">
+                        Version 1.0.3
+                      </h3>
+                      <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-600/10 px-3 py-1 rounded-full">
+                        UX & Persistence
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                      Duplication features, notifications, and persistent settings.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Transaction Duplication:
+                          </strong>{" "}
+                          Instantly clone records using the new duplicate button in ledger actions.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Multi-Entry Mode:
+                          </strong>{" "}
+                          New "Finalize & Repeat" button keeps form data populated for rapid sequential logging.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Toast Notifications:
+                          </strong>{" "}
+                          Visual feedback for every data change, including success confirmations and detailed error reporting.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Persistent State:
+                          </strong>{" "}
+                          Global settings (Privacy Mode, Date Format) are now saved to the backend, surviving refreshes and re-logins.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Validation Fix:
+                          </strong>{" "}
+                          Solved a major engine flaw that caused the app to crash during category creation due to strict parent-child validation.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Export Tracking:
+                          </strong>{" "}
+                          Visual indicators for transactions already included in a manifest log.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
                 <div className="relative pl-12 border-l-2 border-emerald-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/40"></div>
                   <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
                       <h3 className="text-2xl font-black text-white uppercase italic">
-                        Version 1.0.1
+                        Version 1.0.2
                       </h3>
                       <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-600/10 px-3 py-1 rounded-full">
+                        Security & Stability
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                      Hardened registration enforcement and resolved IDE configuration issues.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Registration Shield:
+                          </strong>{" "}
+                          Strict backend enforcement of registration settings to prevent unauthorized account creation via API.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            TypeScript Guard:
+                          </strong>{" "}
+                          Resolved project-wide type definition errors for Node and Vite, ensuring a stable development environment.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-emerald-400 font-black">★</span>
+                        <span>
+                          <strong className="text-white">
+                            Dependency Sync:
+                          </strong>{" "}
+                          Fixed missing package states in both root and backend ecosystems.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="relative pl-12 border-l-2 border-slate-800/50">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-slate-800 shadow-lg shadow-slate-800/40"></div>
+                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-2xl font-black text-white uppercase italic">
+                        Version 1.0.1
+                      </h3>
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-800/40 px-3 py-1 rounded-full">
                         Performance & Stats Update
                       </span>
                     </div>
@@ -1063,7 +1319,7 @@ const App: React.FC = () => {
                     </p>
                     <ul className="space-y-4 text-sm text-slate-300">
                       <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
+                        <span className="text-slate-500 font-black">★</span>
                         <span>
                           <strong className="text-white">
                             Taxonomy Balances:
@@ -1073,7 +1329,7 @@ const App: React.FC = () => {
                         </span>
                       </li>
                       <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
+                        <span className="text-slate-500 font-black">★</span>
                         <span>
                           <strong className="text-white">
                             Import Engine XL:
@@ -1081,25 +1337,6 @@ const App: React.FC = () => {
                           Fixed 500 errors and payload limits; optimized
                           duplicate detection with batch processing for massive
                           CSV files.
-                        </span>
-                      </li>
-                      <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
-                        <span>
-                          <strong className="text-white">
-                            Coolify Optimization:
-                          </strong>{" "}
-                          Container health checks integrated into Docker for
-                          reliable zero-downtime deployments.
-                        </span>
-                      </li>
-                      <li className="flex gap-4">
-                        <span className="text-emerald-400 font-black">★</span>
-                        <span>
-                          <strong className="text-white">Smart Refresh:</strong>{" "}
-                          Enhanced data synchronization between views; accounts,
-                          categories, and entities now update instantly after
-                          any change.
                         </span>
                       </li>
                     </ul>
@@ -1470,16 +1707,15 @@ const App: React.FC = () => {
                     onDeleteTransaction={handleDeleteTransaction}
                     onRefresh={handleRefreshTransactions}
                     onClearError={() => {}} // Error cleared automatically on actions
-                    onToggleAnonymize={() => setIsAnonymized(!isAnonymized)}
+                    onToggleAnonymize={toggleAnonymize}
                     onCategoryCreate={async (name, parentId) => {
-                      const id = await categoriesHook.createCategory({
+                      return handleCreateCategory({
                         name,
                         type: "-",
                         parentId,
                       });
-                      return id;
                     }}
-                    onExportLogged={exportLogHook.refresh}
+                    onExportLogged={handleRefreshTransactions}
                   />
 
                   {/* Import Button (Temporary location until ImportView is refactored) */}
@@ -1491,9 +1727,9 @@ const App: React.FC = () => {
           {activeTab === "accounts" && (
             <AccountsView
               accounts={accountsHook.accounts}
-              createAccount={accountsHook.createAccount}
-              updateAccount={accountsHook.updateAccount}
-              deleteAccount={accountsHook.deleteAccount}
+              createAccount={handleCreateAccount}
+              updateAccount={handleUpdateAccount}
+              deleteAccount={handleDeleteAccount}
               isSaving={accountsHook.isSaving}
               error={accountsHook.error}
               isAnonymized={isAnonymized}
@@ -1501,21 +1737,21 @@ const App: React.FC = () => {
               currencies={availableCurrencies}
               dateFormat={dateFormat}
               decimalSeparator={decimalSeparator}
-              onExportLogged={exportLogHook.refresh}
-              onToggleAnonymize={() => setIsAnonymized(!isAnonymized)}
+              onExportLogged={handleRefreshTransactions}
+              onToggleAnonymize={toggleAnonymize}
             />
           )}
 
           {activeTab === "categories" && (
             <CategoriesView
               categories={categoriesHook.categories}
-              createCategory={categoriesHook.createCategory}
-              updateCategory={categoriesHook.updateCategory}
-              deleteCategory={categoriesHook.deleteCategory}
+              createCategory={handleCreateCategory}
+              updateCategory={handleUpdateCategory}
+              deleteCategory={handleDeleteCategory}
               isSaving={categoriesHook.isSaving}
               error={categoriesHook.error}
               refresh={categoriesHook.refresh}
-              onExportLogged={exportLogHook.refresh}
+              onExportLogged={handleRefreshTransactions}
             />
           )}
 
@@ -1523,15 +1759,15 @@ const App: React.FC = () => {
             <PayeesView
               payees={payeesHook.payees}
               categories={categoriesHook.categories}
-              createPayee={payeesHook.createPayee}
-              updatePayee={payeesHook.updatePayee}
-              deletePayee={payeesHook.deletePayee}
+              createPayee={handleCreatePayee}
+              updatePayee={handleUpdatePayee}
+              deletePayee={handleDeletePayee}
               isSaving={payeesHook.isSaving}
               error={payeesHook.error}
               onRefresh={refreshAll}
               isAnonymized={isAnonymized}
-              onToggleAnonymize={() => setIsAnonymized(!isAnonymized)}
-              onExportLogged={exportLogHook.refresh}
+              onToggleAnonymize={toggleAnonymize}
+              onExportLogged={handleRefreshTransactions}
             />
           )}
 
@@ -1657,7 +1893,7 @@ const App: React.FC = () => {
                         label="CSV Date Format"
                         placeholder="Select Date Format"
                         value={dateFormat}
-                        onChange={setDateFormat}
+                        onChange={updateDateFormat}
                         options={DATE_FORMATS.map((fmt) => ({
                           id: fmt.id,
                           name: fmt.name,
@@ -1683,6 +1919,32 @@ const App: React.FC = () => {
                         Example Amount:{" "}
                         {(1234.56).toFixed(2).replace(".", decimalSeparator)}
                       </p>
+
+                      <div className="flex justify-between items-center py-4 px-5 bg-slate-800/50 rounded-2xl border border-slate-700/50">
+                        <div className="space-y-1">
+                          <span className="text-xs font-black text-white uppercase">
+                            Privacy Mode (Anonymize)
+                          </span>
+                          <p className="text-[10px] text-slate-500 font-medium">
+                            {isAnonymized
+                              ? "Hide sensitive financial values"
+                              : "Show all financial values"}
+                          </p>
+                        </div>
+                        <button
+                          onClick={toggleAnonymize}
+                          disabled={isLoadingSettings}
+                          className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
+                            isAnonymized ? "bg-indigo-600" : "bg-slate-700"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg transition-all duration-300 ${
+                              isAnonymized ? "left-7" : "left-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

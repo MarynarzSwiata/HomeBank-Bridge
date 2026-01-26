@@ -93,6 +93,7 @@ export function TransactionsView({
   // Form state
   const [isFormExpanded, setIsFormExpanded] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [duplicatingTransaction, setDuplicatingTransaction] = useState<Transaction | null>(null);
   
   // Import state
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -249,7 +250,15 @@ export function TransactionsView({
 
   // Edit handler
   const startEditing = useCallback((t: Transaction) => {
+    setDuplicatingTransaction(null);
     setEditingTransaction(t);
+    setIsFormExpanded(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const startDuplicating = useCallback((t: Transaction) => {
+    setEditingTransaction(null);
+    setDuplicatingTransaction(t);
     setIsFormExpanded(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -279,8 +288,8 @@ export function TransactionsView({
     });
   }, [selectedIds.size]);
 
-  // Build initial form values for editing
-  const getEditFormValues = useCallback((t: Transaction): Partial<TransactionFormValues> => {
+  // Build initial form values for editing or duplicating
+  const getFormValues = useCallback((t: Transaction, isDuplicate = false): Partial<TransactionFormValues> => {
     let entryType: 'expense' | 'income' | 'transfer' = (t.amount || 0) < 0 ? 'expense' : 'income';
     let targetAccId = '';
     let targetAmountVal = '';
@@ -329,7 +338,7 @@ export function TransactionsView({
       paymentType: String(t.payment_type),
       date: isoDate,
       memo: t.memo || '',
-      editingId: t.id,
+      editingId: isDuplicate ? null : t.id,
     };
   }, [transactions]);
 
@@ -337,12 +346,13 @@ export function TransactionsView({
   const handleCancel = useCallback(() => {
     setIsFormExpanded(false);
     setEditingTransaction(null);
+    setDuplicatingTransaction(null);
   }, []);
 
   // Save handler
-  const handleSave = useCallback(async (data: TransactionSaveData): Promise<boolean> => {
+  const handleSave = useCallback(async (data: TransactionSaveData, keepOpen: boolean = false): Promise<boolean> => {
     const success = await onSaveTransaction(data);
-    if (success) {
+    if (success && !keepOpen) {
       handleCancel();
     }
     return success;
@@ -412,11 +422,11 @@ export function TransactionsView({
           subtitle={editingTransaction ? 'Modifying existing entry' : 'Manage your money movement'}
           isExpanded={isFormExpanded || !!editingTransaction}
           onToggle={() => {
-            if (editingTransaction) handleCancel();
+            if (editingTransaction || duplicatingTransaction) handleCancel();
             else setIsFormExpanded(!isFormExpanded);
           }}
           expandLabel="Add Transaction"
-          collapseLabel={editingTransaction ? "Cancel Edit" : "Close"}
+          collapseLabel={editingTransaction || duplicatingTransaction ? "Cancel" : "Close"}
           actions={
             <div className="flex flex-wrap gap-2">
               {selectedIds.size > 0 && (
@@ -455,7 +465,7 @@ export function TransactionsView({
                         const groups = result as Record<number, { name: string; csv: string; count: number }>;
                         const dateStr = new Date().toISOString().split('T')[0];
                         
-                        for (const [, data] of Object.entries(groups)) {
+                        for (const [accId, data] of Object.entries(groups)) {
                             const safeName = data.name.replace(/[/\\?%*:|"<>]/g, '-');
                             const filename = `${safeName}-${dateStr}.csv`;
                             
@@ -473,12 +483,16 @@ export function TransactionsView({
                             await exportLogService.createLog({
                                 filename,
                                 count: data.count,
-                                csv_content: data.csv
+                                csv_content: data.csv,
+                                transactionIds: selectedItems
+                                    .filter(t => t.account_id === Number(accId))
+                                    .map(t => t.id)
                             }).catch(err => console.error('Failed to log grouped export', err));
                         }
                       }
                       
                       if (onExportLogged) await onExportLogged();
+                      setSelectedIds(new Set());
                     } catch (err) {
                       console.error('Export failed', err);
                     }
@@ -501,12 +515,18 @@ export function TransactionsView({
           className={editingTransaction ? 'border-amber-500/50 bg-amber-950/10' : ''}
         />
 
-        {(isFormExpanded || editingTransaction) && (
+        {(isFormExpanded || editingTransaction || duplicatingTransaction) && (
           <div className="animate-in slide-in-from-top-4 duration-500">
             <TransactionForm
-              key={editingTransaction?.id || 'new'}
+              key={editingTransaction ? `edit-${editingTransaction.id}` : duplicatingTransaction ? `dup-${duplicatingTransaction.id}` : 'new'}
               mode={editingTransaction ? 'edit' : 'create'}
-              initialValues={editingTransaction ? getEditFormValues(editingTransaction) : undefined}
+              initialValues={
+                editingTransaction 
+                  ? getFormValues(editingTransaction, false) 
+                  : duplicatingTransaction 
+                    ? getFormValues(duplicatingTransaction, true) 
+                    : undefined
+              }
               accounts={accounts}
               categories={categories}
               payees={payees}
@@ -719,10 +739,10 @@ export function TransactionsView({
             />
           </div>
           <SortableHeader field="date" label="Date" colSpan="col-span-2" />
-          <SortableHeader field="payee" label="Entity / Payee" colSpan="col-span-3" />
+          <SortableHeader field="payee" label="Entity / Payee" colSpan="col-span-2" />
           <SortableHeader field="category" label="Category" colSpan="col-span-2" />
           <SortableHeader field="amount" label="Amount" colSpan="col-span-2 text-right justify-end" />
-          <div className="col-span-2 text-right uppercase tracking-[0.2em] font-black py-1">Actions</div>
+          <div className="col-span-3 text-right uppercase tracking-[0.2em] font-black py-1 pr-6">Actions</div>
         </div>
 
         {/* Rows */}
@@ -756,11 +776,13 @@ export function TransactionsView({
                     <div className="text-sm font-black text-slate-100 uppercase tracking-tighter">
                       {formatDateForDisplay(t.date, dateFormat)}
                     </div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-slate-600 mt-1">Manifest Logged</div>
+                    <div className={`text-[9px] font-black uppercase tracking-widest mt-1 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
+                      {t.exported ? 'Transaction Exported' : 'Manifest Logged'}
+                    </div>
                   </div>
 
                   {/* Payee */}
-                  <div className="col-span-3 truncate">
+                  <div className="col-span-2 truncate">
                     <div className="text-sm font-black text-slate-100 uppercase tracking-tight truncate">
                       {t.payee || 'Anonymous Entity'}
                     </div>
@@ -783,7 +805,7 @@ export function TransactionsView({
                   </div>
 
                   {/* Amount */}
-                  <div className="col-span-2 text-right">
+                  <div className="col-span-2 text-right pr-4">
                     <div className={`text-base font-black tracking-tighter ${
                       isExpense ? 'text-rose-400' : isIncome ? 'text-emerald-400' : 'text-indigo-400'
                     }`}>
@@ -796,13 +818,20 @@ export function TransactionsView({
                   </div>
 
                   {/* Actions */}
-                  <div className="col-span-2 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                  <div className="col-span-3 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pr-2">
                     <button
                       onClick={() => startEditing(t)}
                       className="p-3 rounded-2xl bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-lg hover:shadow-indigo-600/20 transition-all"
                       title="Edit"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    </button>
+                    <button
+                      onClick={() => startDuplicating(t)}
+                      className="p-3 rounded-2xl bg-slate-800 text-slate-400 hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-emerald-600/20 transition-all"
+                      title="Duplicate"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                     </button>
                     <button
                       onClick={() => requestDelete(t)}
@@ -824,8 +853,13 @@ export function TransactionsView({
                         onChange={() => toggleSelection(t.id)}
                         className="w-6 h-6 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 focus:ring-offset-slate-900 transition-all cursor-pointer"
                       />
-                      <div className="text-xs font-black text-indigo-400 uppercase tracking-tighter">
-                        {formatDateForDisplay(t.date, dateFormat)}
+                      <div>
+                        <div className="text-xs font-black text-indigo-400 uppercase tracking-tighter">
+                          {formatDateForDisplay(t.date, dateFormat)}
+                        </div>
+                        <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
+                          {t.exported ? 'Transaction Exported' : 'Manifest Logged'}
+                        </div>
                       </div>
                     </div>
                     <div className={`text-lg font-black tracking-tighter ${
@@ -866,6 +900,13 @@ export function TransactionsView({
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       Edit
+                    </button>
+                    <button
+                      onClick={() => startDuplicating(t)}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                      Duplicate
                     </button>
                     <button
                       onClick={() => requestDelete(t)}

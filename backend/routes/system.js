@@ -160,7 +160,7 @@ router.put('/settings/:key', async (req, res, next) => {
     const { value } = req.body;
     
     // Whitelist of allowed settings
-    const allowedSettings = ['allow_registration'];
+    const allowedSettings = ['allow_registration', 'privacy_mode', 'date_format'];
     if (!allowedSettings.includes(key)) {
       return res.status(400).json({ error: 'Invalid setting key' });
     }

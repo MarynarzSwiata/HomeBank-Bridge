@@ -21,7 +21,7 @@ router.get('/', async (req, res, next) => {
 // POST /api/export-log - Create a new log entry
 router.post('/', async (req, res, next) => {
   try {
-    const { filename, count, csv_content } = req.body;
+    const { filename, count, csv_content, transactionIds } = req.body;
 
     // Basic validation
     if (!filename || count === undefined || csv_content === undefined) {
@@ -33,13 +33,33 @@ router.post('/', async (req, res, next) => {
       return res.status(413).json({ error: 'Payload too large (max 10MB)' });
     }
 
-    const { lastID } = await db.run(
-      'INSERT INTO export_log (filename, count, csv_content) VALUES (?, ?, ?)',
-      filename,
-      count,
-      csv_content
-    );
-    res.json({ id: lastID });
+    // Start transaction to ensure both log entry and transaction updates succeed
+    await db.exec('BEGIN TRANSACTION');
+
+    try {
+      const { lastID } = await db.run(
+        'INSERT INTO export_log (filename, count, csv_content) VALUES (?, ?, ?)',
+        filename,
+        count,
+        csv_content
+      );
+
+      // If transaction IDs are provided, mark them as exported
+      if (Array.isArray(transactionIds) && transactionIds.length > 0) {
+        const placeholders = transactionIds.map(() => '?').join(',');
+        await db.run(
+          `UPDATE transactions SET exported = 1, export_log_id = ? WHERE id IN (${placeholders})`,
+          lastID,
+          ...transactionIds
+        );
+      }
+
+      await db.exec('COMMIT');
+      res.json({ id: lastID });
+    } catch (err) {
+      await db.exec('ROLLBACK');
+      throw err;
+    }
   } catch (err) {
     next(err);
   }
