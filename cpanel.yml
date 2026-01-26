@@ -1,0 +1,22 @@
+---
+deployment:
+  tasks:
+    # 1. Ustawienie folderu docelowego (Twoja subdomena)
+    - export DEPLOYPATH=/home/dbmaaeiy/bank.qqs.es
+    
+    # 2. Instalacja zależności i budowanie Frontendu (React)
+    - /usr/bin/npm install
+    - /usr/bin/npm run build
+    
+    # 3. Kopiowanie zbudowanego Frontendu (folder dist) do katalogu subdomeny
+    - /bin/cp -R dist/* $DEPLOYPATH
+    
+    # 4. Przygotowanie folderu dla Backendu i kopiowanie plików
+    - /bin/mkdir -p $DEPLOYPATH/backend
+    - /bin/cp -R backend/* $DEPLOYPATH/backend
+    
+    # 5. Instalacja zależności dla Backendu
+    - cd $DEPLOYPATH/backend && /usr/bin/npm install
+    
+    # 6. Opcjonalnie: Uruchomienie migracji bazy danych (jeśli potrzebne)
+    # - cd $DEPLOYPATH/backend && /usr/bin/npm run migrate
