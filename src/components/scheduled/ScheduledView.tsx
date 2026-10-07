@@ -58,7 +58,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
 
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Templates &amp; scheduled</h2>
+          <h2 className="text-[15px] font-semibold text-slate-100">Templates &amp; scheduled</h2>
           <p className="text-[10px] font-bold text-slate-500 mt-1">
             Scheduled: recurring bills and income, posted when due. Templates: pick one in the entry form to fill it in.
           </p>
@@ -102,7 +102,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
         { title: `Templates (${templates.length})`, items: templates, empty: 'No templates yet. A template fills in the entry form for repeated purchases.' },
       ].map(sectionDef => (
       <section key={sectionDef.title} className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem]">
-        <h3 className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">{sectionDef.title}</h3>
+        <h3 className="px-2 pb-2 text-[13px] font-medium text-slate-500">{sectionDef.title}</h3>
         {sectionDef.items.length === 0 ? (
           <p className="text-sm text-slate-500 py-8 text-center">{sectionDef.empty}</p>
         ) : (
@@ -116,7 +116,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
                   <div className="md:w-40 shrink-0">
                     <div className="text-sm font-black text-slate-100 tabular-nums">{formatDateForDisplay(item.next_date, dateFormat)}</div>
                     {item.finished ? (
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ended</span>
+                      <span className="text-[13px] font-medium text-slate-500">Ended</span>
                     ) : due ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -279,11 +279,11 @@ const ScheduledForm: React.FC<{
   };
 
   const field = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
-  const label = 'block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1';
+  const label = 'block text-[13px] font-medium text-slate-500 mb-1';
 
   return (
     <section className="p-6 md:p-8 bg-slate-900 border border-indigo-500/30 rounded-[2rem] space-y-5">
-      <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">
+      <h3 className="text-[15px] font-semibold text-slate-100">
         {item ? 'Edit' : 'New'} {isScheduled ? 'scheduled transaction' : 'template'}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

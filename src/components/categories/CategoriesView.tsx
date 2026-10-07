@@ -432,7 +432,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
       {/* Filters & Stats */}
       <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 flex flex-col lg:flex-row gap-4 items-stretch lg:items-end">
         <div className="flex-1 space-y-2">
-          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-2">
+          <label className="text-[13px] font-medium text-slate-500 ml-2">
             Search Taxonomy
           </label>
           <div className="relative">
@@ -463,7 +463,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl px-8 h-[60px] flex items-center justify-between sm:justify-start gap-4 flex-1">
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <span className="text-[13px] font-medium text-slate-500">
                 Total
               </span>
               <span className="text-sm font-black text-indigo-400">
@@ -472,7 +472,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             </div>
             <div className="w-[1px] h-8 bg-slate-800"></div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <span className="text-[13px] font-medium text-slate-500">
                 Selected
               </span>
               <span className="text-sm font-black text-slate-100">

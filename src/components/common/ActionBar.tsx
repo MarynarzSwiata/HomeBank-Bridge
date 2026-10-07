@@ -11,6 +11,10 @@ interface ActionBarProps {
   className?: string;
 }
 
+/**
+ * Page header: title + subtitle on the left, secondary actions and the primary
+ * "add" button on the right (wraps on narrow screens).
+ */
 export const ActionBar: React.FC<ActionBarProps> = ({
   title,
   subtitle,
@@ -22,36 +26,31 @@ export const ActionBar: React.FC<ActionBarProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`bg-slate-900 border border-slate-800 rounded-3xl transition-all duration-300 ${className}`}>
-      <div className="flex flex-col md:flex-row md:divide-x md:divide-slate-800">
-        <div className="hidden md:flex flex-1 px-6 py-4 flex-col justify-center">
-          {title && <h2 className="text-xs font-black uppercase tracking-widest text-slate-500">{title}</h2>}
-          {subtitle && <p className="text-[10px] font-bold text-slate-600 mt-1 uppercase">{subtitle}</p>}
-        </div>
-
-        {onToggle && (
-          <button
-            onClick={onToggle}
-            className="px-6 py-4 flex items-center justify-between md:justify-start gap-3 hover:bg-white/5 transition-colors group"
-            title={isExpanded ? collapseLabel : expandLabel}
-          >
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-indigo-400 transition-colors">
-              {isExpanded ? collapseLabel : expandLabel}
-            </span>
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center bg-slate-800 transition-transform duration-500 ${isExpanded ? 'rotate-45 bg-rose-500/10' : 'group-hover:bg-indigo-500 hover:text-white'}`}>
-              <svg className={`w-4 h-4 transition-colors ${isExpanded ? 'text-rose-500' : 'text-slate-100'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-          </button>
-        )}
-
-        {actions && (
-          <div className="flex items-center justify-center md:justify-end px-4 py-3 md:py-0 border-t border-slate-800 md:border-t-0">
-            {actions}
-          </div>
-        )}
+    <header className={`flex flex-wrap items-center gap-3 ${className}`}>
+      <div className="flex-1 min-w-[200px]">
+        {title && <h1 className="text-2xl font-semibold tracking-tight text-slate-100">{title}</h1>}
+        {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
       </div>
-    </div>
+
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+
+      {onToggle && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={!!isExpanded}
+          className={`min-h-[42px] px-4 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors ${
+            isExpanded
+              ? 'bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-950'
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+          }`}
+        >
+          <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-45' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M12 5v14M5 12h14" />
+          </svg>
+          {isExpanded ? collapseLabel : expandLabel}
+        </button>
+      )}
+    </header>
   );
 };

@@ -323,7 +323,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                   type !== "transactions" ? "md:col-span-2" : ""
                 }`}
               >
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <label className="text-[13px] font-medium text-slate-500">
                   Duplicate Check
                 </label>
                 {isCheckingDuplicates ? (

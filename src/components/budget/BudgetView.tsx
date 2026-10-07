@@ -180,7 +180,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
           >›</button>
         </div>
         {currencies.length > 1 && (
-          <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <label className="flex items-center gap-2 text-[13px] font-medium text-slate-500">
             Currency
             <select
               value={currency}
@@ -191,7 +191,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
             </select>
           </label>
         )}
-        <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-pointer select-none md:ml-auto">
+        <label className="flex items-center gap-2 text-[13px] font-medium text-slate-500 cursor-pointer select-none md:ml-auto">
           <input
             type="checkbox"
             checked={onlyBudgeted}
@@ -216,7 +216,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
           <p className="text-sm text-slate-500 py-8 text-center">Create categories first (Categories tab), then set a budget for them here.</p>
         ) : (
           <div>
-            <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_1fr_1fr_1fr_minmax(0,1.2fr)_auto] gap-3 px-3 pb-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_1fr_1fr_1fr_minmax(0,1.2fr)_auto] gap-3 px-3 pb-3 text-[13px] font-medium text-slate-500">
               <div>Category</div>
               <div className="text-right">Budget</div>
               <div className="text-right">Actual</div>
@@ -265,7 +265,7 @@ const TotalTile: React.FC<{
   const over = kind === 'expense' && budget > 0 && actual > budget;
   return (
     <div className="p-6 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-3">
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</div>
+      <div className="text-[13px] font-medium text-slate-500">{label}</div>
       <div className="text-2xl font-black text-slate-100 tabular-nums">
         {fmt(actual)} <span className="text-sm text-slate-500">/ {fmt(budget)} {currency}</span>
       </div>
@@ -310,7 +310,7 @@ const BudgetRowView: React.FC<{
       <div className={`min-w-0 ${row.isChild ? 'pl-5' : ''}`}>
         <div className={`truncate ${row.isChild ? 'text-sm text-slate-300' : 'text-sm font-black text-slate-100'}`}>
           {row.category.name}
-          {isIncome && <span className="ml-2 text-[9px] font-black uppercase tracking-widest text-slate-500">income</span>}
+          {isIncome && <span className="ml-2 text-[13px] font-medium text-slate-500">income</span>}
         </div>
         {!row.isChild && row.hasChildBudget && (
           <div className="text-[10px] text-slate-500">incl. subcategories{row.ownBudget > 0 ? ` · own ${fmt(row.ownBudget)}` : ''}</div>
@@ -397,7 +397,7 @@ const BudgetEditor: React.FC<{
       </div>
       {mode === 'same' && (
         <label className="block max-w-xs">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Amount per month</span>
+          <span className="text-[13px] font-medium text-slate-500">Amount per month</span>
           <input inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className={`${inputClass} mt-1`} />
         </label>
       )}
@@ -405,7 +405,7 @@ const BudgetEditor: React.FC<{
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
           {MONTH_NAMES.map((name, i) => (
             <label key={name} className="block">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{name}</span>
+              <span className="text-[13px] font-medium text-slate-500">{name}</span>
               <input
                 inputMode="decimal"
                 value={months[i]}

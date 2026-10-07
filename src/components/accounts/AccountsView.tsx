@@ -242,7 +242,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                                         {acc.name} <span className="text-indigo-400/60 ml-1 text-[10px]">({acc.currency})</span>
                                     </div>
                                     {!isInSummary(acc) && (
-                                        <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">{acc.closed ? 'Closed' : 'Hidden from summary'}</div>
+                                        <div className="text-[13px] font-medium text-slate-500 mt-1">{acc.closed ? 'Closed' : 'Hidden from summary'}</div>
                                     )}
                                 </div>
                                 <div className={`col-span-2 text-right text-sm font-bold tracking-tight ${tone(acc.reconciled_balance)}`}>
@@ -306,7 +306,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                                 <div className="flex justify-between items-end bg-slate-950/30 rounded-2xl p-4 border border-slate-800/50">
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Future balance</span>
+                                        <span className="text-[13px] font-medium text-slate-500">Future balance</span>
                                         <div className={`text-xl font-black tracking-tighter ${tone(acc.current_balance)}`}>
                                             {fmt(acc.current_balance)}
                                             <span className="ml-2 text-[10px] text-slate-600 uppercase font-black">{acc.currency}</span>
@@ -317,7 +317,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                                     </div>
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); handleExportAccount(acc.id); }} 
-                                        className="px-4 h-10 rounded-xl bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-700 active:scale-95 transition-all"
+                                        className="px-4 h-10 rounded-xl bg-slate-800 text-[13px] font-medium text-slate-500 border border-slate-700 active:scale-95 transition-all"
                                     >
                                         Export
                                     </button>

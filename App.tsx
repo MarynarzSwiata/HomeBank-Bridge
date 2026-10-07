@@ -2251,7 +2251,7 @@ const App: React.FC = () => {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   />
                   <div className="bg-slate-950/50 border-2 border-dashed border-slate-700 group-hover:border-indigo-500 transition-colors p-6 rounded-2xl text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    <p className="text-[13px] font-medium text-slate-500">
                       {restoreFile
                         ? restoreFile.name
                         : "Choose .db file to restore"}

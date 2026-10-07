@@ -389,7 +389,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
       {/* Global Filter Bar */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
         <div className="relative group">
-          <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">
+          <label className="block text-[13px] font-medium text-slate-500 mb-2 px-2">
             Refine Dictionary
           </label>
           <div className="relative">

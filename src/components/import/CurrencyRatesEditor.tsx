@@ -60,7 +60,7 @@ export const CurrencyRatesEditor: React.FC<CurrencyRatesEditorProps> = ({ rates,
       ) : (
         <>
           <label className="block max-w-xs">
-            <span className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Base currency</span>
+            <span className="block text-[13px] font-medium text-slate-500 mb-1">Base currency</span>
             <select value={base} onChange={e => setBase(e.target.value)} className={field}>
               {currencies.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -69,7 +69,7 @@ export const CurrencyRatesEditor: React.FC<CurrencyRatesEditorProps> = ({ rates,
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {others.map(code => (
                 <label key={code} className="block">
-                  <span className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">1 {base} = ? {code}</span>
+                  <span className="block text-[13px] font-medium text-slate-500 mb-1">1 {base} = ? {code}</span>
                   <input
                     inputMode="decimal"
                     value={values[code] ?? ''}

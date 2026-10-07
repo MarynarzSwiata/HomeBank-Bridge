@@ -99,7 +99,7 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
     : null;
 
   const selectClass = 'bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
-  const labelClass = 'flex flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500';
+  const labelClass = 'flex flex-col gap-1 text-[13px] font-medium text-slate-500';
 
   return (
     <div className="space-y-8">
@@ -136,7 +136,7 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
           </div>
           <section className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-3">
             <header>
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">
+              <h2 className="text-[15px] font-semibold text-slate-100">
                 Balance · {selected ? selected.name : 'all summary accounts'}
               </h2>
               <p className="text-[10px] font-bold text-slate-500 mt-1">
@@ -155,7 +155,7 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
 
 const Tile: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="p-5 bg-slate-900 border border-slate-800 rounded-[2rem]">
-    <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</div>
+    <div className="text-[13px] font-medium text-slate-500">{label}</div>
     <div className="mt-2 text-lg font-black text-slate-100 tabular-nums">{value}</div>
   </div>
 );
