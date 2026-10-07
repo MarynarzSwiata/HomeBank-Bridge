@@ -108,6 +108,26 @@ export const systemService = {
     return response.json();
   },
 
+  /** Download all data as a HomeBank .xhb file (admin only) */
+  async exportXhb(): Promise<void> {
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(`${API_BASE}/system/export-xhb`, { credentials: 'include' });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Export failed (${response.status})`);
+    }
+    const blob = await response.blob();
+    const match = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') || '');
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = match?.[1] || 'homebank-bridge.xhb';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
   /** Preview or import a HomeBank .xhb file (admin only) */
   async importXhb(file: File, mode: 'preview' | 'import', replace = false): Promise<XhbImportResult> {
     const formData = new FormData();
