@@ -12,6 +12,7 @@ import {
   periodRange,
 } from '../../utils/periodUtils';
 import { sanitizeCSVField, triggerDownload } from '../../utils/exportUtils';
+import { splitTags } from '../../utils/tagUtils';
 
 /**
  * Statistics report modelled on HomeBank's "Statistics" and "Trend time" reports:
@@ -25,13 +26,14 @@ interface ReportsViewProps {
   isAnonymized: boolean;
 }
 
-type GroupBy = 'category' | 'subcategory' | 'payee' | 'month';
+type GroupBy = 'category' | 'subcategory' | 'payee' | 'tag' | 'month';
 type Flow = 'expense' | 'income';
 
 const GROUPS: { id: GroupBy; name: string }[] = [
   { id: 'category', name: 'Category' },
   { id: 'subcategory', name: 'Subcategory' },
   { id: 'payee', name: 'Payee' },
+  { id: 'tag', name: 'Tag' },
   { id: 'month', name: 'Month' },
 ];
 
@@ -69,6 +71,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ accounts, transactions
       if (accountId && String(t.account_id) !== accountId) continue;
       const value = flow === 'expense' ? -t.amount : t.amount;
       if (value <= 0) continue;
+      total += value;
+      count += 1;
+      // A transaction with several tags counts towards each of them (as in HomeBank)
+      if (groupBy === 'tag') {
+        const tags = splitTags(t.tags);
+        (tags.length ? tags : ['(no tag)']).forEach(tag => totals.set(tag, (totals.get(tag) || 0) + value));
+        continue;
+      }
       const info = t.category_id ? categoryInfo.get(t.category_id) : undefined;
       const key =
         groupBy === 'category' ? info?.top || 'Unassigned'
@@ -76,8 +86,6 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ accounts, transactions
         : groupBy === 'payee' ? t.payee?.trim() || '(no payee)'
         : t.iso.slice(0, 7);
       totals.set(key, (totals.get(key) || 0) + value);
-      total += value;
-      count += 1;
     }
 
     let rows: { key: string; label: string; value: number }[];
@@ -252,6 +260,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ accounts, transactions
               </tr>
             </tfoot>
           </table>
+        )}
+        {groupBy === 'tag' && report.total > 0 && (
+          <p className="text-[10px] font-bold text-slate-500">A transaction with several tags is counted under each tag, so rows can add up to more than the total.</p>
         )}
         {groupBy === 'month' && report.total > 0 && monthsWithData < report.rows.length && (
           <p className="text-[10px] font-bold text-slate-500">Months without any {flow} are shown as 0.</p>

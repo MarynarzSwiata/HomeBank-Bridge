@@ -64,6 +64,7 @@ export interface Transaction {
   memo: string;
   transfer_id?: string;
   status: TransactionStatus;
+  tags: string;
   exported: number;
   export_log_id?: number | null;
 }
@@ -132,4 +133,28 @@ export interface ScheduledInput {
   unit: ScheduleUnit;
   nextDate: string;
   endDate?: string | null;
+}
+
+/** Assignment rule: when payee/memo match, assign category, payment type and tags */
+export interface Rule {
+  id: number;
+  field: 'payee' | 'memo' | 'any';
+  match_type: 'contains' | 'exact';
+  pattern: string;
+  category_id: number | null;
+  payment_type: number | null;
+  tags: string;
+  position: number;
+  category_name?: string | null;
+  parent_category_name?: string | null;
+}
+
+export interface RuleInput {
+  field: Rule['field'];
+  matchType: Rule['match_type'];
+  pattern: string;
+  categoryId?: number | null;
+  paymentType?: number | null;
+  tags?: string;
+  position?: number;
 }

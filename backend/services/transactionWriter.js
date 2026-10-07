@@ -1,4 +1,5 @@
 import db from '../db/index.js';
+import { normalizeTags } from './tags.js';
 
 const badRequest = (message) => {
   const err = new Error(message);
@@ -11,12 +12,13 @@ const badRequest = (message) => {
  * Shared by POST /api/transactions and posting of scheduled transactions.
  *
  * @param data { type, accountId, targetAccountId, amount (positive), date, payee, memo,
- *               categoryId, paymentType, targetAmount, status }
+ *               categoryId, paymentType, targetAmount, status, tags }
  * @param options.useDbTransaction false when the caller already opened BEGIN/COMMIT
  * @returns { id } for single entries, { transferId } for transfers
  */
 export async function createTransaction(data, { useDbTransaction = true } = {}) {
   const { type, accountId, targetAccountId, amount, date, payee, memo, categoryId, paymentType, targetAmount, status = 0 } = data;
+  const tags = normalizeTags(data.tags);
 
   if (type === 'transfer') {
     if (!targetAccountId) {
@@ -38,14 +40,14 @@ export async function createTransaction(data, { useDbTransaction = true } = {}) 
       const transferCategoryId = transferCategoryResult?.id || null;
 
       await db.run(`
-        INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status)
-        VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)
-      `, accountId, date, `Transfer to ${destination?.name || 'Account'}`, -amount, transferCategoryId, uuid, memo || '', status);
+        INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status, tags)
+        VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?, ?)
+      `, accountId, date, `Transfer to ${destination?.name || 'Account'}`, -amount, transferCategoryId, uuid, memo || '', status, tags);
 
       await db.run(`
-        INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status)
-        VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)
-      `, targetAccountId, date, `Transfer from ${source?.name || 'Account'}`, targetAmount || amount, transferCategoryId, uuid, memo || '', status);
+        INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status, tags)
+        VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?, ?)
+      `, targetAccountId, date, `Transfer from ${source?.name || 'Account'}`, targetAmount || amount, transferCategoryId, uuid, memo || '', status, tags);
 
       if (useDbTransaction) await db.exec('COMMIT');
       return { transferId: uuid };
@@ -58,9 +60,9 @@ export async function createTransaction(data, { useDbTransaction = true } = {}) 
   // Single transaction
   const finalAmount = type === 'expense' ? -amount : amount;
   const result = await db.run(`
-    INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, memo, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `, accountId, date, payee || '', finalAmount, categoryId || null, paymentType || 0, memo || '', status);
+    INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, memo, status, tags)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, accountId, date, payee || '', finalAmount, categoryId || null, paymentType || 0, memo || '', status, tags);
 
   // Auto-create/update payee if provided
   if (payee && categoryId) {

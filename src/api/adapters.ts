@@ -52,6 +52,7 @@ export const adaptTransaction = (apiTransaction: ApiTransaction): Transaction =>
   memo: apiTransaction.memo || '',
   transfer_id: apiTransaction.transfer_id,
   status: apiTransaction.status || 0,
+  tags: apiTransaction.tags || '',
   exported: apiTransaction.exported || 0,
   export_log_id: apiTransaction.export_log_id,
 });

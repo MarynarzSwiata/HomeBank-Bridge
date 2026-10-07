@@ -23,6 +23,7 @@ interface CreateTransactionData {
   targetAccountId?: number; // For transfers
   targetAmount?: number; // For mixed-currency transfers
   status?: TransactionStatus;
+  tags?: string;
 }
 
 interface UpdateTransactionData {
@@ -36,6 +37,7 @@ interface UpdateTransactionData {
   targetAccountId?: number;
   targetAmount?: number;
   status?: TransactionStatus;
+  tags?: string;
 }
 
 export interface UseTransactionsResult {
@@ -100,6 +102,7 @@ export function useTransactions(): UseTransactionsResult {
         targetAccountId: data.targetAccountId,
         targetAmount: data.targetAmount,
         status: data.status,
+        tags: data.tags,
       });
       // Refresh with preserved filters
       await refresh().catch(() => {});

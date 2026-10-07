@@ -45,6 +45,7 @@ export interface ApiTransaction {
   memo: string;
   transfer_id?: string;
   status: 0 | 1 | 2;
+  tags?: string;
   exported: number;
   export_log_id?: number | null;
 }
@@ -69,6 +70,7 @@ export interface CreateTransactionRequest {
   targetAccountId?: number; // For transfers
   targetAmount?: number; // For mixed-currency transfers
   status?: 0 | 1 | 2;
+  tags?: string;
 }
 
 export interface CreateAccountRequest {

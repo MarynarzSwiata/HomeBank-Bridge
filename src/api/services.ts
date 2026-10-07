@@ -1,5 +1,5 @@
 import { api, ApiError } from './client';
-import type { BudgetRow, BudgetInput, ScheduledItem, ScheduledInput } from '../types';
+import type { BudgetRow, BudgetInput, ScheduledItem, ScheduledInput, Rule, RuleInput } from '../types';
 import type {
   ApiAccount,
   ApiCategory,
@@ -436,5 +436,23 @@ export const scheduledService = {
   },
   async postDue(until: string): Promise<{ posted: number }> {
     return api.post('/scheduled/post-due', { until });
+  },
+};
+
+export const rulesService = {
+  async getAll(): Promise<Rule[]> {
+    return api.get('/rules');
+  },
+  async create(data: RuleInput): Promise<{ id: number }> {
+    return api.post('/rules', data);
+  },
+  async update(id: number, data: RuleInput): Promise<{ message: string }> {
+    return api.put(`/rules/${id}`, data);
+  },
+  async delete(id: number): Promise<null> {
+    return api.delete(`/rules/${id}`);
+  },
+  async apply(dryRun = false): Promise<{ matched: number; updated: number }> {
+    return api.post('/rules/apply', { dryRun });
   },
 };

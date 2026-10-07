@@ -5,12 +5,13 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { ApiError, accountsService, systemService } from "./src/api";
+import { ApiError, accountsService, systemService, rulesService } from "./src/api";
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import type {
   Account,
   AccountInput,
+  Rule,
   TransactionStatus,
   Category,
   CategoryType,
@@ -32,6 +33,7 @@ import { DashboardView } from "./src/components/dashboard/DashboardView";
 import { BudgetView } from "./src/components/budget/BudgetView";
 import { ReportsView } from "./src/components/reports/ReportsView";
 import { ScheduledView } from "./src/components/scheduled/ScheduledView";
+import { RulesView } from "./src/components/rules/RulesView";
 import { useScheduled } from "./src/hooks/useScheduled";
 import {
   PAYMENT_LEXICON,
@@ -100,6 +102,7 @@ const App: React.FC = () => {
     | "budget"
     | "reports"
     | "scheduled"
+    | "rules"
     | "how_to_use"
     | "transactions"
     | "accounts"
@@ -321,6 +324,7 @@ const App: React.FC = () => {
             paymentType: data.paymentType,
             targetAccountId: data.targetAccountId,
             targetAmount: data.targetAmount,
+            tags: data.tags,
           }
         );
         if (success) {
@@ -346,6 +350,7 @@ const App: React.FC = () => {
           paymentType: data.paymentType,
           targetAccountId: data.targetAccountId,
           targetAmount: data.targetAmount,
+          tags: data.tags,
         });
         if (res) {
           await Promise.all([
@@ -504,6 +509,19 @@ const App: React.FC = () => {
       refreshScheduled();
     }
   }, [auth.isAuthenticated, activeTab, refreshScheduled]);
+
+  // Assignment rules: used by the entry form and managed in the Rules tab
+  const [rules, setRules] = useState<Rule[]>([]);
+  const refreshRules = useCallback(async () => {
+    try {
+      setRules(await rulesService.getAll());
+    } catch (err) {
+      console.error("Failed to load rules:", err);
+    }
+  }, []);
+  useEffect(() => {
+    if (auth.isAuthenticated && activeTab === "transactions") refreshRules();
+  }, [auth.isAuthenticated, activeTab, refreshRules]);
 
   // Refresh effect removed (handled by useDataBootstrap)
 
@@ -1049,6 +1067,7 @@ const App: React.FC = () => {
               label: "Accounts",
             },
             { id: "scheduled", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", label: "Scheduled" },
+            { id: "rules", icon: "M13 10V3L4 14h7v7l9-11h-7z", label: "Rules" },
             { id: "budget", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "Budget" },
             { id: "reports", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", label: "Reports" },
             {
@@ -1493,6 +1512,15 @@ const App: React.FC = () => {
             />
           )}
 
+          {activeTab === "rules" && (
+            <RulesView
+              rules={rules}
+              categories={categoriesHook.categories}
+              onChanged={refreshRules}
+              onTransactionsChanged={handleRefreshTransactions}
+            />
+          )}
+
           {activeTab === "budget" && (
             <BudgetView
               accounts={accountsHook.accounts}
@@ -1799,6 +1827,7 @@ const App: React.FC = () => {
                     }}
                     onExportLogged={handleRefreshTransactions}
                     onSetStatus={handleSetTransactionStatus}
+                    rules={rules}
                   />
 
                   {/* Import Button (Temporary location until ImportView is refactored) */}
@@ -2311,6 +2340,7 @@ const App: React.FC = () => {
             label="Vault"
           />
           <NavItem id="scheduled" icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" label="Planned" />
+          <NavItem id="rules" icon="M13 10V3L4 14h7v7l9-11h-7z" label="Rules" />
           <NavItem id="budget" icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" label="Budget" />
           <NavItem id="reports" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" label="Reports" />
           <NavItem

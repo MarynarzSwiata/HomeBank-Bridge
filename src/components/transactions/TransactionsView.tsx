@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import type { Transaction, Account, Category, Payee, TransactionStatus } from '../../types';
+import type { Transaction, Account, Category, Payee, Rule, TransactionStatus } from '../../types';
+import { splitTags } from '../../utils/tagUtils';
 import { TRANSACTION_STATUS } from '../../constants';
 import { TransactionForm, TransactionSaveData, TransactionFormValues } from './TransactionForm';
 import { transactionsService } from '../../api/services';
@@ -41,6 +42,7 @@ export interface TransactionsViewProps {
   onToggleAnonymize?: () => void;
   onCategoryCreate?: (name: string, parentId?: number) => Promise<number | null>;
   onSetStatus?: (ids: number[], status: TransactionStatus) => Promise<boolean>;
+  rules?: Rule[];
 }
 
 type SortField = 'date' | 'payee' | 'category' | 'amount';
@@ -67,6 +69,7 @@ export function TransactionsView({
   onToggleAnonymize,
   onCategoryCreate,
   onSetStatus,
+  rules,
 }: TransactionsViewProps) {
   // Filter state - use initialAccountFilter if provided
   const [filterAccount, setFilterAccount] = useState(initialAccountFilter);
@@ -76,6 +79,7 @@ export function TransactionsView({
   const [filterDateTo, setFilterDateTo] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterTag, setFilterTag] = useState('');
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(!!initialAccountFilter);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
@@ -187,6 +191,7 @@ export function TransactionsView({
       if (filterDateFrom && tCompDate < filterDateFrom) return false;
       if (filterDateTo && tCompDate > filterDateTo) return false;
 
+      if (filterTag && !splitTags(t.tags).some(tag => tag.toLowerCase() === filterTag.toLowerCase())) return false;
       if (filterStatus === 'uncleared' && t.status !== 0) return false;
       if (filterStatus === 'cleared' && t.status !== 1) return false;
       if (filterStatus === 'reconciled' && t.status !== 2) return false;
@@ -218,7 +223,7 @@ export function TransactionsView({
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [transactions, filterAccount, filterCategory, filterPayee, filterDateFrom, filterDateTo, filterType, filterStatus, sortField, sortOrder]);
+  }, [transactions, filterAccount, filterCategory, filterPayee, filterDateFrom, filterDateTo, filterType, filterStatus, filterTag, sortField, sortOrder]);
 
   // Running balance per transaction (like a HomeBank account register).
   // Only meaningful when a single account is selected; computed over that account's full history.
@@ -250,6 +255,12 @@ export function TransactionsView({
     const ok = await onSetStatus(Array.from(selectedIds), status);
     if (ok) setSelectedIds(new Set());
   }, [onSetStatus, selectedIds]);
+
+  const tagOptions = useMemo(() => {
+    const all = new Map<string, string>();
+    transactions.forEach(t => splitTags(t.tags).forEach(tag => all.set(tag.toLowerCase(), tag)));
+    return Array.from(all.values()).sort((a, b) => a.localeCompare(b)).map(tag => ({ id: tag, name: `#${tag}` }));
+  }, [transactions]);
 
   const statusFilterOptions = [
     { id: 'uncleared', name: 'None (uncleared)' },
@@ -293,6 +304,7 @@ export function TransactionsView({
     setFilterDateTo('');
     setFilterType('');
     setFilterStatus('');
+    setFilterTag('');
     setItemsToShow(25);
     // Notify parent to clear account filter state
     onClearAccountFilter?.();
@@ -389,6 +401,7 @@ export function TransactionsView({
             paymentType: String(expensePart.payment_type),
             date: isoDate,
             memo: expensePart.memo || '',
+            tags: expensePart.tags || '',
             editingId: expensePart.id,
           };
         }
@@ -406,6 +419,7 @@ export function TransactionsView({
       paymentType: String(t.payment_type),
       date: isoDate,
       memo: t.memo || '',
+      tags: t.tags || '',
       editingId: isDuplicate ? null : t.id,
     };
   }, [transactions]);
@@ -453,7 +467,7 @@ export function TransactionsView({
   }, []);
 
   // Check if filters are active
-  const hasActiveFilters = filterAccount || filterCategory || filterPayee || filterDateFrom || filterDateTo || filterType || filterStatus;
+  const hasActiveFilters = filterAccount || filterCategory || filterPayee || filterDateFrom || filterDateTo || filterType || filterStatus || filterTag;
 
   return (
     <div className="space-y-8">
@@ -603,6 +617,7 @@ export function TransactionsView({
               onSave={handleSave}
               onCancel={handleCancel}
               onCategoryCreate={onCategoryCreate}
+              rules={rules}
             />
           </div>
         )}
@@ -679,6 +694,15 @@ export function TransactionsView({
               showAllOption
               allLabel="ALL STATUSES"
               searchable={false}
+            />
+            <SearchableSelect
+              label="Tag"
+              options={tagOptions}
+              value={filterTag}
+              onChange={setFilterTag}
+              placeholder="All Tags"
+              showAllOption
+              allLabel="ALL TAGS"
             />
             <div className="relative">
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">Entity Name</label>
@@ -878,6 +902,7 @@ export function TransactionsView({
                         "{t.memo}"
                       </div>
                     )}
+                    <TagChips tags={t.tags} onPick={setFilterTag} />
                   </div>
 
                   {/* Category & Account */}
@@ -989,6 +1014,7 @@ export function TransactionsView({
                         "{t.memo}"
                       </div>
                     )}
+                    <TagChips tags={t.tags} onPick={setFilterTag} />
                   </div>
 
                   <div className="flex gap-2 pt-2">
@@ -1057,6 +1083,27 @@ export function TransactionsView({
         accounts={accounts}
         dateFormat={dateFormat}
       />
+    </div>
+  );
+}
+
+/** Tags as small chips; clicking one filters the ledger by that tag */
+function TagChips({ tags, onPick }: { tags: string; onPick: (tag: string) => void }) {
+  const list = splitTags(tags);
+  if (list.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {list.map(tag => (
+        <button
+          key={tag}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onPick(tag); }}
+          title={`Show only #${tag}`}
+          className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-bold text-indigo-300 hover:bg-indigo-500/20"
+        >
+          #{tag}
+        </button>
+      ))}
     </div>
   );
 }

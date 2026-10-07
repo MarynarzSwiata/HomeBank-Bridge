@@ -3,6 +3,8 @@ import { body, param, query } from 'express-validator';
 import db from '../db/index.js';
 import { validate } from '../middleware/validation.js';
 import { createTransaction } from '../services/transactionWriter.js';
+import { normalizeTags, mergeTags } from '../services/tags.js';
+import { loadRules, findRule } from '../services/rules.js';
 
 const router = express.Router();
 
@@ -32,6 +34,7 @@ router.get('/',
           t.account_id,
           t.transfer_id,
           t.status,
+          t.tags,
           t.exported,
           t.export_log_id
         FROM transactions t
@@ -79,6 +82,7 @@ router.post('/',
     body('targetAccountId').optional({ nullable: true }).isInt(),
     body('targetAmount').optional({ nullable: true }).isFloat({ min: 0 }),
     body('status').optional().isIn([0, 1, 2]).withMessage('Invalid status'),
+    body('tags').optional({ nullable: true }).isString().isLength({ max: 1000 }),
     validate
   ],
   async (req, res, next) => {
@@ -110,12 +114,14 @@ router.put('/:id',
     body('memo').optional().trim(),
     body('accountId').optional().isInt(),
     body('status').optional().isIn([0, 1, 2]).withMessage('Invalid status'),
+    body('tags').optional({ nullable: true }).isString().isLength({ max: 1000 }),
     validate
   ],
   async (req, res, next) => {
     try {
       const { id } = req.params;
       const { date, payee, amount, categoryId, paymentType, memo, accountId, targetAccountId, targetAmount, status } = req.body;
+      const tags = req.body.tags === undefined ? undefined : normalizeTags(req.body.tags);
 
       const transaction = await db.get('SELECT * FROM transactions WHERE id = ?', id);
       if (!transaction) {
@@ -142,6 +148,7 @@ router.put('/:id',
           if (accountId !== undefined) { pUpdates.push('account_id = ?'); pValues.push(accountId); }
           // Status is per side: each account is reconciled against its own statement
           if (status !== undefined) { pUpdates.push('status = ?'); pValues.push(status); }
+          if (tags !== undefined) { pUpdates.push('tags = ?'); pValues.push(tags); }
           if (amount !== undefined) { 
             pUpdates.push('amount = ?'); 
             // In transfers, the source is negative
@@ -158,6 +165,7 @@ router.put('/:id',
           const sValues = [];
           if (date !== undefined) { sUpdates.push('date = ?'); sValues.push(date); }
           if (memo !== undefined) { sUpdates.push('memo = ?'); sValues.push(memo); }
+          if (tags !== undefined) { sUpdates.push('tags = ?'); sValues.push(tags); }
           if (targetAccountId !== undefined) { sUpdates.push('account_id = ?'); sValues.push(targetAccountId); }
           
           if (targetAmount !== undefined || amount !== undefined) {
@@ -185,6 +193,7 @@ router.put('/:id',
       if (memo !== undefined) { updates.push('memo = ?'); values.push(memo); }
       if (accountId !== undefined) { updates.push('account_id = ?'); values.push(accountId); }
       if (status !== undefined) { updates.push('status = ?'); values.push(status); }
+      if (tags !== undefined) { updates.push('tags = ?'); values.push(tags); }
 
       if (updates.length > 0) {
         values.push(id);
@@ -376,6 +385,9 @@ router.post('/import', async (req, res, next) => {
 
         // Cache for categories to avoid repeat lookups
         const categoryCache = new Map();
+        // Assignment rules fill in rows that come without a category
+        const rules = await loadRules();
+        let rulesApplied = 0;
 
         for (const line of lines) {
           // Skip header if present
@@ -385,7 +397,7 @@ router.post('/import', async (req, res, next) => {
           const parts = line.split(';');
           if (parts.length < 5) continue;
 
-          const [dateStr, payType, num, payee, memo, amountStr, catName] = parts.map(s => s.trim());
+          const [dateStr, payType, num, payee, memo, amountStr, catName, tagStr] = parts.map(s => s.trim());
           
           // Improved Date Parsing
           let date = dateStr;
@@ -443,18 +455,29 @@ router.post('/import', async (req, res, next) => {
             }
           }
 
-          const paymentType = parseInt(payType) || 0;
+          let paymentType = parseInt(payType) || 0;
+          let tags = normalizeTags(tagStr);
+
+          if (!categoryId) {
+            const rule = findRule(rules, { payee, memo });
+            if (rule) {
+              categoryId = rule.category_id || null;
+              if (!paymentType && rule.payment_type) paymentType = rule.payment_type;
+              tags = mergeTags(tags, rule.tags);
+              rulesApplied++;
+            }
+          }
 
           await db.run(`
-            INSERT INTO transactions (date, payee, amount, category_id, payment_type, memo, account_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-          `, date, payee, amount, categoryId, paymentType, memo, targetAcc.id); 
+            INSERT INTO transactions (date, payee, amount, category_id, payment_type, memo, account_id, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, date, payee, amount, categoryId, paymentType, memo, targetAcc.id, tags); 
           
           importedCount++;
         }
 
         await db.exec('COMMIT');
-        res.status(201).json({ message: 'Transactions imported successfully', count: importedCount });
+        res.status(201).json({ message: 'Transactions imported successfully', count: importedCount, rulesApplied });
       } catch (err) {
         await db.exec('ROLLBACK');
         console.error('Import Error Trace:', err);
@@ -491,6 +514,7 @@ router.post('/export',
           t.payee,
           t.memo,
           t.amount,
+          t.tags,
           t.account_id,
           a.name as account_name,
           c.name as category_name,
@@ -581,8 +605,8 @@ router.post('/export',
             : (t.category_name || '');
         const categoryVal = escapeCSV(fullCategory);
 
-        // 8. Tags
-        const tags = '';
+        // 8. Tags (space-separated, HomeBank format)
+        const tags = escapeCSV(t.tags || '');
 
         return `${dateFormatted};${paymentType};${number};${payeeVal};${memoVal};${amountVal};${categoryVal};${tags}`;
       };

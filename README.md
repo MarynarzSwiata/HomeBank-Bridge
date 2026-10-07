@@ -145,6 +145,8 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **🏷️ Tags**: Add tags to any entry (space-separated, exported in the HomeBank CSV `tags` column and read back on import). Click a tag to filter the ledger; Reports can group by tag.
+- **⚡ Assignment Rules**: "If payee/memo contains X → set category, payment type and tags." Rules fill the entry form as you type, run automatically on CSV import for rows without a category, and can be applied on demand to existing uncategorised entries (with a preview count first).
 - **🔁 Scheduled Transactions**: Recurring expenses, income and transfers (every N days / weeks / months / years, optional end date). Due items are shown on Home and in the Scheduled tab; post or skip them one by one, or post all due at once. Nothing is posted automatically, so using the app on several computers never creates duplicates. Monthly items keep their day (e.g. the 31st falls back to the 30th/28th in shorter months).
 - **🎯 Monthly Budget**: Set a budget per category — the same amount every month or a different amount per month. The Budget tab shows budget vs actual, remaining amount and an "over budget" warning for any month; parent categories include their subcategories.
 - **📈 Reports**: Expense or income totals grouped by category, subcategory, payee or month, for any period (presets or a custom range), per account or currency, with CSV export.
