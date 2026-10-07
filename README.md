@@ -154,7 +154,7 @@ docker run -d \
 
 ## 📜 Changelog
 
-### Unreleased
+### Version 2.1 (2026-10-07)
 - **💾 Automatic backups**: The server saves a copy of all data every day (the last 14 days are kept, `BACKUP_KEEP_DAYS` changes this) and right before every restore, factory reset or replacing HomeBank import (the last 10 are kept). Settings → Automatic backups lists them with Download and Restore; restoring first saves a copy of the current data, so it can be undone. Copies live in `data/backups` next to the database (inside the persistent volume).
 - **📱 Install on your phone**: The app can be added to the home screen (Android, iPhone, desktop Chrome/Edge) and opens full screen with its own icon. A long press on the icon offers "New transaction", and a round "+" button on every mobile screen opens the entry form. Without a connection a short "No connection" page is shown; finance data is never stored on the device.
 - **🎨 Consistent look**: Settings, How to use, What's new, Budget, Reports, Templates and Rules use the same page headers, cards and buttons as the rest of the app, in both themes. Dialog backdrops work in dark mode, and amounts that round to zero no longer show as "-0,00".

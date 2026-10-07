@@ -52,7 +52,7 @@ import {
 import SearchableSelect from "./src/components/shared/SearchableSelect";
 
 // Shown in the sidebar, mobile header and changelog; keep in sync with package.json
-const APP_VERSION = "2.0";
+const APP_VERSION = "2.1";
 
 const INITIAL_CURRENCIES = ["EUR", "USD", "PLN", "GBP", "CHF", "JPY"];
 
@@ -1048,6 +1048,45 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-12">
+                <div className="relative pl-12 border-l-2 border-indigo-500/30">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-lg font-semibold text-slate-100">
+                        Version 2.1
+                      </h3>
+                      <span className="text-xs font-medium text-indigo-400 bg-indigo-600/10 px-2.5 py-1 rounded-full">
+                        Safety & mobile
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
+                      Automatic backups, a home-screen app for your phone and a consistent look.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Automatic backups:</strong>{" "}
+                          The server saves a copy of all data every day (last 14 days) and before every restore, reset or HomeBank import. Settings → Automatic backups lets you download or restore any of them.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Install on your phone:</strong>{" "}
+                          Add the app to your home screen: it opens full screen with its own icon, with a "New transaction" shortcut and a round + button on every mobile screen.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Consistent look:</strong>{" "}
+                          Settings, help, budget, reports, templates and rules now match the rest of the app in both themes.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
                 <div className="relative pl-12 border-l-2 border-indigo-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
                   <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
