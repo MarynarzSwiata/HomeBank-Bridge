@@ -14,3 +14,11 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// Installable app (home-screen icon, offline page). Production only, so the dev
+// server never serves stale pages.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}

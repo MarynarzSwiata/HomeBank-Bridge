@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HomeBank Bridge – offline</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+           font: 16px/1.5 system-ui, sans-serif; background: #F4F5F7; color: #16181D; text-align: center; }
+    @media (prefers-color-scheme: dark) { body { background: #0F1115; color: #EEF0F3; } }
+    .logo { width: 56px; height: 56px; border-radius: 12px; background: #2F5BD3; color: #fff; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 22px; }
+    button { margin-top: 16px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 10px; background: #2F5BD3;
+             color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="logo">HB</div>
+    <h1 style="font-size:20px;margin:0">No connection</h1>
+    <p style="margin:8px 0 0">HomeBank Bridge needs the internet to load your data. Nothing was lost.</p>
+    <button onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>

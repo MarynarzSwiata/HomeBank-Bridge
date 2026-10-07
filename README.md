@@ -131,7 +131,7 @@ docker run -d \
     *   **Exposed Port**: `3000`
     *   **Port Mapping**: Set `3005:3000` if using an external proxy.
 4.  **Environment Variables**: Set `SESSION_SECRET`, `FRONTEND_URL`, and `ALLOW_REGISTRATION`.
-5.  **Persistent Storage**: Mount path `/app/backend/data`.
+5.  **Persistent Storage**: Mount path `/app/backend/data` (database and automatic backups in `data/backups`).
 6.  **Deploy**: Click "Deploy".
 
 ---
@@ -153,6 +153,11 @@ docker run -d \
 ---
 
 ## 📜 Changelog
+
+### Unreleased
+- **💾 Automatic backups**: The server saves a copy of all data every day (the last 14 days are kept, `BACKUP_KEEP_DAYS` changes this) and right before every restore, factory reset or replacing HomeBank import (the last 10 are kept). Settings → Automatic backups lists them with Download and Restore; restoring first saves a copy of the current data, so it can be undone. Copies live in `data/backups` next to the database (inside the persistent volume).
+- **📱 Install on your phone**: The app can be added to the home screen (Android, iPhone, desktop Chrome/Edge) and opens full screen with its own icon. A long press on the icon offers "New transaction", and a round "+" button on every mobile screen opens the entry form. Without a connection a short "No connection" page is shown; finance data is never stored on the device.
+- **🎨 Consistent look**: Settings, How to use, What's new, Budget, Reports, Templates and Rules use the same page headers, cards and buttons as the rest of the app, in both themes. Dialog backdrops work in dark mode, and amounts that round to zero no longer show as "-0,00".
 
 ### Version 2.0 (2026-10-07)
 The biggest update so far: HomeBank Bridge becomes a web replacement for HomeBank desktop, with two-way `.xhb` file support and a new design.

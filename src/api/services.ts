@@ -52,6 +52,14 @@ export interface XhbImportResult {
   message?: string;
 }
 
+export interface StoredBackup {
+  name: string;
+  kind: 'daily' | 'safety';
+  action: string | null;
+  size: number;
+  createdAt: string;
+}
+
 export const systemService = {
   async backup(): Promise<void> {
     const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -106,6 +114,33 @@ export const systemService = {
     }
     
     return response.json();
+  },
+
+  /** Automatic (daily) and safety backups stored on the server (admin only) */
+  async listBackups(): Promise<StoredBackup[]> {
+    return api.get('/system/backups');
+  },
+
+  async downloadBackup(name: string): Promise<void> {
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(`${API_BASE}/system/backups/${encodeURIComponent(name)}`, { credentials: 'include' });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Download failed (${response.status})`);
+    }
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+
+  async restoreBackup(name: string): Promise<{ message: string }> {
+    return api.post(`/system/backups/${encodeURIComponent(name)}/restore`, {});
   },
 
   /** Download all data as a HomeBank .xhb file (admin only) */

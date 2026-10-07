@@ -47,3 +47,6 @@ backend/uploads/*
 backend/public
 coverage
 
+
+# Automatic database backups
+backend/data/backups/

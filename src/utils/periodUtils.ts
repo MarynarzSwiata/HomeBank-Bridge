@@ -88,5 +88,6 @@ export const categoryLookup = (categories: Category[]) => {
   return map;
 };
 
+// Rounded to cents first, and `+ 0` turns -0 into 0, so tiny negatives never show as "-0,00"
 export const formatMoney = (v: number, hidden: boolean) =>
-  hidden ? '••••' : v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  hidden ? '••••' : (Math.sign(v) * Math.round(Math.abs(v) * 100) / 100 + 0).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

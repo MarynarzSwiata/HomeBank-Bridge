@@ -18,7 +18,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ variant = 'inline', label = 'L
 
   if (variant === 'fullscreen') {
     return (
-      <div className="fixed inset-0 bg-slate-50/40 backdrop-blur-xl flex items-center justify-center z-[999]">
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[999]">
         {spinnerElement}
       </div>
     );

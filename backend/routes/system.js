@@ -7,6 +7,7 @@ import runMigrations from '../db/migrate.js';
 import { parseXhb, buildPlan, planSummary, applyPlan, hasExistingData } from '../services/xhbImport.js';
 import { buildXhb } from '../services/xhbExport.js';
 import { advanceDate } from './scheduled.js';
+import { safetyBackup, listBackups, backupPath } from '../services/backups.js';
 
 import multer from 'multer';
 
@@ -48,65 +49,108 @@ router.get('/backup', async (req, res) => {
   }
 });
 
-// Restore database
+const isSqliteFile = (file) => {
+  const fd = fs.openSync(file, 'r');
+  try {
+    const buf = Buffer.alloc(16);
+    fs.readSync(fd, buf, 0, 16, 0);
+    return buf.toString('utf8', 0, 15) === 'SQLite format 3';
+  } finally {
+    fs.closeSync(fd);
+  }
+};
+
+/**
+ * Replace the live database with a copy of `srcPath`, then reopen it and apply
+ * pending migrations (older backups may predate them).
+ */
+async function replaceDatabase(srcPath) {
+  const dbPath = config.dbPath;
+
+  // Close current DB connection to release file locks (CRITICAL for Windows)
+  console.log('🔒 Closing database connection for restore...');
+  await closeDb();
+
+  // Keep the current file in case copying fails halfway
+  const backupPath = `${dbPath}.bak`;
+  try {
+    if (fs.existsSync(dbPath)) {
+      fs.copyFileSync(dbPath, backupPath);
+    }
+    fs.copyFileSync(srcPath, dbPath);
+
+    // Clean up stale WAL/SHM files
+    const walFile = `${dbPath}-wal`;
+    const shmFile = `${dbPath}-shm`;
+    if (fs.existsSync(walFile)) fs.unlinkSync(walFile);
+    if (fs.existsSync(shmFile)) fs.unlinkSync(shmFile);
+
+    console.log('✅ Database files replaced. Re-initializing connection...');
+  } catch (fsErr) {
+    console.error('File operation failed during restore:', fsErr);
+    if (fs.existsSync(backupPath)) fs.copyFileSync(backupPath, dbPath);
+    throw fsErr;
+  } finally {
+    await initDb();
+  }
+
+  await runMigrations();
+}
+
+// Restore database from an uploaded file
 router.post('/restore', upload.single('database'), async (req, res) => {
   console.log('📥 POST /api/system/restore - Restore requested');
-  let tempPath;
+  const tempPath = req.file?.path;
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-
-    const dbPath = config.dbPath;
-    tempPath = req.file.path;
-
-    // Validate if it's a valid SQLite file
-    const buffer = fs.readFileSync(tempPath, { encoding: null, flag: 'r' });
-    const header = buffer.toString('utf8', 0, 15);
-    if (!header.startsWith('SQLite format 3')) {
-      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    if (!isSqliteFile(tempPath)) {
       return res.status(400).json({ error: 'Invalid database file format' });
     }
 
-    // Step 1: Close current DB connection to release file locks (CRITICAL for Windows)
-    console.log('🔒 Closing database connection for restore...');
-    await closeDb();
-
-    // Backup current one locally just in case
-    const backupPath = `${dbPath}.bak`;
-    try {
-      if (fs.existsSync(dbPath)) {
-        fs.copyFileSync(dbPath, backupPath);
-      }
-
-      // Step 2: Replace file
-      fs.copyFileSync(tempPath, dbPath);
-      
-      // Step 3: Clean up stale WAL/SHM files
-      const walFile = `${dbPath}-wal`;
-      const shmFile = `${dbPath}-shm`;
-      if (fs.existsSync(walFile)) fs.unlinkSync(walFile);
-      if (fs.existsSync(shmFile)) fs.unlinkSync(shmFile);
-      
-      console.log('✅ Database files replaced. Re-initializing connection...');
-    } catch (fsErr) {
-      console.error('File operation failed during restore:', fsErr);
-      // Attempt to restore from .bak if it went wrong halfway
-      if (fs.existsSync(backupPath)) fs.copyFileSync(backupPath, dbPath);
-      throw fsErr;
-    } finally {
-      // Step 4: Re-open connection
-      await initDb();
-      if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-    }
-
-    // Older backups may predate recent migrations
-    await runMigrations();
+    await safetyBackup('restore');
+    await replaceDatabase(tempPath);
 
     console.log('🎉 Database restored successfully');
     res.json({ message: 'Database restored successfully.' });
   } catch (err) {
     console.error('Restore failed:', err);
+    res.status(500).json({ error: 'Restore failed: ' + err.message });
+  } finally {
+    if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+  }
+});
+
+// GET /api/system/backups - Automatic and safety backups stored on the server
+router.get('/backups', (req, res, next) => {
+  try {
+    res.json(listBackups());
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/system/backups/:name - Download one stored backup
+router.get('/backups/:name', (req, res) => {
+  const file = backupPath(req.params.name);
+  if (!file) return res.status(404).json({ error: 'Backup not found' });
+  res.download(file, req.params.name);
+});
+
+// POST /api/system/backups/:name/restore - Replace current data with a stored backup
+router.post('/backups/:name/restore', async (req, res) => {
+  const file = backupPath(req.params.name);
+  if (!file) return res.status(404).json({ error: 'Backup not found' });
+  try {
+    if (!isSqliteFile(file)) return res.status(400).json({ error: 'Invalid database file format' });
+    // Safety copy first, so this restore can be undone too
+    await safetyBackup('restore');
+    await replaceDatabase(file);
+    console.log(`🎉 Database restored from backup ${req.params.name}`);
+    res.json({ message: 'Database restored successfully.' });
+  } catch (err) {
+    console.error('Restore from backup failed:', err);
     res.status(500).json({ error: 'Restore failed: ' + err.message });
   }
 });
@@ -115,6 +159,8 @@ router.post('/restore', upload.single('database'), async (req, res) => {
 router.post('/reset', async (req, res) => {
   console.log('💣 POST /api/system/reset - Hard Reset requested');
   try {
+    await safetyBackup('reset');
+
     // We execute individual DELETEs in the right order of dependencies
     await db.run('PRAGMA foreign_keys = OFF');
     
@@ -177,6 +223,7 @@ router.post('/import-xhb', (req, res, next) => {
       return res.status(409).json({ error: 'The app already contains data. Confirm replacing it to import.' });
     }
 
+    if (existing) await safetyBackup('import');
     await applyPlan(plan, { replace });
     console.log(`📥 HomeBank import: ${summary.accounts} accounts, ${summary.transactions} transactions`);
     res.json({ message: 'HomeBank file imported', summary });

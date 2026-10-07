@@ -58,7 +58,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
 
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="text-[15px] font-semibold text-slate-100">Templates &amp; scheduled</h2>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Templates &amp; scheduled</h1>
           <p className="text-[10px] font-bold text-slate-500 mt-1">
             Scheduled: recurring bills and income, posted when due. Templates: pick one in the entry form to fill it in.
           </p>
