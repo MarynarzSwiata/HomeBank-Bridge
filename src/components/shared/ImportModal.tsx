@@ -224,7 +224,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     }) || [];
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-start justify-center p-2 md:p-4 pt-[2vh] md:pt-[5vh] backdrop-blur-md bg-slate-50/40 animate-in fade-in duration-300 overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center p-2 md:p-4 pt-[2vh] md:pt-[5vh] backdrop-blur-sm bg-black/40 animate-in fade-in duration-300 overflow-y-auto">
       <div className="bg-slate-900 border border-slate-800 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[92vh] md:max-h-[85vh] flex flex-col space-y-4 md:space-y-6 relative overflow-hidden">
         <div className="flex justify-between items-start shrink-0">
           <div>

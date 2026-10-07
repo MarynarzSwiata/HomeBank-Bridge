@@ -87,7 +87,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
   const canImport = !!preview && !busy && (!mustConfirmReplace || replace);
 
   return (
-    <div className="md:col-span-2 bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+    <div className="md:col-span-2 bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
       <div className="flex flex-wrap items-start gap-4">
         <div className="w-12 h-12 shrink-0 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -95,7 +95,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
           </svg>
         </div>
         <div>
-          <h3 className="text-xl font-black text-slate-100 uppercase italic">HomeBank file (.xhb)</h3>
+          <h3 className="text-[15px] font-semibold text-slate-100">HomeBank file (.xhb)</h3>
           <p className="text-slate-400 text-sm leading-relaxed mt-2">
             Move your history from HomeBank desktop: choose your <span className="text-emerald-400 font-bold">.xhb</span> file.
             You will see what will be imported before anything is saved. The import is all-or-nothing.
@@ -167,11 +167,11 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
             <button
               onClick={runImport}
               disabled={!canImport}
-              className="px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.3em] disabled:opacity-30 hover:text-white"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold disabled:opacity-30 hover:text-white"
             >
               {busy === 'import' ? 'Importing…' : 'Import'}
             </button>
-            <button onClick={reset} disabled={!!busy} className="px-8 py-4 rounded-2xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-[0.3em]">
+            <button onClick={reset} disabled={!!busy} className="px-5 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-sm font-semibold">
               Cancel
             </button>
           </div>

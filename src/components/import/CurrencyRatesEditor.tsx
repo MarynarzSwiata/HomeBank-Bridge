@@ -47,9 +47,9 @@ export const CurrencyRatesEditor: React.FC<CurrencyRatesEditorProps> = ({ rates,
   const field = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
 
   return (
-    <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+    <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
       <div>
-        <h3 className="text-xl font-black text-slate-100 uppercase italic">Exchange rates</h3>
+        <h3 className="text-[15px] font-semibold text-slate-100">Exchange rates</h3>
         <p className="text-slate-400 text-sm leading-relaxed mt-2">
           Totals on Home and in Accounts are converted to the base currency, like HomeBank’s “Grand total”.
           Rates are not updated automatically.
@@ -85,7 +85,7 @@ export const CurrencyRatesEditor: React.FC<CurrencyRatesEditorProps> = ({ rates,
           <button
             onClick={save}
             disabled={saving || !base}
-            className="px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.3em] disabled:opacity-40 hover:text-white"
+            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold disabled:opacity-40 hover:text-white"
           >
             {saving ? 'Saving…' : 'Save rates'}
           </button>

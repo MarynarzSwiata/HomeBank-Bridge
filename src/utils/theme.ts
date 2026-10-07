@@ -16,6 +16,11 @@ export const getThemePref = (): ThemePref => {
 export const applyTheme = (pref: ThemePref = getThemePref()) => {
   const dark = pref === 'dark' || (pref === 'system' && media().matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  // Browser / phone status bar follows the chosen theme
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => {
+    m.removeAttribute('media');
+    m.setAttribute('content', dark ? '#0F1115' : '#F4F5F7');
+  });
 };
 
 export const setThemePref = (pref: ThemePref) => {

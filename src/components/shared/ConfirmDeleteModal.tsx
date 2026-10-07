@@ -18,7 +18,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 backdrop-blur-md bg-slate-50/40 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 backdrop-blur-sm bg-black/40 animate-in fade-in duration-300">
       <div className="bg-slate-900 border-2 border-rose-500/50 p-6 sm:p-12 rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl max-w-md w-full space-y-8 animate-in slide-in-from-bottom-4 duration-500">
         <div className="flex justify-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-rose-500/10 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-rose-500">

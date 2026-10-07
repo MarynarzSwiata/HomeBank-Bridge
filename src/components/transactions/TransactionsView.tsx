@@ -45,6 +45,8 @@ export interface TransactionsViewProps {
   onSetStatus?: (ids: number[], status: TransactionStatus) => Promise<boolean>;
   rules?: Rule[];
   templates?: ScheduledItem[];
+  openNewEntry?: boolean; // open the new-entry form (quick add / home-screen shortcut)
+  onNewEntryOpened?: () => void; // called when that form is closed again
 }
 
 type SortField = 'date' | 'payee' | 'category' | 'amount';
@@ -73,6 +75,8 @@ export function TransactionsView({
   onSetStatus,
   rules,
   templates,
+  openNewEntry = false,
+  onNewEntryOpened,
 }: TransactionsViewProps) {
   // Filter state - use initialAccountFilter if provided
   const [filterAccount, setFilterAccount] = useState(initialAccountFilter);
@@ -105,6 +109,16 @@ export function TransactionsView({
   const [isFormExpanded, setIsFormExpanded] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [duplicatingTransaction, setDuplicatingTransaction] = useState<Transaction | null>(null);
+
+  // Quick add from elsewhere in the app (mobile "+" button, home-screen shortcut).
+  // The request stays pending until the form is closed, so it survives the view
+  // remounting while data loads right after sign-in.
+  React.useEffect(() => {
+    if (!openNewEntry) return;
+    setEditingTransaction(null);
+    setDuplicatingTransaction(null);
+    setIsFormExpanded(true);
+  }, [openNewEntry]);
   
   // Import state
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -428,6 +442,11 @@ export function TransactionsView({
   }, [transactions]);
 
   const isDrawerOpen = isFormExpanded || !!editingTransaction || !!duplicatingTransaction;
+  const wasDrawerOpen = React.useRef(false);
+  React.useEffect(() => {
+    if (wasDrawerOpen.current && !isDrawerOpen && openNewEntry) onNewEntryOpened?.();
+    wasDrawerOpen.current = isDrawerOpen;
+  }, [isDrawerOpen, openNewEntry, onNewEntryOpened]);
 
   // Cancel form
   const handleCancel = useCallback(() => {

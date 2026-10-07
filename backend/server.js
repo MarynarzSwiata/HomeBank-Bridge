@@ -22,6 +22,7 @@ import rulesRouter from './routes/rules.js';
 import currenciesRouter from './routes/currencies.js';
 import exportLogRouter from './routes/export-log.js';
 import systemRouter from './routes/system.js';
+import { startAutoBackup } from './services/backups.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +77,7 @@ if (fs.existsSync(uploadsDir)) {
 
 // Run migrations on startup
 await runMigrations();
+startAutoBackup();
 
 // Log all requests
 app.use((req, res, next) => {

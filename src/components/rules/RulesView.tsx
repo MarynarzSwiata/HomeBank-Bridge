@@ -82,7 +82,7 @@ export const RulesView: React.FC<RulesViewProps> = ({ rules, categories, onChang
 
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="text-[15px] font-semibold text-slate-100">Assignment rules</h2>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Assignment rules</h1>
           <p className="text-[10px] font-bold text-slate-500 mt-1">
             Automatically fill category, payment and tags. Used in the entry form, on CSV import, and on demand below.
           </p>

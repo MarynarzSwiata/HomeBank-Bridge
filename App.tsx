@@ -9,7 +9,7 @@ import { ApiError, accountsService, systemService, rulesService, currencyService
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import { AnimatedLogo } from "./src/components/shared/AnimatedLogo";
-import { ThemeSwitch } from "./src/components/common";
+import { ThemeSwitch, ActionBar } from "./src/components/common";
 import { watchSystemTheme } from "./src/utils/theme";
 import type {
   Account,
@@ -38,6 +38,7 @@ import { ReportsView } from "./src/components/reports/ReportsView";
 import { ScheduledView } from "./src/components/scheduled/ScheduledView";
 import { RulesView } from "./src/components/rules/RulesView";
 import { HomeBankImport } from "./src/components/import/HomeBankImport";
+import { AutoBackups } from "./src/components/import/AutoBackups";
 import { CurrencyRatesEditor } from "./src/components/import/CurrencyRatesEditor";
 import { CurrencyRates, EMPTY_RATES } from "./src/utils/currencyUtils";
 import { useScheduled } from "./src/hooks/useScheduled";
@@ -51,7 +52,7 @@ import {
 import SearchableSelect from "./src/components/shared/SearchableSelect";
 
 // Shown in the sidebar, mobile header and changelog; keep in sync with package.json
-const APP_VERSION = "2.0";
+const APP_VERSION = "2.1";
 
 const INITIAL_CURRENCIES = ["EUR", "USD", "PLN", "GBP", "CHF", "JPY"];
 
@@ -157,6 +158,21 @@ const App: React.FC = () => {
   const [transactionsAccountFilter, setTransactionsAccountFilter] =
     useState("");
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+
+  // Quick add: mobile "+" button and the home-screen shortcut (/?new=transaction)
+  const [pendingNewEntry, setPendingNewEntry] = useState(false);
+  const startNewEntry = useCallback(() => {
+    setActiveTab("transactions");
+    setPendingNewEntry(true);
+  }, []);
+  const clearPendingNewEntry = useCallback(() => setPendingNewEntry(false), []);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "transaction") {
+      startNewEntry();
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [startNewEntry]);
 
   // Follow the device theme while "Auto" is selected
   useEffect(() => watchSystemTheme(), []);
@@ -1021,20 +1037,59 @@ const App: React.FC = () => {
 
         <section className="flex-1 overflow-y-auto p-4 md:p-14 space-y-16 no-scrollbar pb-32 md:pb-14">
           {activeTab === "changelog" && (
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-4xl mx-auto py-10">
-              <div className="space-y-6 text-center">
-                <h2 className="text-2xl md:text-4xl font-black text-slate-100 uppercase italic tracking-tighter">
-                  System Changelog
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-6 max-w-4xl mx-auto">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-100">
+                  What's new
                 </h2>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">
-                  Tracking the evolution of HomeBank Bridge.
+                <p className="text-sm text-slate-500">
+                  Changes in each version of HomeBank Bridge.
                 </p>
               </div>
 
               <div className="space-y-12">
                 <div className="relative pl-12 border-l-2 border-indigo-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
-                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-lg font-semibold text-slate-100">
+                        Version 2.1
+                      </h3>
+                      <span className="text-xs font-medium text-indigo-400 bg-indigo-600/10 px-2.5 py-1 rounded-full">
+                        Safety & mobile
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
+                      Automatic backups, a home-screen app for your phone and a consistent look.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Automatic backups:</strong>{" "}
+                          The server saves a copy of all data every day (last 14 days) and before every restore, reset or HomeBank import. Settings → Automatic backups lets you download or restore any of them.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Install on your phone:</strong>{" "}
+                          Add the app to your home screen: it opens full screen with its own icon, with a "New transaction" shortcut and a round + button on every mobile screen.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Consistent look:</strong>{" "}
+                          Settings, help, budget, reports, templates and rules now match the rest of the app in both themes.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="relative pl-12 border-l-2 border-indigo-500/30">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
                       <h3 className="text-2xl font-black text-slate-100">
                         Version 2.0
@@ -1101,16 +1156,16 @@ const App: React.FC = () => {
                 </div>
                 <div className="relative pl-12 border-l-2 border-indigo-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
-                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                      <h3 className="text-lg font-semibold text-slate-100">
                         Version 1.0.3
                       </h3>
-                      <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-600/10 px-3 py-1 rounded-full">
+                      <span className="text-xs font-medium text-indigo-400 bg-indigo-600/10 px-2.5 py-1 rounded-full">
                         UX & Persistence
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
                       Duplication features, notifications, and persistent settings.
                     </p>
                     <ul className="space-y-4 text-sm text-slate-300">
@@ -1174,16 +1229,16 @@ const App: React.FC = () => {
 
                 <div className="relative pl-12 border-l-2 border-emerald-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/40"></div>
-                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                      <h3 className="text-lg font-semibold text-slate-100">
                         Version 1.0.2
                       </h3>
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-600/10 px-3 py-1 rounded-full">
+                      <span className="text-xs font-medium text-emerald-400 bg-emerald-600/10 px-2.5 py-1 rounded-full">
                         Security & Stability
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
                       Hardened registration enforcement and resolved IDE configuration issues.
                     </p>
                     <ul className="space-y-4 text-sm text-slate-300">
@@ -1220,16 +1275,16 @@ const App: React.FC = () => {
 
                 <div className="relative pl-12 border-l-2 border-slate-800/50">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-slate-800 shadow-lg shadow-slate-800/40"></div>
-                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                      <h3 className="text-lg font-semibold text-slate-100">
                         Version 1.0.1
                       </h3>
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-800/40 px-3 py-1 rounded-full">
                         Performance & Stats Update
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
                       Optimized for scale and deeper insights into your
                       taxonomy.
                     </p>
@@ -1261,16 +1316,16 @@ const App: React.FC = () => {
 
                 <div className="relative pl-12 border-l-2 border-indigo-600/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-600 shadow-lg shadow-indigo-600/40"></div>
-                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                      <h3 className="text-lg font-semibold text-slate-100">
                         Version 1.0.0
                       </h3>
-                      <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-600/10 px-3 py-1 rounded-full">
+                      <span className="text-xs font-medium text-indigo-400 bg-indigo-600/10 px-2.5 py-1 rounded-full">
                         Initial Stable
                       </span>
                     </div>
-                    <p className="text-slate-400 text-sm leading-relaxed font-bold uppercase tracking-widest pb-4 border-b border-slate-800">
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
                       The birth of the Bridge. A modern toolkit for minimalist
                       financial logging.
                     </p>
@@ -1337,7 +1392,7 @@ const App: React.FC = () => {
               <div className="text-center">
                 <button
                   onClick={() => setActiveTab("how_to_use")}
-                  className="px-10 py-5 bg-slate-800 text-slate-300 hover:text-slate-100 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all"
+                  className="px-10 min-h-[44px] py-2.5 bg-slate-800 text-slate-300 hover:text-slate-100 rounded-xl font-semibold text-sm transition-all"
                 >
                   Return to Documentation
                 </button>
@@ -1382,31 +1437,37 @@ const App: React.FC = () => {
           )}
 
           {activeTab === "budget" && (
-            <BudgetView
-              accounts={accountsHook.accounts}
-              transactions={transactionsHook.transactions}
-              categories={categoriesHook.categories}
-              isAnonymized={isAnonymized}
-            />
+            <div className="space-y-6">
+              <ActionBar title="Budget" subtitle="Planned vs actual spending per category" />
+              <BudgetView
+                accounts={accountsHook.accounts}
+                transactions={transactionsHook.transactions}
+                categories={categoriesHook.categories}
+                isAnonymized={isAnonymized}
+              />
+            </div>
           )}
 
           {activeTab === "reports" && (
-            <ReportsView
-              accounts={accountsHook.accounts}
-              transactions={transactionsHook.transactions}
-              categories={categoriesHook.categories}
-              isAnonymized={isAnonymized}
-              rates={rates}
-            />
+            <div className="space-y-6">
+              <ActionBar title="Reports" subtitle="Totals by category, payee, month or tag, and balance over time" />
+              <ReportsView
+                accounts={accountsHook.accounts}
+                transactions={transactionsHook.transactions}
+                categories={categoriesHook.categories}
+                isAnonymized={isAnonymized}
+                rates={rates}
+              />
+            </div>
           )}
 
           {activeTab === "how_to_use" && (
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-5xl mx-auto py-10">
-              <div className="space-y-6 text-center">
-                <h2 className="text-2xl md:text-4xl font-black text-slate-100 uppercase italic tracking-tighter">
-                  Documentation & Guide
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-6 max-w-5xl mx-auto">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-100">
+                  How to use
                 </h2>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-sm max-w-2xl mx-auto">
+                <p className="text-sm text-slate-500 max-w-2xl">
                   Welcome to HomeBank Bridge. This tool is designed to bridge
                   the gap between your daily logging and the powerful HomeBank
                   analysis suite. Now featuring a fully responsive mobile-first
@@ -1414,9 +1475,9 @@ const App: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
-                  <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                  <div className="w-10 h-10 bg-indigo-600/10 rounded-lg flex items-center justify-center text-indigo-400">
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -1431,7 +1492,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                  <h3 className="text-[15px] font-semibold text-slate-100">
                     Smart Logging & Mobile
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1458,8 +1519,8 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
-                  <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                  <div className="w-10 h-10 bg-emerald-600/10 rounded-lg flex items-center justify-center text-emerald-400">
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -1474,7 +1535,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                  <h3 className="text-[15px] font-semibold text-slate-100">
                     Export & Archives
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1499,8 +1560,8 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
-                  <div className="w-12 h-12 bg-amber-600/10 rounded-2xl flex items-center justify-center text-amber-400">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                  <div className="w-10 h-10 bg-amber-600/10 rounded-lg flex items-center justify-center text-amber-400">
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -1515,7 +1576,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                  <h3 className="text-[15px] font-semibold text-slate-100">
                     Vault & Advanced Import
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1535,8 +1596,8 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
-                  <div className="w-12 h-12 bg-rose-600/10 rounded-2xl flex items-center justify-center text-rose-400">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-6">
+                  <div className="w-10 h-10 bg-rose-600/10 rounded-lg flex items-center justify-center text-rose-400">
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -1551,7 +1612,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                  <h3 className="text-[15px] font-semibold text-slate-100">
                     Security & System
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1580,7 +1641,7 @@ const App: React.FC = () => {
                   href="https://github.com/MarynarzSwiata/HomeBank-Bridge"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
+                  className="flex items-center justify-center gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-medium text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
                 >
                   <svg
                     className="w-4 h-4"
@@ -1593,7 +1654,7 @@ const App: React.FC = () => {
                 </a>
                 <button
                   onClick={() => setIsDonateModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-3 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-medium text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
                 >
                   <svg
                     className="w-4 h-4 text-indigo-400"
@@ -1612,7 +1673,7 @@ const App: React.FC = () => {
                 </p>
                 <button
                   onClick={() => setActiveTab("transactions")}
-                  className="px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-indigo-600/40 hover:scale-105 transition-all active:scale-95"
+                  className="px-10 min-h-[44px] py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm shadow-2xl shadow-indigo-600/40 hover:scale-105 transition-all active:scale-95"
                 >
                   Go to Manifest
                 </button>
@@ -1660,6 +1721,8 @@ const App: React.FC = () => {
               ) : (
                 <div className="relative z-20 max-w-7xl mx-auto pb-20 px-6">
                   <TransactionsView
+                    openNewEntry={pendingNewEntry}
+                    onNewEntryOpened={clearPendingNewEntry}
                     transactions={transactionsHook.transactions}
                     accounts={accountsHook.accounts} // Using hook data for accurate latest state
                     categories={categoriesHook.categories}
@@ -1752,25 +1815,25 @@ const App: React.FC = () => {
           )}
 
           {activeTab === "options" && (
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-5xl mx-auto py-10">
-              <div className="space-y-6 text-center">
-                <h2 className="text-2xl md:text-4xl font-black text-slate-100 uppercase italic tracking-tighter">
-                  System Options
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-6 max-w-5xl mx-auto">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-100">
+                  Settings
                 </h2>
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">
-                  Control center for application data and global preferences.
+                <p className="text-sm text-slate-500">
+                  Backups, HomeBank file, exchange rates and preferences.
                 </p>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center gap-3 pt-3">
                   <span className="text-sm text-slate-500">Theme</span>
                   <ThemeSwitch className="w-56" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Data Backup & Snapshots */}
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
-                    <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
+                    <div className="w-10 h-10 bg-indigo-600/10 rounded-lg flex items-center justify-center text-indigo-400">
                       <svg
                         className="w-6 h-6"
                         fill="none"
@@ -1785,7 +1848,7 @@ const App: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                    <h3 className="text-[15px] font-semibold text-slate-100">
                       Database Management
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
@@ -1801,7 +1864,7 @@ const App: React.FC = () => {
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={handleBackup}
-                      className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 hover:text-white"
+                      className="w-full min-h-[44px] py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm shadow-2xl shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 hover:text-white"
                     >
                       <svg
                         className="w-5 h-5"
@@ -1820,7 +1883,7 @@ const App: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setIsRestoreModalOpen(true)}
-                      className="w-full py-5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all active:scale-95 flex items-center justify-center gap-3"
+                      className="w-full min-h-[44px] py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-semibold text-sm transition-all active:scale-95 flex items-center justify-center gap-3"
                     >
                       <svg
                         className="w-5 h-5"
@@ -1840,6 +1903,13 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
+                <AutoBackups
+                  onRestored={async () => {
+                    await Promise.all([refreshAll(), refreshScheduled(), refreshRules(), refreshRates()]).catch(() => {});
+                  }}
+                  notify={(msg, type) => showToast(msg, type)}
+                />
+
                 <HomeBankImport
                   onBackup={handleBackup}
                   onImported={async () => {
@@ -1855,9 +1925,9 @@ const App: React.FC = () => {
                 />
 
                 {/* Localization Settings */}
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
-                    <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
+                    <div className="w-10 h-10 bg-indigo-600/10 rounded-lg flex items-center justify-center text-indigo-400">
                       <svg
                         className="w-6 h-6"
                         fill="none"
@@ -1872,7 +1942,7 @@ const App: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                    <h3 className="text-[15px] font-semibold text-slate-100">
                       Localization & Formats
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
@@ -1943,9 +2013,9 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Currency Management */}
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
-                    <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
+                    <div className="w-10 h-10 bg-indigo-600/10 rounded-lg flex items-center justify-center text-indigo-400">
                       <svg
                         className="w-6 h-6"
                         fill="none"
@@ -1960,7 +2030,7 @@ const App: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                    <h3 className="text-[15px] font-semibold text-slate-100">
                       Currency Lexicon
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
@@ -2061,8 +2131,8 @@ const App: React.FC = () => {
                 </div>
 
                 {/* System Diagnostics */}
-                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8">
-                  <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-8">
+                  <div className="w-10 h-10 bg-emerald-600/10 rounded-lg flex items-center justify-center text-emerald-400">
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -2077,7 +2147,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                  <h3 className="text-[15px] font-semibold text-slate-100">
                     Environment Stats
                   </h3>
                   <div className="space-y-4">
@@ -2116,9 +2186,9 @@ const App: React.FC = () => {
 
                 {/* User Management (Admin only) */}
                 {auth.user?.isAdmin && (
-                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8">
+                  <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-8">
                     <div className="space-y-6">
-                      <div className="w-12 h-12 bg-purple-600/10 rounded-2xl flex items-center justify-center text-purple-400">
+                      <div className="w-10 h-10 bg-purple-600/10 rounded-lg flex items-center justify-center text-purple-400">
                         <svg
                           className="w-6 h-6"
                           fill="none"
@@ -2133,7 +2203,7 @@ const App: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-black text-slate-100 uppercase italic">
+                      <h3 className="text-[15px] font-semibold text-slate-100">
                         User Management
                       </h3>
                       <p className="text-slate-400 text-sm leading-relaxed">
@@ -2177,7 +2247,7 @@ const App: React.FC = () => {
 
                 {/* Reset System */}
                 <div className="bg-rose-950/10 p-10 rounded-[3rem] border border-rose-500/20 space-y-8">
-                  <div className="w-12 h-12 bg-rose-600/10 rounded-2xl flex items-center justify-center text-rose-500">
+                  <div className="w-10 h-10 bg-rose-600/10 rounded-lg flex items-center justify-center text-rose-500">
                     <svg
                       className="w-6 h-6"
                       fill="none"
@@ -2192,7 +2262,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-rose-500 uppercase italic">
+                  <h3 className="text-[15px] font-semibold text-rose-500">
                     Danger Zone
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -2202,7 +2272,7 @@ const App: React.FC = () => {
                   </p>
                   <button
                     onClick={() => setIsResetModalOpen(true)}
-                    className="w-full py-5 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all active:scale-95"
+                    className="w-full min-h-[44px] py-2.5 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white rounded-xl font-semibold text-sm transition-all active:scale-95"
                   >
                     Hard Reset Environment
                   </button>
@@ -2211,6 +2281,17 @@ const App: React.FC = () => {
             </div>
           )}
         </section>
+
+        <button
+          type="button"
+          onClick={startNewEntry}
+          aria-label="New transaction"
+          className="md:hidden fixed right-4 bottom-[104px] z-[110] w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-2xl flex items-center justify-center active:scale-95 transition-transform"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.4" d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
 
         <nav className="md:hidden flex justify-between gap-1 overflow-x-auto no-scrollbar px-2 py-4 bg-slate-900 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
           <NavItem id="home" icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" label="Home" />
@@ -2234,7 +2315,7 @@ const App: React.FC = () => {
             icon="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m16-10a4 4 0 11-8 0 4 4 0 018 0z"
             label="Payees"
           />
-          <NavItem id="export_log" icon="M9 12h6m-6 4h6m2 5" label="Exports" />
+          <NavItem id="export_log" icon="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" label="Exports" />
           <NavItem
             id="options"
             icon="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
@@ -2248,7 +2329,7 @@ const App: React.FC = () => {
 
         {/* Reset Confirmation Modal */}
         {isResetModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-50/40 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-slate-900 border-2 border-rose-500/30 rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8">
               <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
                 <svg
@@ -2266,7 +2347,7 @@ const App: React.FC = () => {
                 </svg>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                <h3 className="text-lg font-semibold text-slate-100">
                   Hard Reset?
                 </h3>
                 <p className="text-slate-400 text-sm">
@@ -2278,19 +2359,19 @@ const App: React.FC = () => {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={() => handleReset(true)}
-                  className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
+                  className="w-full min-h-[44px] py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm shadow-xl shadow-indigo-600/20 active:scale-95 transition-all"
                 >
                   Backup & Reset (Recommended)
                 </button>
                 <button
                   onClick={() => handleReset(false)}
-                  className="w-full py-5 bg-rose-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-rose-600/20 active:scale-95 transition-all"
+                  className="w-full min-h-[44px] py-2.5 bg-rose-600 text-white rounded-xl font-semibold text-sm shadow-xl shadow-rose-600/20 active:scale-95 transition-all"
                 >
                   Confirm Full Wipe
                 </button>
                 <button
                   onClick={() => setIsResetModalOpen(false)}
-                  className="w-full py-5 bg-slate-800 text-slate-300 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] active:scale-95 transition-all"
+                  className="w-full min-h-[44px] py-2.5 bg-slate-800 text-slate-300 rounded-xl font-semibold text-sm active:scale-95 transition-all"
                 >
                   Cancel
                 </button>
@@ -2301,7 +2382,7 @@ const App: React.FC = () => {
 
         {/* Restore Confirmation Modal */}
         {isRestoreModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-50/40 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-slate-900 border-2 border-indigo-500/30 rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8">
               <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 mx-auto">
                 <svg
@@ -2319,7 +2400,7 @@ const App: React.FC = () => {
                 </svg>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                <h3 className="text-lg font-semibold text-slate-100">
                   Restore System?
                 </h3>
                 <p className="text-slate-400 text-sm">
@@ -2350,7 +2431,7 @@ const App: React.FC = () => {
                   <button
                     disabled={!restoreFile || isSaving}
                     onClick={handleRestore}
-                    className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all active:scale-95 ${
+                    className={`w-full min-h-[44px] py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-95 ${
                       !restoreFile || isSaving
                         ? "bg-slate-800 text-slate-600 grayscale cursor-not-allowed"
                         : "bg-indigo-600 text-white shadow-xl shadow-indigo-600/20"
@@ -2363,7 +2444,7 @@ const App: React.FC = () => {
                       setIsRestoreModalOpen(false);
                       setRestoreFile(null);
                     }}
-                    className="w-full py-5 bg-slate-800 text-slate-300 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] active:scale-95 transition-all"
+                    className="w-full min-h-[44px] py-2.5 bg-slate-800 text-slate-300 rounded-xl font-semibold text-sm active:scale-95 transition-all"
                   >
                     Cancel
                   </button>
@@ -2375,7 +2456,7 @@ const App: React.FC = () => {
         {/* Donate Modal */}
         {isDonateModalOpen && (
           <div
-            className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-50/40 backdrop-blur-xl animate-in fade-in duration-300"
+            className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => setIsDonateModalOpen(false)}
           >
             <div
@@ -2411,7 +2492,7 @@ const App: React.FC = () => {
                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.016.393 5.464 0 5.972 0h10.362c3.567 0 5.166 1.765 4.88 4.417-.168 1.551-.838 3.13-1.927 4.544-1.22 1.587-2.863 2.628-4.75 3.023l-.116.024c-.754.148-1.206.561-1.34 1.23l-1.35 6.757c-.085.424-.455.742-.887.742h-3.955l.82-4.102c.022-.112.12-.193.234-.193h2.32c.321 0 .58-.26.58-.582a.582.582 0 0 0-.012-.117l-.582-2.91a.583.583 0 0 0-.57-.468h-2.32c-.322 0-.58.26-.58.582a.58.58 0 0 0 .012.117l-.82 4.1z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-black text-slate-100 uppercase italic">
+                <h3 className="text-lg font-semibold text-slate-100">
                   Support the Bridge
                 </h3>
                 <p className="text-slate-400 text-sm">
