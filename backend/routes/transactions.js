@@ -2,6 +2,7 @@ import express from 'express';
 import { body, param, query } from 'express-validator';
 import db from '../db/index.js';
 import { validate } from '../middleware/validation.js';
+import { createTransaction } from '../services/transactionWriter.js';
 
 const router = express.Router();
 
@@ -82,71 +83,16 @@ router.post('/',
   ],
   async (req, res, next) => {
     try {
-      const { type, accountId, targetAccountId, amount, date, payee, memo, categoryId, paymentType, targetAmount, status = 0 } = req.body;
-
-      if (type === 'transfer') {
-        if (!targetAccountId) {
-          return res.status(400).json({ error: 'Target account required for transfers' });
-        }
-        if (accountId === targetAccountId) {
-          return res.status(400).json({ error: 'Cannot transfer to the same account' });
-        }
-
-        // ATOMIC TRANSACTION for dual-record transfer
-        await db.exec('BEGIN TRANSACTION');
-        try {
-          const uuid = `tr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          
-          const sourceAccount = await db.get('SELECT name FROM accounts WHERE id = ?', targetAccountId);
-          const targetAccount = await db.get('SELECT name FROM accounts WHERE id = ?', accountId);
-
-          const transferCategoryResult = await db.get("SELECT id FROM categories WHERE name='Internal Transfer' LIMIT 1");
-          const transferCategoryId = transferCategoryResult?.id || null;
-
-          await db.run(`
-            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status)
-            VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)
-          `, accountId, date, `Transfer to ${sourceAccount?.name || 'Account'}`, -amount, transferCategoryId, uuid, memo || '', status);
-
-          await db.run(`
-            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status)
-            VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)
-          `, targetAccountId, date, `Transfer from ${targetAccount?.name || 'Account'}`, targetAmount || amount, transferCategoryId, uuid, memo || '', status);
-
-          await db.exec('COMMIT');
-
-          res.status(201).json({ message: 'Transfer created', transferId: uuid });
-        } catch (err) {
-          await db.exec('ROLLBACK');
-          throw err;
-        }
+      const result = await createTransaction(req.body);
+      if (result.transferId) {
+        res.status(201).json({ message: 'Transfer created', transferId: result.transferId });
       } else {
-        // Single transaction
-        const finalAmount = type === 'expense' ? -amount : amount;
-        const result = await db.run(`
-          INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, memo, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, accountId, date, payee || '', finalAmount, categoryId || null, paymentType || 0, memo || '', status);
-
-        // Auto-create/update payee if provided
-        if (payee && categoryId) {
-          const existingPayee = await db.get('SELECT id FROM payees WHERE name = ?', payee);
-          if (existingPayee) {
-            await db.run(`
-              UPDATE payees SET default_category_id = ?, default_payment_type = ?
-              WHERE name = ?
-            `, categoryId, paymentType || null, payee);
-          } else {
-            await db.run(`
-              INSERT INTO payees (name, default_category_id, default_payment_type)
-              VALUES (?, ?, ?)
-            `, payee, categoryId, paymentType || null);
-          }
-        }
-
-        res.status(201).json({ id: result.lastID });
+        res.status(201).json({ id: result.id });
       }
     } catch (err) {
+      if (err.status === 400) {
+        return res.status(400).json({ error: err.message });
+      }
       next(err);
     }
   }

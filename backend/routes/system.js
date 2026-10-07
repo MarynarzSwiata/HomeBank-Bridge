@@ -121,7 +121,7 @@ router.post('/reset', async (req, res) => {
     // 3. Accounts
     // 4. Categories (self-referencing parent_id handles via Order if needed, but DELETE ALL is fine)
     // 5. Export Logs
-    const tables = ['transactions', 'payees', 'budgets', 'accounts', 'categories', 'export_log'];
+    const tables = ['transactions', 'payees', 'budgets', 'scheduled', 'accounts', 'categories', 'export_log'];
     for (const table of tables) {
       await db.run(`DELETE FROM ${table}`);
       try {

@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import type { Account, Category, Transaction } from '../../types';
 import { ACCOUNT_TYPE_OPTIONS } from '../../constants';
+import type { UseScheduledResult } from '../../hooks/useScheduled';
+import { describeItem } from '../scheduled/ScheduledView';
+import { formatDateForDisplay } from '../../utils/dateUtils';
 import {
   PERIODS,
   PeriodId,
@@ -11,6 +14,7 @@ import {
   categoryLookup,
   flowTransactions as getFlowTransactions,
   formatMoney,
+  toISO,
 } from '../../utils/periodUtils';
 
 /**
@@ -26,7 +30,13 @@ interface DashboardViewProps {
   onOpenAccount: (id: number) => void;
   onAddTransaction: () => void;
   onOpenGuide: () => void;
+  scheduled: UseScheduledResult;
+  dateFormat: string;
+  onOpenScheduled: () => void;
 }
+
+const UPCOMING_DAYS = 14;
+const UPCOMING_LIMIT = 6;
 
 // Chart series colours (validated for CVD separation and contrast on the dark surface).
 // Colour follows the entity: income is always blue, expense always orange.
@@ -44,6 +54,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenAccount,
   onAddTransaction,
   onOpenGuide,
+  scheduled,
+  dateFormat,
+  onOpenScheduled,
 }) => {
   const { currencies, defaultCurrency } = useMemo(() => currencyInfo(accounts), [accounts]);
 
@@ -245,6 +258,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </section>
       </div>
 
+      <UpcomingScheduled scheduled={scheduled} dateFormat={dateFormat} fmt={fmt} onOpenScheduled={onOpenScheduled} />
+
       {/* Account summary */}
       <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
         <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Your accounts</h2>
@@ -403,5 +418,83 @@ const MonthlyChart: React.FC<{ months: MonthPoint[]; fmt: (v: number) => string;
         </tbody>
       </table>
     </div>
+  );
+};
+
+/** Due and upcoming scheduled transactions, like HomeBank's home "scheduled" panel */
+const UpcomingScheduled: React.FC<{
+  scheduled: UseScheduledResult;
+  dateFormat: string;
+  fmt: (v: number) => string;
+  onOpenScheduled: () => void;
+}> = ({ scheduled, dateFormat, fmt, onOpenScheduled }) => {
+  const today = toISO(new Date());
+  const horizonDate = new Date();
+  horizonDate.setDate(horizonDate.getDate() + UPCOMING_DAYS);
+  const horizon = toISO(horizonDate);
+  const upcoming = scheduled.items.filter(i => !i.finished && i.next_date <= horizon);
+  const dueCount = upcoming.filter(i => i.next_date <= today).length;
+
+  if (scheduled.items.length === 0) return null;
+
+  return (
+    <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+      <header className="flex flex-wrap items-center gap-3">
+        <div>
+          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Scheduled</h2>
+          <p className="text-[10px] font-bold text-slate-500 mt-1">Due now and in the next {UPCOMING_DAYS} days</p>
+        </div>
+        <div className="flex gap-2 md:ml-auto">
+          {dueCount > 0 && (
+            <button
+              onClick={() => scheduled.postDue()}
+              disabled={scheduled.isSaving}
+              className="px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 disabled:opacity-40"
+            >
+              Post all due ({dueCount})
+            </button>
+          )}
+          <button onClick={onOpenScheduled} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-white">
+            Manage
+          </button>
+        </div>
+      </header>
+      {scheduled.error && <p className="text-xs font-bold text-rose-400">{scheduled.error}</p>}
+      {upcoming.length === 0 ? (
+        <p className="text-sm text-slate-500">Nothing due in the next {UPCOMING_DAYS} days.</p>
+      ) : (
+        <ul className="divide-y divide-slate-800/60">
+          {upcoming.slice(0, UPCOMING_LIMIT).map(item => {
+            const due = item.next_date <= today;
+            return (
+              <li key={item.id} className="py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+                <span className={`w-24 text-xs font-black tabular-nums ${due ? 'text-amber-300' : 'text-slate-300'}`}>
+                  {formatDateForDisplay(item.next_date, dateFormat)}
+                </span>
+                <span className="flex-1 min-w-[8rem] text-sm font-bold text-slate-100 truncate">
+                  {describeItem(item)}
+                  {due && <span className="ml-2 text-[9px] font-black uppercase tracking-widest text-amber-300">{item.next_date < today ? 'Overdue' : 'Due'}</span>}
+                </span>
+                <span className="text-sm font-bold tabular-nums text-slate-200">
+                  {item.type === 'expense' ? '−' : item.type === 'income' ? '+' : ''}{fmt(item.amount)} <span className="text-[10px] text-slate-500">{item.currency}</span>
+                </span>
+                <button
+                  onClick={() => scheduled.post(item.id)}
+                  disabled={scheduled.isSaving}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600/40 disabled:opacity-40"
+                >
+                  Post
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {upcoming.length > UPCOMING_LIMIT && (
+        <button onClick={onOpenScheduled} className="text-[10px] font-black uppercase tracking-widest text-indigo-300">
+          + {upcoming.length - UPCOMING_LIMIT} more
+        </button>
+      )}
+    </section>
   );
 };

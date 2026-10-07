@@ -92,3 +92,44 @@ export type BudgetInput =
   | { mode: 'none' }
   | { mode: 'same'; amount: number }
   | { mode: 'monthly'; months: number[] };
+
+export type ScheduleUnit = 'day' | 'week' | 'month' | 'year';
+
+/** Recurring transaction template (HomeBank "scheduled") */
+export interface ScheduledItem {
+  id: number;
+  type: 'expense' | 'income' | 'transfer';
+  account_id: number;
+  target_account_id: number | null;
+  amount: number;
+  target_amount: number | null;
+  payee: string;
+  category_id: number | null;
+  payment_type: number;
+  memo: string;
+  every: number;
+  unit: ScheduleUnit;
+  next_date: string;
+  end_date: string | null;
+  account_name: string;
+  currency: string;
+  target_account_name: string | null;
+  category_name: string | null;
+  finished: boolean;
+}
+
+export interface ScheduledInput {
+  type: ScheduledItem['type'];
+  accountId: number;
+  targetAccountId?: number | null;
+  amount: number;
+  targetAmount?: number | null;
+  payee?: string;
+  categoryId?: number | null;
+  paymentType?: number;
+  memo?: string;
+  every: number;
+  unit: ScheduleUnit;
+  nextDate: string;
+  endDate?: string | null;
+}

@@ -145,6 +145,7 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **🔁 Scheduled Transactions**: Recurring expenses, income and transfers (every N days / weeks / months / years, optional end date). Due items are shown on Home and in the Scheduled tab; post or skip them one by one, or post all due at once. Nothing is posted automatically, so using the app on several computers never creates duplicates. Monthly items keep their day (e.g. the 31st falls back to the 30th/28th in shorter months).
 - **🎯 Monthly Budget**: Set a budget per category — the same amount every month or a different amount per month. The Budget tab shows budget vs actual, remaining amount and an "over budget" warning for any month; parent categories include their subcategories.
 - **📈 Reports**: Expense or income totals grouped by category, subcategory, payee or month, for any period (presets or a custom range), per account or currency, with CSV export.
 - **🏠 Home Dashboard**: New start screen like HomeBank's main window — income / expense / balance for a chosen period (this month, last month, last 30 days, this year, last 12 months), top spending by category, income vs expense for the last 6 months, and an account summary with per-currency totals. Transfers between own accounts are not counted as income or spending.
