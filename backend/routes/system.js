@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import config from '../config/database.js';
 import db, { initDb, closeDb } from '../db/index.js';
+import runMigrations from '../db/migrate.js';
 
 import multer from 'multer';
 
@@ -94,6 +95,9 @@ router.post('/restore', upload.single('database'), async (req, res) => {
       if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
     }
 
+    // Older backups may predate recent migrations
+    await runMigrations();
+
     console.log('🎉 Database restored successfully');
     res.json({ message: 'Database restored successfully.' });
   } catch (err) {
@@ -117,7 +121,7 @@ router.post('/reset', async (req, res) => {
     // 3. Accounts
     // 4. Categories (self-referencing parent_id handles via Order if needed, but DELETE ALL is fine)
     // 5. Export Logs
-    const tables = ['transactions', 'payees', 'accounts', 'categories', 'export_log'];
+    const tables = ['transactions', 'payees', 'budgets', 'scheduled', 'rules', 'accounts', 'categories', 'export_log'];
     for (const table of tables) {
       await db.run(`DELETE FROM ${table}`);
       try {

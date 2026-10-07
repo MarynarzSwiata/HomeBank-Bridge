@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import type { Account, Category, Payee, Transaction } from '../../types';
+import type { Account, Category, Payee, Rule, Transaction } from '../../types';
+import { findRule, mergeTags, normalizeTags } from '../../utils/tagUtils';
 import type { TransactionType } from '../../hooks';
 import { 
   Button, 
@@ -19,6 +20,7 @@ export interface TransactionFormProps {
   onSave: (data: TransactionSaveData, keepOpen?: boolean) => Promise<boolean>;
   onCancel: () => void;
   onCategoryCreate?: (name: string, parentId?: number) => Promise<number | null>;
+  rules?: Rule[];
   key?: React.Key;
 }
 
@@ -32,6 +34,7 @@ export interface TransactionFormValues {
   paymentType: string;
   date: string;
   memo: string;
+  tags?: string;
   editingId: number | null;
   targetAmount?: string;
 }
@@ -47,6 +50,7 @@ export interface TransactionSaveData {
   paymentType?: number;
   targetAccountId?: number;
   targetAmount?: number;
+  tags?: string;
   editingId?: number | null;
 }
 
@@ -96,6 +100,7 @@ export function TransactionForm({
   onSave,
   onCancel,
   onCategoryCreate,
+  rules = [],
 }: TransactionFormProps) {
   // Form state
   const [entryType, setEntryType] = useState<TransactionType>(initialValues?.entryType || 'expense');
@@ -106,6 +111,8 @@ export function TransactionForm({
   const [paymentType, setPaymentType] = useState(initialValues?.paymentType || '6');
   const [date, setDate] = useState(initialValues?.date || getTodayISO());
   const [memo, setMemo] = useState(initialValues?.memo || '');
+  const [tags, setTags] = useState(initialValues?.tags || '');
+  const [ruleApplied, setRuleApplied] = useState<string | null>(null);
   const [targetAmount, setTargetAmount] = useState(initialValues?.targetAmount || '');
   const [editingId] = useState<number | null>(initialValues?.editingId || null);
   const [isSmartApplied, setIsSmartApplied] = useState(false);
@@ -153,9 +160,12 @@ export function TransactionForm({
   }, [categories, mainCategoryId]);
 
   // Account options
+  // Closed accounts are hidden, except ones already used by the edited entry
   const accountOptions = useMemo(() => 
-    accounts.map(a => ({ id: a.id, name: `${a.name} (${a.currency})` })),
-    [accounts]
+    accounts
+      .filter(a => !a.closed || String(a.id) === accountId || String(a.id) === targetAccountId)
+      .map(a => ({ id: a.id, name: `${a.name} (${a.currency})` })),
+    [accounts, accountId, targetAccountId]
   );
 
   // Payee suggestions
@@ -163,6 +173,39 @@ export function TransactionForm({
     payees.map(p => ({ id: p.name, name: p.name })),
     [payees]
   );
+
+  const setCategoryById = useCallback((catId: number) => {
+    const cat = flatCategories.find(c => c.id === catId);
+    if (!cat) return;
+    if (cat.parent_id) {
+      setMainCategoryId(String(cat.parent_id));
+      setSubCategoryId(String(cat.id));
+    } else {
+      setMainCategoryId(String(cat.id));
+      setSubCategoryId('');
+    }
+  }, [flatCategories]);
+
+  // Assignment rules (HomeBank-style): fill category / payment / tags from payee or memo text
+  const applyRules = useCallback((payeeVal: string, memoVal: string, overrideCategory: boolean) => {
+    if (entryType === 'transfer' || editingId !== null || rules.length === 0) return false;
+    const rule = findRule(rules, payeeVal, memoVal);
+    if (!rule) {
+      setRuleApplied(null);
+      return false;
+    }
+    if (rule.category_id && overrideCategory) setCategoryById(rule.category_id);
+    if (rule.payment_type) setPaymentType(String(rule.payment_type));
+    if (rule.tags) setTags(prev => mergeTags(prev, rule.tags));
+    setRuleApplied(rule.pattern);
+    return true;
+  }, [entryType, editingId, rules, setCategoryById]);
+
+  const handleMemoChange = useCallback((val: string) => {
+    setMemo(val);
+    // Only fill an empty category from memo rules; never overwrite the user's choice
+    applyRules(payee, val, !mainCategoryId);
+  }, [applyRules, payee, mainCategoryId]);
 
   // Smart payee matching
   const handlePayeeChange = useCallback((val: string) => {
@@ -193,10 +236,13 @@ export function TransactionForm({
         setPaymentType(String(matchingPayee.default_payment_type));
       }
       setIsSmartApplied(true);
+      setRuleApplied(null);
     } else {
       setIsSmartApplied(false);
+      // No remembered payee: try assignment rules
+      applyRules(val, memo, true);
     }
-  }, [entryType, editingId, payees, flatCategories]);
+  }, [entryType, editingId, payees, flatCategories, applyRules, memo]);
 
   // Swap accounts for transfer
   const swapAccounts = useCallback(() => {
@@ -280,6 +326,7 @@ export function TransactionForm({
         targetAmount: targetAmount && isCurrencyMismatch ? Math.abs(parseFloat(targetAmount.replace(',', '.'))) : undefined,
         date,
         memo: memo || undefined,
+        tags: normalizeTags(tags),
         editingId,
       };
     } else if (editingId) {
@@ -294,6 +341,7 @@ export function TransactionForm({
         memo: memo || undefined,
         categoryId: finalCategoryId || undefined,
         paymentType: paymentType ? parseInt(paymentType) : undefined,
+        tags: normalizeTags(tags),
         editingId,
       };
     } else {
@@ -307,6 +355,7 @@ export function TransactionForm({
         memo: memo || undefined,
         categoryId: finalCategoryId || undefined,
         paymentType: paymentType ? parseInt(paymentType) : undefined,
+        tags: normalizeTags(tags),
       };
     }
     
@@ -314,7 +363,7 @@ export function TransactionForm({
     if (success && !keepOpen) {
       // Form will be reset by parent via onCancel or re-render
     }
-  }, [validate, amount, entryType, accountId, targetAccountId, date, memo, payee, mainCategoryId, subCategoryId, paymentType, editingId, onSave, targetAmount, isCurrencyMismatch]);
+  }, [validate, amount, entryType, accountId, targetAccountId, date, memo, payee, mainCategoryId, subCategoryId, paymentType, editingId, onSave, targetAmount, isCurrencyMismatch, tags]);
 
   return (
     <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 space-y-6">
@@ -353,6 +402,14 @@ export function TransactionForm({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           Lexicon pattern matched
+        </div>
+      )}
+      {ruleApplied && !isSmartApplied && (
+        <div className="flex items-center gap-2 text-indigo-400 text-[10px] font-black uppercase tracking-widest bg-indigo-500/10 rounded-2xl px-5 py-3 border border-indigo-500/20">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Rule "{ruleApplied}" applied
         </div>
       )}
 
@@ -532,10 +589,27 @@ export function TransactionForm({
           <input
             type="text"
             value={memo}
-            onChange={(e) => setMemo(e.target.value)}
+            onChange={(e) => handleMemoChange(e.target.value)}
             placeholder="Add a brief description..."
             disabled={isSaving}
             className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-white uppercase placeholder:lowercase"
+          />
+        </div>
+
+        {/* Tags */}
+        <div className="md:col-span-2">
+          <label htmlFor="tx-tags" className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 px-2">
+            Tags
+          </label>
+          <input
+            id="tx-tags"
+            type="text"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
+            onBlur={() => setTags(normalizeTags(tags))}
+            placeholder="e.g. vacation2026 car (separate with spaces)"
+            disabled={isSaving}
+            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-white"
           />
         </div>
       </div>

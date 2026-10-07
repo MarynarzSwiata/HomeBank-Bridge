@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import type { Transaction, Account, Category, Payee } from '../../types';
+import type { Transaction, Account, Category, Payee, Rule, TransactionStatus } from '../../types';
+import { splitTags } from '../../utils/tagUtils';
+import { TRANSACTION_STATUS } from '../../constants';
 import { TransactionForm, TransactionSaveData, TransactionFormValues } from './TransactionForm';
 import { transactionsService } from '../../api/services';
 import { ImportModal } from '../shared/ImportModal';
@@ -39,6 +41,8 @@ export interface TransactionsViewProps {
   onClearError?: () => void;
   onToggleAnonymize?: () => void;
   onCategoryCreate?: (name: string, parentId?: number) => Promise<number | null>;
+  onSetStatus?: (ids: number[], status: TransactionStatus) => Promise<boolean>;
+  rules?: Rule[];
 }
 
 type SortField = 'date' | 'payee' | 'category' | 'amount';
@@ -64,6 +68,8 @@ export function TransactionsView({
   onClearError,
   onToggleAnonymize,
   onCategoryCreate,
+  onSetStatus,
+  rules,
 }: TransactionsViewProps) {
   // Filter state - use initialAccountFilter if provided
   const [filterAccount, setFilterAccount] = useState(initialAccountFilter);
@@ -72,6 +78,8 @@ export function TransactionsView({
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterTag, setFilterTag] = useState('');
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(!!initialAccountFilter);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
@@ -183,6 +191,11 @@ export function TransactionsView({
       if (filterDateFrom && tCompDate < filterDateFrom) return false;
       if (filterDateTo && tCompDate > filterDateTo) return false;
 
+      if (filterTag && !splitTags(t.tags).some(tag => tag.toLowerCase() === filterTag.toLowerCase())) return false;
+      if (filterStatus === 'uncleared' && t.status !== 0) return false;
+      if (filterStatus === 'cleared' && t.status !== 1) return false;
+      if (filterStatus === 'reconciled' && t.status !== 2) return false;
+
       if (filterType) {
         if (filterType === 'expense' && ((t.amount || 0) >= 0 || t.transfer_id)) return false;
         if (filterType === 'income' && ((t.amount || 0) <= 0 || t.transfer_id)) return false;
@@ -210,7 +223,72 @@ export function TransactionsView({
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [transactions, filterAccount, filterCategory, filterPayee, filterDateFrom, filterDateTo, filterType, sortField, sortOrder]);
+  }, [transactions, filterAccount, filterCategory, filterPayee, filterDateFrom, filterDateTo, filterType, filterStatus, filterTag, sortField, sortOrder]);
+
+  // Running balance per transaction (like a HomeBank account register).
+  // Only meaningful when a single account is selected; computed over that account's full history.
+  const runningBalances = useMemo(() => {
+    const map = new Map<number, number>();
+    if (!filterAccount) return map;
+    const account = accounts.find(a => String(a.id) === filterAccount);
+    if (!account) return map;
+    const rows = transactions
+      .filter(t => String(t.account_id) === filterAccount)
+      .sort((a, b) =>
+        parseDateForComparison(a.date).localeCompare(parseDateForComparison(b.date)) || a.id - b.id
+      );
+    let balance = account.initial_balance || 0;
+    for (const t of rows) {
+      balance += t.amount || 0;
+      map.set(t.id, Math.round(balance * 100) / 100);
+    }
+    return map;
+  }, [transactions, accounts, filterAccount]);
+
+  const cycleStatus = useCallback((t: Transaction) => {
+    const next = ((t.status + 1) % 3) as TransactionStatus;
+    onSetStatus?.([t.id], next);
+  }, [onSetStatus]);
+
+  const setSelectedStatus = useCallback(async (status: TransactionStatus) => {
+    if (!onSetStatus) return;
+    const ok = await onSetStatus(Array.from(selectedIds), status);
+    if (ok) setSelectedIds(new Set());
+  }, [onSetStatus, selectedIds]);
+
+  const tagOptions = useMemo(() => {
+    const all = new Map<string, string>();
+    transactions.forEach(t => splitTags(t.tags).forEach(tag => all.set(tag.toLowerCase(), tag)));
+    return Array.from(all.values()).sort((a, b) => a.localeCompare(b)).map(tag => ({ id: tag, name: `#${tag}` }));
+  }, [transactions]);
+
+  const statusFilterOptions = [
+    { id: 'uncleared', name: 'None (uncleared)' },
+    { id: 'cleared', name: 'Cleared' },
+    { id: 'reconciled', name: 'Reconciled' },
+  ];
+
+  const StatusBadge = ({ t }: { t: Transaction }) => {
+    const label = TRANSACTION_STATUS[t.status]?.short || '';
+    return (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); cycleStatus(t); }}
+        disabled={!onSetStatus || isSaving}
+        title={`Status: ${TRANSACTION_STATUS[t.status]?.name}. Click to change (None → Cleared → Reconciled).`}
+        aria-label={`Transaction status ${TRANSACTION_STATUS[t.status]?.name}, click to change`}
+        className={`inline-flex items-center justify-center w-6 h-6 rounded-md border text-[10px] font-black transition-all disabled:cursor-not-allowed ${
+          t.status === 2
+            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+            : t.status === 1
+              ? 'bg-sky-500/20 border-sky-500/40 text-sky-300'
+              : 'bg-slate-800 border-slate-700 text-slate-600 hover:text-slate-300'
+        }`}
+      >
+        {label || '·'}
+      </button>
+    );
+  };
 
   // Paginated
   const visibleTransactions = useMemo(() => {
@@ -225,6 +303,8 @@ export function TransactionsView({
     setFilterDateFrom('');
     setFilterDateTo('');
     setFilterType('');
+    setFilterStatus('');
+    setFilterTag('');
     setItemsToShow(25);
     // Notify parent to clear account filter state
     onClearAccountFilter?.();
@@ -321,6 +401,7 @@ export function TransactionsView({
             paymentType: String(expensePart.payment_type),
             date: isoDate,
             memo: expensePart.memo || '',
+            tags: expensePart.tags || '',
             editingId: expensePart.id,
           };
         }
@@ -338,6 +419,7 @@ export function TransactionsView({
       paymentType: String(t.payment_type),
       date: isoDate,
       memo: t.memo || '',
+      tags: t.tags || '',
       editingId: isDuplicate ? null : t.id,
     };
   }, [transactions]);
@@ -385,7 +467,7 @@ export function TransactionsView({
   }, []);
 
   // Check if filters are active
-  const hasActiveFilters = filterAccount || filterCategory || filterPayee || filterDateFrom || filterDateTo || filterType;
+  const hasActiveFilters = filterAccount || filterCategory || filterPayee || filterDateFrom || filterDateTo || filterType || filterStatus || filterTag;
 
   return (
     <div className="space-y-8">
@@ -535,6 +617,7 @@ export function TransactionsView({
               onSave={handleSave}
               onCancel={handleCancel}
               onCategoryCreate={onCategoryCreate}
+              rules={rules}
             />
           </div>
         )}
@@ -602,6 +685,25 @@ export function TransactionsView({
               showAllOption
               allLabel="ALL TYPES"
             />
+            <SearchableSelect
+              label="Status"
+              options={statusFilterOptions}
+              value={filterStatus}
+              onChange={setFilterStatus}
+              placeholder="All Statuses"
+              showAllOption
+              allLabel="ALL STATUSES"
+              searchable={false}
+            />
+            <SearchableSelect
+              label="Tag"
+              options={tagOptions}
+              value={filterTag}
+              onChange={setFilterTag}
+              placeholder="All Tags"
+              showAllOption
+              allLabel="ALL TAGS"
+            />
             <div className="relative">
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">Entity Name</label>
               <input
@@ -648,7 +750,7 @@ export function TransactionsView({
                 </div>
               </div>
             </div>
-            <div className="flex items-end gap-3 lg:col-span-2">
+            <div className="flex items-end gap-3">
               <Button
                 variant="ghost"
                 onClick={clearFilters}
@@ -713,6 +815,14 @@ export function TransactionsView({
           </button>
         </div>
 
+        {selectedIds.size > 0 && onSetStatus && (
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-xl" disabled={isSaving} onClick={() => setSelectedStatus(1)}>Mark Cleared</Button>
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-xl" disabled={isSaving} onClick={() => setSelectedStatus(2)}>Mark Reconciled</Button>
+            <Button variant="ghost" size="sm" className="h-10 px-4 rounded-xl" disabled={isSaving} onClick={() => setSelectedStatus(0)}>Clear Status</Button>
+          </div>
+        )}
+
         {selectedIds.size > 0 && (
           <Button
             variant="danger"
@@ -773,7 +883,8 @@ export function TransactionsView({
 
                   {/* Date */}
                   <div className="col-span-2">
-                    <div className="text-sm font-black text-slate-100 uppercase tracking-tighter">
+                    <div className="flex items-center gap-2 text-sm font-black text-slate-100 uppercase tracking-tighter">
+                      <StatusBadge t={t} />
                       {formatDateForDisplay(t.date, dateFormat)}
                     </div>
                     <div className={`text-[9px] font-black uppercase tracking-widest mt-1 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
@@ -791,6 +902,7 @@ export function TransactionsView({
                         "{t.memo}"
                       </div>
                     )}
+                    <TagChips tags={t.tags} onPick={setFilterTag} />
                   </div>
 
                   {/* Category & Account */}
@@ -815,6 +927,11 @@ export function TransactionsView({
                           : `+${(t.amount || 0).toFixed(2)}`
                       )}
                     </div>
+                    {runningBalances.has(t.id) && (
+                      <div className="text-[10px] font-bold text-slate-500 mt-1" title="Account balance after this transaction">
+                        Bal. {isAnonymized ? 'xxxx' : runningBalances.get(t.id)!.toFixed(2)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
@@ -853,6 +970,7 @@ export function TransactionsView({
                         onChange={() => toggleSelection(t.id)}
                         className="w-6 h-6 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 focus:ring-offset-slate-900 transition-all cursor-pointer"
                       />
+                      <StatusBadge t={t} />
                       <div>
                         <div className="text-xs font-black text-indigo-400 uppercase tracking-tighter">
                           {formatDateForDisplay(t.date, dateFormat)}
@@ -869,6 +987,11 @@ export function TransactionsView({
                         isExpense
                           ? `-${Math.abs(t.amount || 0).toFixed(2)}`
                           : `+${(t.amount || 0).toFixed(2)}`
+                      )}
+                      {runningBalances.has(t.id) && (
+                        <div className="text-[10px] font-bold text-slate-500 text-right tracking-normal">
+                          Bal. {isAnonymized ? 'xxxx' : runningBalances.get(t.id)!.toFixed(2)}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -891,6 +1014,7 @@ export function TransactionsView({
                         "{t.memo}"
                       </div>
                     )}
+                    <TagChips tags={t.tags} onPick={setFilterTag} />
                   </div>
 
                   <div className="flex gap-2 pt-2">
@@ -959,6 +1083,27 @@ export function TransactionsView({
         accounts={accounts}
         dateFormat={dateFormat}
       />
+    </div>
+  );
+}
+
+/** Tags as small chips; clicking one filters the ledger by that tag */
+function TagChips({ tags, onPick }: { tags: string; onPick: (tag: string) => void }) {
+  const list = splitTags(tags);
+  if (list.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {list.map(tag => (
+        <button
+          key={tag}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onPick(tag); }}
+          title={`Show only #${tag}`}
+          className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-bold text-indigo-300 hover:bg-indigo-500/20"
+        >
+          #{tag}
+        </button>
+      ))}
     </div>
   );
 }

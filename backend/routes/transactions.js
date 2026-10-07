@@ -2,6 +2,9 @@ import express from 'express';
 import { body, param, query } from 'express-validator';
 import db from '../db/index.js';
 import { validate } from '../middleware/validation.js';
+import { createTransaction } from '../services/transactionWriter.js';
+import { normalizeTags, mergeTags } from '../services/tags.js';
+import { loadRules, findRule } from '../services/rules.js';
 
 const router = express.Router();
 
@@ -30,6 +33,8 @@ router.get('/',
           t.category_id,
           t.account_id,
           t.transfer_id,
+          t.status,
+          t.tags,
           t.exported,
           t.export_log_id
         FROM transactions t
@@ -76,75 +81,22 @@ router.post('/',
     body('paymentType').optional({ nullable: true }).isInt(),
     body('targetAccountId').optional({ nullable: true }).isInt(),
     body('targetAmount').optional({ nullable: true }).isFloat({ min: 0 }),
+    body('status').optional().isIn([0, 1, 2]).withMessage('Invalid status'),
+    body('tags').optional({ nullable: true }).isString().isLength({ max: 1000 }),
     validate
   ],
   async (req, res, next) => {
     try {
-      const { type, accountId, targetAccountId, amount, date, payee, memo, categoryId, paymentType, targetAmount } = req.body;
-
-      if (type === 'transfer') {
-        if (!targetAccountId) {
-          return res.status(400).json({ error: 'Target account required for transfers' });
-        }
-        if (accountId === targetAccountId) {
-          return res.status(400).json({ error: 'Cannot transfer to the same account' });
-        }
-
-        // ATOMIC TRANSACTION for dual-record transfer
-        await db.exec('BEGIN TRANSACTION');
-        try {
-          const uuid = `tr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          
-          const sourceAccount = await db.get('SELECT name FROM accounts WHERE id = ?', targetAccountId);
-          const targetAccount = await db.get('SELECT name FROM accounts WHERE id = ?', accountId);
-
-          const transferCategoryResult = await db.get("SELECT id FROM categories WHERE name='Internal Transfer' LIMIT 1");
-          const transferCategoryId = transferCategoryResult?.id || null;
-
-          await db.run(`
-            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo)
-            VALUES (?, ?, ?, ?, ?, 4, ?, ?)
-          `, accountId, date, `Transfer to ${sourceAccount?.name || 'Account'}`, -amount, transferCategoryId, uuid, memo || '');
-
-          await db.run(`
-            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo)
-            VALUES (?, ?, ?, ?, ?, 4, ?, ?)
-          `, targetAccountId, date, `Transfer from ${targetAccount?.name || 'Account'}`, targetAmount || amount, transferCategoryId, uuid, memo || '');
-
-          await db.exec('COMMIT');
-
-          res.status(201).json({ message: 'Transfer created', transferId: uuid });
-        } catch (err) {
-          await db.exec('ROLLBACK');
-          throw err;
-        }
+      const result = await createTransaction(req.body);
+      if (result.transferId) {
+        res.status(201).json({ message: 'Transfer created', transferId: result.transferId });
       } else {
-        // Single transaction
-        const finalAmount = type === 'expense' ? -amount : amount;
-        const result = await db.run(`
-          INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, memo)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, accountId, date, payee || '', finalAmount, categoryId || null, paymentType || 0, memo || '');
-
-        // Auto-create/update payee if provided
-        if (payee && categoryId) {
-          const existingPayee = await db.get('SELECT id FROM payees WHERE name = ?', payee);
-          if (existingPayee) {
-            await db.run(`
-              UPDATE payees SET default_category_id = ?, default_payment_type = ?
-              WHERE name = ?
-            `, categoryId, paymentType || null, payee);
-          } else {
-            await db.run(`
-              INSERT INTO payees (name, default_category_id, default_payment_type)
-              VALUES (?, ?, ?)
-            `, payee, categoryId, paymentType || null);
-          }
-        }
-
-        res.status(201).json({ id: result.lastID });
+        res.status(201).json({ id: result.id });
       }
     } catch (err) {
+      if (err.status === 400) {
+        return res.status(400).json({ error: err.message });
+      }
       next(err);
     }
   }
@@ -161,12 +113,15 @@ router.put('/:id',
     body('paymentType').optional({ nullable: true }).isInt(),
     body('memo').optional().trim(),
     body('accountId').optional().isInt(),
+    body('status').optional().isIn([0, 1, 2]).withMessage('Invalid status'),
+    body('tags').optional({ nullable: true }).isString().isLength({ max: 1000 }),
     validate
   ],
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { date, payee, amount, categoryId, paymentType, memo, accountId, targetAccountId, targetAmount } = req.body;
+      const { date, payee, amount, categoryId, paymentType, memo, accountId, targetAccountId, targetAmount, status } = req.body;
+      const tags = req.body.tags === undefined ? undefined : normalizeTags(req.body.tags);
 
       const transaction = await db.get('SELECT * FROM transactions WHERE id = ?', id);
       if (!transaction) {
@@ -191,6 +146,9 @@ router.put('/:id',
           if (date !== undefined) { pUpdates.push('date = ?'); pValues.push(date); }
           if (memo !== undefined) { pUpdates.push('memo = ?'); pValues.push(memo); }
           if (accountId !== undefined) { pUpdates.push('account_id = ?'); pValues.push(accountId); }
+          // Status is per side: each account is reconciled against its own statement
+          if (status !== undefined) { pUpdates.push('status = ?'); pValues.push(status); }
+          if (tags !== undefined) { pUpdates.push('tags = ?'); pValues.push(tags); }
           if (amount !== undefined) { 
             pUpdates.push('amount = ?'); 
             // In transfers, the source is negative
@@ -207,6 +165,7 @@ router.put('/:id',
           const sValues = [];
           if (date !== undefined) { sUpdates.push('date = ?'); sValues.push(date); }
           if (memo !== undefined) { sUpdates.push('memo = ?'); sValues.push(memo); }
+          if (tags !== undefined) { sUpdates.push('tags = ?'); sValues.push(tags); }
           if (targetAccountId !== undefined) { sUpdates.push('account_id = ?'); sValues.push(targetAccountId); }
           
           if (targetAmount !== undefined || amount !== undefined) {
@@ -233,6 +192,8 @@ router.put('/:id',
       if (paymentType !== undefined) { updates.push('payment_type = ?'); values.push(paymentType); }
       if (memo !== undefined) { updates.push('memo = ?'); values.push(memo); }
       if (accountId !== undefined) { updates.push('account_id = ?'); values.push(accountId); }
+      if (status !== undefined) { updates.push('status = ?'); values.push(status); }
+      if (tags !== undefined) { updates.push('tags = ?'); values.push(tags); }
 
       if (updates.length > 0) {
         values.push(id);
@@ -240,6 +201,29 @@ router.put('/:id',
       }
 
       res.json({ message: 'Transaction updated successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/transactions/status - Set status (0 none, 1 cleared, 2 reconciled) for many rows
+router.post('/status',
+  [
+    body('ids').isArray({ min: 1, max: 10000 }).withMessage('ids must be a non-empty array'),
+    body('ids.*').isInt(),
+    body('status').isIn([0, 1, 2]).withMessage('Invalid status'),
+    validate
+  ],
+  async (req, res, next) => {
+    try {
+      const { ids, status } = req.body;
+      const placeholders = ids.map(() => '?').join(',');
+      const result = await db.run(
+        `UPDATE transactions SET status = ? WHERE id IN (${placeholders})`,
+        status, ...ids
+      );
+      res.json({ updated: result.changes });
     } catch (err) {
       next(err);
     }
@@ -401,6 +385,9 @@ router.post('/import', async (req, res, next) => {
 
         // Cache for categories to avoid repeat lookups
         const categoryCache = new Map();
+        // Assignment rules fill in rows that come without a category
+        const rules = await loadRules();
+        let rulesApplied = 0;
 
         for (const line of lines) {
           // Skip header if present
@@ -410,7 +397,7 @@ router.post('/import', async (req, res, next) => {
           const parts = line.split(';');
           if (parts.length < 5) continue;
 
-          const [dateStr, payType, num, payee, memo, amountStr, catName] = parts.map(s => s.trim());
+          const [dateStr, payType, num, payee, memo, amountStr, catName, tagStr] = parts.map(s => s.trim());
           
           // Improved Date Parsing
           let date = dateStr;
@@ -468,18 +455,29 @@ router.post('/import', async (req, res, next) => {
             }
           }
 
-          const paymentType = parseInt(payType) || 0;
+          let paymentType = parseInt(payType) || 0;
+          let tags = normalizeTags(tagStr);
+
+          if (!categoryId) {
+            const rule = findRule(rules, { payee, memo });
+            if (rule) {
+              categoryId = rule.category_id || null;
+              if (!paymentType && rule.payment_type) paymentType = rule.payment_type;
+              tags = mergeTags(tags, rule.tags);
+              rulesApplied++;
+            }
+          }
 
           await db.run(`
-            INSERT INTO transactions (date, payee, amount, category_id, payment_type, memo, account_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-          `, date, payee, amount, categoryId, paymentType, memo, targetAcc.id); 
+            INSERT INTO transactions (date, payee, amount, category_id, payment_type, memo, account_id, tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, date, payee, amount, categoryId, paymentType, memo, targetAcc.id, tags); 
           
           importedCount++;
         }
 
         await db.exec('COMMIT');
-        res.status(201).json({ message: 'Transactions imported successfully', count: importedCount });
+        res.status(201).json({ message: 'Transactions imported successfully', count: importedCount, rulesApplied });
       } catch (err) {
         await db.exec('ROLLBACK');
         console.error('Import Error Trace:', err);
@@ -516,6 +514,7 @@ router.post('/export',
           t.payee,
           t.memo,
           t.amount,
+          t.tags,
           t.account_id,
           a.name as account_name,
           c.name as category_name,
@@ -606,8 +605,8 @@ router.post('/export',
             : (t.category_name || '');
         const categoryVal = escapeCSV(fullCategory);
 
-        // 8. Tags
-        const tags = '';
+        // 8. Tags (space-separated, HomeBank format)
+        const tags = escapeCSV(t.tags || '');
 
         return `${dateFormatted};${paymentType};${number};${payeeVal};${memoVal};${amountVal};${categoryVal};${tags}`;
       };

@@ -5,11 +5,14 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { ApiError, accountsService, systemService } from "./src/api";
+import { ApiError, accountsService, systemService, rulesService } from "./src/api";
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import type {
   Account,
+  AccountInput,
+  Rule,
+  TransactionStatus,
   Category,
   CategoryType,
   Payee,
@@ -26,6 +29,12 @@ import { AccountsView } from "./src/components/accounts/AccountsView";
 import { CategoriesView } from "./src/components/categories/CategoriesView";
 import { PayeesView } from "./src/components/payees/PayeesView";
 import { ExportHistoryView } from "./src/components/export/ExportHistoryView";
+import { DashboardView } from "./src/components/dashboard/DashboardView";
+import { BudgetView } from "./src/components/budget/BudgetView";
+import { ReportsView } from "./src/components/reports/ReportsView";
+import { ScheduledView } from "./src/components/scheduled/ScheduledView";
+import { RulesView } from "./src/components/rules/RulesView";
+import { useScheduled } from "./src/hooks/useScheduled";
 import {
   PAYMENT_LEXICON,
   PAYMENT_OPTIONS,
@@ -89,6 +98,11 @@ const App: React.FC = () => {
   const auth = useAuth();
 
   const [activeTab, setActiveTab] = useState<
+    | "home"
+    | "budget"
+    | "reports"
+    | "scheduled"
+    | "rules"
     | "how_to_use"
     | "transactions"
     | "accounts"
@@ -97,7 +111,7 @@ const App: React.FC = () => {
     | "export_log"
     | "options"
     | "changelog"
-  >("how_to_use");
+  >("home");
 
   // Helpers
   const getTodayISO = () => new Date().toISOString().split("T")[0];
@@ -310,6 +324,7 @@ const App: React.FC = () => {
             paymentType: data.paymentType,
             targetAccountId: data.targetAccountId,
             targetAmount: data.targetAmount,
+            tags: data.tags,
           }
         );
         if (success) {
@@ -335,6 +350,7 @@ const App: React.FC = () => {
           paymentType: data.paymentType,
           targetAccountId: data.targetAccountId,
           targetAmount: data.targetAmount,
+          tags: data.tags,
         });
         if (res) {
           await Promise.all([
@@ -371,7 +387,21 @@ const App: React.FC = () => {
     [transactionsHook, accountsHook, categoriesHook, payeesHook, showToast]
   );
 
-  const handleCreateAccount = useCallback(async (data: { name: string; currency: string; initialBalance?: number }) => {
+  const handleSetTransactionStatus = useCallback(
+    async (ids: number[], status: TransactionStatus): Promise<boolean> => {
+      const success = await transactionsHook.setStatus(ids, status);
+      if (success) {
+        // Reconciled/cleared balances depend on status
+        await accountsHook.refresh().catch(() => {});
+      } else {
+        showToast(transactionsHook.error || "Failed to update status", "error");
+      }
+      return success;
+    },
+    [transactionsHook, accountsHook, showToast]
+  );
+
+  const handleCreateAccount = useCallback(async (data: AccountInput) => {
     const id = await accountsHook.createAccount(data);
     if (id) {
       showToast(`Account "${data.name}" created successfully`, "success");
@@ -381,7 +411,7 @@ const App: React.FC = () => {
     return id;
   }, [accountsHook, showToast]);
 
-  const handleUpdateAccount = useCallback(async (id: number, data: { name?: string; currency?: string; initialBalance?: number }) => {
+  const handleUpdateAccount = useCallback(async (id: number, data: Partial<AccountInput>) => {
     const success = await accountsHook.updateAccount(id, data);
     if (success) {
       showToast("Account updated successfully", "success");
@@ -470,6 +500,28 @@ const App: React.FC = () => {
       exportLogHook.refresh(),
     ]).catch(() => {});
   }, [transactionsHook, accountsHook, categoriesHook, payeesHook, exportLogHook]);
+
+  // Scheduled transactions: posting creates real entries, so refresh the ledger afterwards
+  const scheduled = useScheduled(handleRefreshTransactions);
+  const refreshScheduled = scheduled.refresh;
+  useEffect(() => {
+    if (auth.isAuthenticated && (activeTab === "home" || activeTab === "scheduled")) {
+      refreshScheduled();
+    }
+  }, [auth.isAuthenticated, activeTab, refreshScheduled]);
+
+  // Assignment rules: used by the entry form and managed in the Rules tab
+  const [rules, setRules] = useState<Rule[]>([]);
+  const refreshRules = useCallback(async () => {
+    try {
+      setRules(await rulesService.getAll());
+    } catch (err) {
+      console.error("Failed to load rules:", err);
+    }
+  }, []);
+  useEffect(() => {
+    if (auth.isAuthenticated && activeTab === "transactions") refreshRules();
+  }, [auth.isAuthenticated, activeTab, refreshRules]);
 
   // Refresh effect removed (handled by useDataBootstrap)
 
@@ -590,7 +642,7 @@ const App: React.FC = () => {
   }) => (
     <button
       onClick={() => setActiveTab(id as any)}
-      className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${
+      className={`shrink-0 min-w-[3.75rem] flex flex-col items-center gap-1.5 transition-all duration-300 ${
         activeTab === id
           ? "text-indigo-400 scale-110 font-black"
           : "text-slate-500"
@@ -897,7 +949,7 @@ const App: React.FC = () => {
             </button>
             {isAccountListExpanded && (
               <div className="mt-2 space-y-1 px-4 animate-in fade-in slide-in-from-top-1 duration-300 max-h-40 overflow-y-auto no-scrollbar">
-                {accountsHook.accounts.map((acc) => (
+                {accountsHook.accounts.filter((acc) => !acc.closed).map((acc) => (
                   <div
                     key={acc.id}
                     className="px-3 py-2 flex justify-between items-center hover:bg-white/5 rounded-xl transition-all"
@@ -1002,6 +1054,7 @@ const App: React.FC = () => {
 
         <nav className="flex-1 space-y-3 w-64 overflow-y-auto no-scrollbar">
           {[
+            { id: "home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6", label: "Home" },
             {
               id: "how_to_use",
               icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
@@ -1013,6 +1066,10 @@ const App: React.FC = () => {
               icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
               label: "Accounts",
             },
+            { id: "scheduled", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", label: "Scheduled" },
+            { id: "rules", icon: "M13 10V3L4 14h7v7l9-11h-7z", label: "Rules" },
+            { id: "budget", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "Budget" },
+            { id: "reports", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", label: "Reports" },
             {
               id: "categories",
               icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z",
@@ -1429,6 +1486,59 @@ const App: React.FC = () => {
             </div>
           )}
 
+          {activeTab === "home" && (
+            <DashboardView
+              accounts={accountsHook.accounts}
+              transactions={transactionsHook.transactions}
+              categories={categoriesHook.categories}
+              isAnonymized={isAnonymized}
+              onOpenAccount={viewAccountHistory}
+              onAddTransaction={() => setActiveTab("transactions")}
+              onOpenGuide={() => setActiveTab("how_to_use")}
+              scheduled={scheduled}
+              dateFormat={dateFormat}
+              onOpenScheduled={() => setActiveTab("scheduled")}
+            />
+          )}
+
+          {activeTab === "scheduled" && (
+            <ScheduledView
+              scheduled={scheduled}
+              accounts={accountsHook.accounts}
+              categories={categoriesHook.categories}
+              payees={payeesHook.payees}
+              dateFormat={dateFormat}
+              isAnonymized={isAnonymized}
+            />
+          )}
+
+          {activeTab === "rules" && (
+            <RulesView
+              rules={rules}
+              categories={categoriesHook.categories}
+              onChanged={refreshRules}
+              onTransactionsChanged={handleRefreshTransactions}
+            />
+          )}
+
+          {activeTab === "budget" && (
+            <BudgetView
+              accounts={accountsHook.accounts}
+              transactions={transactionsHook.transactions}
+              categories={categoriesHook.categories}
+              isAnonymized={isAnonymized}
+            />
+          )}
+
+          {activeTab === "reports" && (
+            <ReportsView
+              accounts={accountsHook.accounts}
+              transactions={transactionsHook.transactions}
+              categories={categoriesHook.categories}
+              isAnonymized={isAnonymized}
+            />
+          )}
+
           {activeTab === "how_to_use" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-5xl mx-auto py-10">
               <div className="space-y-6 text-center">
@@ -1716,6 +1826,8 @@ const App: React.FC = () => {
                       });
                     }}
                     onExportLogged={handleRefreshTransactions}
+                    onSetStatus={handleSetTransactionStatus}
+                    rules={rules}
                   />
 
                   {/* Import Button (Temporary location until ImportView is refactored) */}
@@ -2219,18 +2331,18 @@ const App: React.FC = () => {
           )}
         </section>
 
-        <nav className="md:hidden flex justify-around px-2 py-4 bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
-          <NavItem
-            id="how_to_use"
-            icon="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            label="Guide"
-          />
+        <nav className="md:hidden flex justify-between gap-1 overflow-x-auto no-scrollbar px-2 py-4 bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
+          <NavItem id="home" icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" label="Home" />
           <NavItem id="transactions" icon="M12 4v16m8-8H4" label="Log" />
           <NavItem
             id="accounts"
             icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
             label="Vault"
           />
+          <NavItem id="scheduled" icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" label="Planned" />
+          <NavItem id="rules" icon="M13 10V3L4 14h7v7l9-11h-7z" label="Rules" />
+          <NavItem id="budget" icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" label="Budget" />
+          <NavItem id="reports" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" label="Reports" />
           <NavItem
             id="categories"
             icon="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"

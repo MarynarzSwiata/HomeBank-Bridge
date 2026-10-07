@@ -10,7 +10,12 @@ export const adaptAccount = (apiAccount: ApiAccount): Account => ({
   id: apiAccount.id,
   name: apiAccount.name,
   currency: apiAccount.currency,
+  type: apiAccount.type || 'bank',
+  closed: !!apiAccount.closed,
   initial_balance: apiAccount.initial_balance,
+  reconciled_balance: apiAccount.reconciled_balance ?? apiAccount.initial_balance,
+  cleared_balance: apiAccount.cleared_balance ?? apiAccount.initial_balance,
+  today_balance: apiAccount.today_balance ?? apiAccount.current_balance,
   current_balance: apiAccount.current_balance,
 });
 
@@ -46,6 +51,8 @@ export const adaptTransaction = (apiTransaction: ApiTransaction): Transaction =>
   payment_type: apiTransaction.payment_type || 0,
   memo: apiTransaction.memo || '',
   transfer_id: apiTransaction.transfer_id,
+  status: apiTransaction.status || 0,
+  tags: apiTransaction.tags || '',
   exported: apiTransaction.exported || 0,
   export_log_id: apiTransaction.export_log_id,
 });

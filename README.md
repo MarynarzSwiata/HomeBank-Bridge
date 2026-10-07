@@ -144,6 +144,19 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 
 ## 📜 Changelog
 
+### Unreleased
+- **🏷️ Tags**: Add tags to any entry (space-separated, exported in the HomeBank CSV `tags` column and read back on import). Click a tag to filter the ledger; Reports can group by tag.
+- **⚡ Assignment Rules**: "If payee/memo contains X → set category, payment type and tags." Rules fill the entry form as you type, run automatically on CSV import for rows without a category, and can be applied on demand to existing uncategorised entries (with a preview count first).
+- **🔁 Scheduled Transactions**: Recurring expenses, income and transfers (every N days / weeks / months / years, optional end date). Due items are shown on Home and in the Scheduled tab; post or skip them one by one, or post all due at once. Nothing is posted automatically, so using the app on several computers never creates duplicates. Monthly items keep their day (e.g. the 31st falls back to the 30th/28th in shorter months).
+- **🎯 Monthly Budget**: Set a budget per category — the same amount every month or a different amount per month. The Budget tab shows budget vs actual, remaining amount and an "over budget" warning for any month; parent categories include their subcategories.
+- **📈 Reports**: Expense or income totals grouped by category, subcategory, payee or month, for any period (presets or a custom range), per account or currency, with CSV export.
+- **🏠 Home Dashboard**: New start screen like HomeBank's main window — income / expense / balance for a chosen period (this month, last month, last 30 days, this year, last 12 months), top spending by category, income vs expense for the last 6 months, and an account summary with per-currency totals. Transfers between own accounts are not counted as income or spending.
+- **✅ Transaction Status (HomeBank-style)**: Each entry can be *None*, *Cleared (C)* or *Reconciled (R)*. Click the badge to change it, or mark many entries at once. New status filter in the ledger.
+- **🏦 Account Types & Closing**: Accounts now have a type (Bank, Checking, Savings, Cash, Credit Card, Asset, Liability) and can be closed — closed accounts are hidden from lists and new entries, history is kept.
+- **📊 HomeBank Balances**: Account list shows *Reconciled*, *Today* and *Future* balances, grouped by account type.
+- **📒 Running Balance**: When the ledger is filtered to one account, each entry shows the account balance after it.
+- **🛠️ Restore Upgrade**: Restoring an older database backup now applies pending schema migrations automatically.
+
 ### Version 1.0.3 (2026-01-15)
 - **🔔 Interactive Notifications**: Implemented a global toast system for instant feedback on all data operations (success and errors).
 - **👯 Transaction Duplication**: Added a "Duplicate" button in ledger actions to quickly clone existing records.

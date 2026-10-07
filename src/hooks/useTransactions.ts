@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { transactionsService, ApiError } from '../api';
 import { adaptTransaction } from '../api/adapters';
-import type { Transaction } from '../types';
+import type { Transaction, TransactionStatus } from '../types';
 
 export type TransactionType = 'expense' | 'income' | 'transfer';
 
@@ -22,6 +22,8 @@ interface CreateTransactionData {
   paymentType?: number;
   targetAccountId?: number; // For transfers
   targetAmount?: number; // For mixed-currency transfers
+  status?: TransactionStatus;
+  tags?: string;
 }
 
 interface UpdateTransactionData {
@@ -34,6 +36,8 @@ interface UpdateTransactionData {
   accountId?: number;
   targetAccountId?: number;
   targetAmount?: number;
+  status?: TransactionStatus;
+  tags?: string;
 }
 
 export interface UseTransactionsResult {
@@ -46,6 +50,7 @@ export interface UseTransactionsResult {
   createTransaction: (data: CreateTransactionData) => Promise<{ id?: number; transferId?: string } | null>;
   updateTransaction: (id: number, data: UpdateTransactionData) => Promise<boolean>;
   deleteTransaction: (id: number) => Promise<boolean>;
+  setStatus: (ids: number[], status: TransactionStatus) => Promise<boolean>;
 }
 
 export function useTransactions(): UseTransactionsResult {
@@ -96,6 +101,8 @@ export function useTransactions(): UseTransactionsResult {
         paymentType: data.paymentType,
         targetAccountId: data.targetAccountId,
         targetAmount: data.targetAmount,
+        status: data.status,
+        tags: data.tags,
       });
       // Refresh with preserved filters
       await refresh().catch(() => {});
@@ -150,6 +157,25 @@ export function useTransactions(): UseTransactionsResult {
     }
   }, [refresh]);
 
+  const setStatus = useCallback(async (ids: number[], status: TransactionStatus): Promise<boolean> => {
+    if (ids.length === 0) return true;
+    try {
+      setIsSaving(true);
+      setError(null);
+      await transactionsService.setStatus(ids, status);
+      await refresh().catch(() => {});
+      return true;
+    } catch (err) {
+      const message = err instanceof ApiError
+        ? `API Error (${err.status}): ${err.message}`
+        : err instanceof Error ? err.message : 'Failed to update status';
+      setError(message);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [refresh]);
+
   return {
     transactions,
     isLoading,
@@ -160,5 +186,6 @@ export function useTransactions(): UseTransactionsResult {
     createTransaction,
     updateTransaction,
     deleteTransaction,
+    setStatus,
   };
 }

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { accountsService, ApiError } from '../api';
 import { adaptAccount } from '../api/adapters';
-import type { Account } from '../types';
+import type { Account, AccountInput } from '../types';
 
 interface UseAccountsResult {
   accounts: Account[];
@@ -9,8 +9,8 @@ interface UseAccountsResult {
   error: string | null;
   isSaving: boolean;
   refresh: () => Promise<void>;
-  createAccount: (data: { name: string; currency: string; initialBalance?: number }) => Promise<number | null>;
-  updateAccount: (id: number, data: { name?: string; currency?: string; initialBalance?: number }) => Promise<boolean>;
+  createAccount: (data: AccountInput) => Promise<number | null>;
+  updateAccount: (id: number, data: Partial<AccountInput>) => Promise<boolean>;
   deleteAccount: (id: number) => Promise<boolean>;
 }
 
@@ -37,7 +37,7 @@ export function useAccounts(): UseAccountsResult {
     }
   }, []);
 
-  const createAccount = useCallback(async (data: { name: string; currency: string; initialBalance?: number }): Promise<number | null> => {
+  const createAccount = useCallback(async (data: AccountInput): Promise<number | null> => {
     try {
       setIsSaving(true);
       setError(null); // Clear stale errors
@@ -55,7 +55,7 @@ export function useAccounts(): UseAccountsResult {
     }
   }, [refresh]);
 
-  const updateAccount = useCallback(async (id: number, data: { name?: string; currency?: string; initialBalance?: number }): Promise<boolean> => {
+  const updateAccount = useCallback(async (id: number, data: Partial<AccountInput>): Promise<boolean> => {
     try {
       setIsSaving(true);
       setError(null); // Clear stale errors

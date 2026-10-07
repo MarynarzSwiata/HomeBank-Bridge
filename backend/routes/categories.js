@@ -133,6 +133,8 @@ router.delete('/:id',
       await db.run('UPDATE transactions SET category_id = NULL WHERE category_id = ?', id);
       // Unassign from payees
       await db.run('UPDATE payees SET default_category_id = NULL WHERE default_category_id = ?', id);
+      // Remove its budget
+      await db.run('DELETE FROM budgets WHERE category_id = ?', id);
       // Delete category
       await db.run('DELETE FROM categories WHERE id = ?', id);
 

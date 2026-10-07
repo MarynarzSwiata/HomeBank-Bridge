@@ -16,6 +16,9 @@ import accountsRouter from './routes/accounts.js';
 import transactionsRouter from './routes/transactions.js';
 import categoriesRouter from './routes/categories.js';
 import payeesRouter from './routes/payees.js';
+import budgetRouter from './routes/budget.js';
+import scheduledRouter from './routes/scheduled.js';
+import rulesRouter from './routes/rules.js';
 import exportLogRouter from './routes/export-log.js';
 import systemRouter from './routes/system.js';
 
@@ -88,6 +91,9 @@ app.use('/api/accounts', requireAuth, accountsRouter);
 app.use('/api/transactions', requireAuth, transactionsRouter);
 app.use('/api/categories', requireAuth, categoriesRouter);
 app.use('/api/payees', requireAuth, payeesRouter);
+app.use('/api/budget', requireAuth, budgetRouter);
+app.use('/api/scheduled', requireAuth, scheduledRouter);
+app.use('/api/rules', requireAuth, rulesRouter);
 app.use('/api/export-log', requireAuth, exportLogRouter);
 app.use('/api/system', requireAdmin, systemRouter);
 

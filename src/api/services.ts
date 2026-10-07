@@ -1,4 +1,5 @@
 import { api, ApiError } from './client';
+import type { BudgetRow, BudgetInput, ScheduledItem, ScheduledInput, Rule, RuleInput } from '../types';
 import type {
   ApiAccount,
   ApiCategory,
@@ -272,6 +273,10 @@ export const transactionsService = {
     return api.delete(`/transactions/${id}`);
   },
 
+  async setStatus(ids: number[], status: 0 | 1 | 2): Promise<{ updated: number }> {
+    return api.post('/transactions/status', { ids, status });
+  },
+
   async checkDuplicates(candidates: { date: string; payee: string; amount: number }[], dateFormat?: string): Promise<any[]> {
     const API_BASE = import.meta.env.VITE_API_URL || '/api';
     const response = await fetch(`${API_BASE}/transactions/import-check`, {
@@ -398,4 +403,56 @@ export const exportLogService = {
   async clearAllLogs(): Promise<{ success: boolean }> {
     return api.delete('/export-log');
   }
+};
+
+export const budgetService = {
+  async getAll(): Promise<BudgetRow[]> {
+    return api.get('/budget');
+  },
+
+  async save(categoryId: number, data: BudgetInput): Promise<{ message: string }> {
+    return api.put(`/budget/${categoryId}`, data);
+  },
+};
+
+export const scheduledService = {
+  async getAll(): Promise<ScheduledItem[]> {
+    return api.get('/scheduled');
+  },
+  async create(data: ScheduledInput): Promise<{ id: number }> {
+    return api.post('/scheduled', data);
+  },
+  async update(id: number, data: ScheduledInput): Promise<{ message: string }> {
+    return api.put(`/scheduled/${id}`, data);
+  },
+  async delete(id: number): Promise<null> {
+    return api.delete(`/scheduled/${id}`);
+  },
+  async post(id: number): Promise<{ posted: number; nextDate: string; finished: boolean }> {
+    return api.post(`/scheduled/${id}/post`, {});
+  },
+  async skip(id: number): Promise<{ posted: number; nextDate: string; finished: boolean }> {
+    return api.post(`/scheduled/${id}/skip`, {});
+  },
+  async postDue(until: string): Promise<{ posted: number }> {
+    return api.post('/scheduled/post-due', { until });
+  },
+};
+
+export const rulesService = {
+  async getAll(): Promise<Rule[]> {
+    return api.get('/rules');
+  },
+  async create(data: RuleInput): Promise<{ id: number }> {
+    return api.post('/rules', data);
+  },
+  async update(id: number, data: RuleInput): Promise<{ message: string }> {
+    return api.put(`/rules/${id}`, data);
+  },
+  async delete(id: number): Promise<null> {
+    return api.delete(`/rules/${id}`);
+  },
+  async apply(dryRun = false): Promise<{ matched: number; updated: number }> {
+    return api.post('/rules/apply', { dryRun });
+  },
 };
