@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import type { Transaction, Account, Category, Payee, Rule, TransactionStatus } from '../../types';
+import type { Transaction, Account, Category, Payee, Rule, ScheduledItem, TransactionStatus } from '../../types';
 import { splitTags } from '../../utils/tagUtils';
 import { TRANSACTION_STATUS } from '../../constants';
 import { TransactionForm, TransactionSaveData, TransactionFormValues } from './TransactionForm';
@@ -43,6 +43,7 @@ export interface TransactionsViewProps {
   onCategoryCreate?: (name: string, parentId?: number) => Promise<number | null>;
   onSetStatus?: (ids: number[], status: TransactionStatus) => Promise<boolean>;
   rules?: Rule[];
+  templates?: ScheduledItem[];
 }
 
 type SortField = 'date' | 'payee' | 'category' | 'amount';
@@ -70,6 +71,7 @@ export function TransactionsView({
   onCategoryCreate,
   onSetStatus,
   rules,
+  templates,
 }: TransactionsViewProps) {
   // Filter state - use initialAccountFilter if provided
   const [filterAccount, setFilterAccount] = useState(initialAccountFilter);
@@ -618,6 +620,7 @@ export function TransactionsView({
               onCancel={handleCancel}
               onCategoryCreate={onCategoryCreate}
               rules={rules}
+              templates={templates}
             />
           </div>
         )}

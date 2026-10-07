@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import type { Account, Category, Payee, Rule, Transaction } from '../../types';
+import type { Account, Category, Payee, Rule, ScheduledItem, Transaction } from '../../types';
 import { findRule, mergeTags, normalizeTags } from '../../utils/tagUtils';
 import type { TransactionType } from '../../hooks';
 import { 
@@ -21,6 +21,7 @@ export interface TransactionFormProps {
   onCancel: () => void;
   onCategoryCreate?: (name: string, parentId?: number) => Promise<number | null>;
   rules?: Rule[];
+  templates?: ScheduledItem[];
   key?: React.Key;
 }
 
@@ -101,6 +102,7 @@ export function TransactionForm({
   onCancel,
   onCategoryCreate,
   rules = [],
+  templates = [],
 }: TransactionFormProps) {
   // Form state
   const [entryType, setEntryType] = useState<TransactionType>(initialValues?.entryType || 'expense');
@@ -200,6 +202,37 @@ export function TransactionForm({
     setRuleApplied(rule.pattern);
     return true;
   }, [entryType, editingId, rules, setCategoryById]);
+
+  // HomeBank-style: pick a template to fill in the form (the date stays as chosen)
+  const templateOptions = useMemo(() =>
+    templates
+      .map(t => ({
+        id: t.id,
+        name: `${t.name || (t.type === 'transfer' ? `${t.account_name} → ${t.target_account_name || '?'}` : t.payee || t.category_name || '(no payee)')}`
+          + (t.amount ? ` · ${t.amount.toFixed(2)} ${t.currency}` : ''),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [templates]
+  );
+
+  const applyTemplate = useCallback((id: string) => {
+    const t = templates.find(x => String(x.id) === id);
+    if (!t) return;
+    setEntryType(t.type);
+    setAccountId(String(t.account_id));
+    setTargetAccountId(t.target_account_id ? String(t.target_account_id) : '');
+    setAmount(t.amount ? String(t.amount).replace('.', ',') : '');
+    setTargetAmount(t.target_amount ? String(t.target_amount).replace('.', ',') : '');
+    setPayee(t.payee || '');
+    if (t.category_id) setCategoryById(t.category_id);
+    else { setMainCategoryId(''); setSubCategoryId(''); }
+    setPaymentType(String(t.payment_type ?? 0));
+    setMemo(t.memo || '');
+    setTags(t.tags || '');
+    setIsSmartApplied(false);
+    setRuleApplied(null);
+    setValidationError(null);
+  }, [templates, setCategoryById]);
 
   const handleMemoChange = useCallback((val: string) => {
     setMemo(val);
@@ -367,6 +400,17 @@ export function TransactionForm({
 
   return (
     <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 space-y-6">
+      {mode === 'create' && templateOptions.length > 0 && (
+        <SearchableSelect
+          label="From template"
+          options={templateOptions}
+          value=""
+          onChange={applyTemplate}
+          placeholder="Choose a template to fill in the form…"
+          className="w-full"
+        />
+      )}
+
       {/* Type Selector */}
       <div className="flex gap-2">
         {TRANSACTION_TYPES.map((t) => (

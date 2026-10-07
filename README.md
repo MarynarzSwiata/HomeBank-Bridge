@@ -145,6 +145,8 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **📋 Templates**: The Scheduled tab is now "Templates": plain templates (pick one in the entry form to fill it in) and scheduled items. HomeBank import brings all templates and recognises HomeBank 5.9+ scheduled items (`recflg`), which were previously skipped.
+- **🏦 Account options & converted totals**: Exclude accounts from summary / budget / reports (imported from HomeBank) and see group and grand totals in your base currency using the exchange rates in Options.
 - **📂 Import from HomeBank (.xhb)**: Options → Import from HomeBank reads your desktop file and moves accounts (types, closed state, currencies), categories, payees, transactions (status, tags, info), transfers, budgets, scheduled transactions and assignment rules. A preview shows what will be imported first; replacing existing data needs explicit confirmation and offers a backup download. Split transactions become one entry per part (tag `split`); void entries and regex rules are skipped.
 - **🛡️ Safer "Post all due"**: Shows how many transactions will be created before posting, with a warning when old schedules would create many entries.
 - **🏷️ Tags**: Add tags to any entry (space-separated, exported in the HomeBank CSV `tags` column and read back on import). Click a tag to filter the ledger; Reports can group by tag.

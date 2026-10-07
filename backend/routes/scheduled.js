@@ -3,6 +3,7 @@ import { body, param } from 'express-validator';
 import db from '../db/index.js';
 import { validate } from '../middleware/validation.js';
 import { createTransaction } from '../services/transactionWriter.js';
+import { normalizeTags } from '../services/tags.js';
 
 const router = express.Router();
 
@@ -42,6 +43,9 @@ const scheduledValidators = [
   body('unit').isIn(['day', 'week', 'month', 'year']).withMessage('Invalid unit'),
   body('nextDate').isISO8601({ strict: true }).withMessage('Invalid next date'),
   body('endDate').optional({ nullable: true, checkFalsy: true }).isISO8601({ strict: true }).withMessage('Invalid end date'),
+  body('isScheduled').optional().isBoolean(),
+  body('name').optional({ nullable: true }).isString().trim().isLength({ max: 200 }),
+  body('tags').optional({ nullable: true }).isString().isLength({ max: 1000 }),
   validate
 ];
 
@@ -69,6 +73,9 @@ const rowValues = (b) => {
     nextDate,
     Number(nextDate.slice(8, 10)),
     b.endDate ? b.endDate.slice(0, 10) : null,
+    b.isScheduled === false ? 0 : 1,
+    (b.name || '').trim(),
+    normalizeTags(b.tags),
   ];
 };
 
@@ -84,7 +91,7 @@ router.get('/', async (req, res, next) => {
       LEFT JOIN categories c ON c.id = s.category_id
       ORDER BY s.next_date, s.id
     `);
-    res.json(rows.map(r => ({ ...r, finished: isFinished(r) })));
+    res.json(rows.map(r => ({ ...r, is_scheduled: !!r.is_scheduled, finished: !!r.is_scheduled && isFinished(r) })));
   } catch (err) {
     next(err);
   }
@@ -97,8 +104,8 @@ router.post('/', scheduledValidators, async (req, res, next) => {
     if (problem) return res.status(400).json({ error: problem });
     const result = await db.run(`
       INSERT INTO scheduled (type, account_id, target_account_id, amount, target_amount, payee, category_id,
-                             payment_type, memo, every, unit, next_date, anchor_day, end_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             payment_type, memo, every, unit, next_date, anchor_day, end_date, is_scheduled, name, tags)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, ...rowValues(req.body));
     res.status(201).json({ id: result.lastID });
   } catch (err) {
@@ -113,7 +120,8 @@ router.put('/:id', [param('id').isInt(), ...scheduledValidators], async (req, re
     if (problem) return res.status(400).json({ error: problem });
     const result = await db.run(`
       UPDATE scheduled SET type = ?, account_id = ?, target_account_id = ?, amount = ?, target_amount = ?, payee = ?,
-        category_id = ?, payment_type = ?, memo = ?, every = ?, unit = ?, next_date = ?, anchor_day = ?, end_date = ?
+        category_id = ?, payment_type = ?, memo = ?, every = ?, unit = ?, next_date = ?, anchor_day = ?, end_date = ?,
+        is_scheduled = ?, name = ?, tags = ?
       WHERE id = ?
     `, ...rowValues(req.body), req.params.id);
     if (result.changes === 0) return res.status(404).json({ error: 'Scheduled transaction not found' });
@@ -145,6 +153,7 @@ const postOccurrence = (row) => createTransaction({
   memo: row.memo,
   categoryId: row.category_id,
   paymentType: row.payment_type,
+  tags: row.tags,
 }, { useDbTransaction: false });
 
 /**
@@ -157,6 +166,11 @@ async function processItem(id, { post, until }) {
   if (!row) {
     const err = new Error('Scheduled transaction not found');
     err.status = 404;
+    throw err;
+  }
+  if (!row.is_scheduled) {
+    const err = new Error('This is a template, not a scheduled transaction');
+    err.status = 400;
     throw err;
   }
   if (isFinished(row)) {
@@ -224,7 +238,7 @@ router.post('/post-due',
   async (req, res, next) => {
     try {
       const until = req.body.until.slice(0, 10);
-      const due = await db.all('SELECT * FROM scheduled WHERE next_date <= ? ORDER BY next_date, id', until);
+      const due = await db.all('SELECT * FROM scheduled WHERE is_scheduled = 1 AND next_date <= ? ORDER BY next_date, id', until);
       if (req.body.dryRun === true) {
         return res.json({ wouldPost: due.reduce((sum, row) => sum + countDue(row, until), 0), items: due.length });
       }

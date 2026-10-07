@@ -43,6 +43,7 @@ export interface XhbImportResult {
     transfers: number;
     budgets: number;
     scheduled: number;
+    templates?: number;
     rules: number;
     currencies: string[];
     warnings: string[];

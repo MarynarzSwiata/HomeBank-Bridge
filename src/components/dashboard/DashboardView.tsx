@@ -465,10 +465,11 @@ const UpcomingScheduled: React.FC<{
   const horizonDate = new Date();
   horizonDate.setDate(horizonDate.getDate() + UPCOMING_DAYS);
   const horizon = toISO(horizonDate);
-  const upcoming = scheduled.items.filter(i => !i.finished && i.next_date <= horizon);
+  const recurring = scheduled.items.filter(i => i.is_scheduled);
+  const upcoming = recurring.filter(i => !i.finished && i.next_date <= horizon);
   const dueCount = upcoming.filter(i => i.next_date <= today).length;
 
-  if (scheduled.items.length === 0) return null;
+  if (recurring.length === 0) return null;
 
   return (
     <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
