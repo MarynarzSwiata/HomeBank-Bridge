@@ -28,6 +28,7 @@ import { AccountsView } from "./src/components/accounts/AccountsView";
 import { CategoriesView } from "./src/components/categories/CategoriesView";
 import { PayeesView } from "./src/components/payees/PayeesView";
 import { ExportHistoryView } from "./src/components/export/ExportHistoryView";
+import { DashboardView } from "./src/components/dashboard/DashboardView";
 import {
   PAYMENT_LEXICON,
   PAYMENT_OPTIONS,
@@ -91,6 +92,7 @@ const App: React.FC = () => {
   const auth = useAuth();
 
   const [activeTab, setActiveTab] = useState<
+    | "home"
     | "how_to_use"
     | "transactions"
     | "accounts"
@@ -99,7 +101,7 @@ const App: React.FC = () => {
     | "export_log"
     | "options"
     | "changelog"
-  >("how_to_use");
+  >("home");
 
   // Helpers
   const getTodayISO = () => new Date().toISOString().split("T")[0];
@@ -1018,6 +1020,7 @@ const App: React.FC = () => {
 
         <nav className="flex-1 space-y-3 w-64 overflow-y-auto no-scrollbar">
           {[
+            { id: "home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6", label: "Home" },
             {
               id: "how_to_use",
               icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
@@ -1443,6 +1446,18 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
+          )}
+
+          {activeTab === "home" && (
+            <DashboardView
+              accounts={accountsHook.accounts}
+              transactions={transactionsHook.transactions}
+              categories={categoriesHook.categories}
+              isAnonymized={isAnonymized}
+              onOpenAccount={viewAccountHistory}
+              onAddTransaction={() => setActiveTab("transactions")}
+              onOpenGuide={() => setActiveTab("how_to_use")}
+            />
           )}
 
           {activeTab === "how_to_use" && (
@@ -2237,11 +2252,7 @@ const App: React.FC = () => {
         </section>
 
         <nav className="md:hidden flex justify-around px-2 py-4 bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
-          <NavItem
-            id="how_to_use"
-            icon="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            label="Guide"
-          />
+          <NavItem id="home" icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" label="Home" />
           <NavItem id="transactions" icon="M12 4v16m8-8H4" label="Log" />
           <NavItem
             id="accounts"

@@ -145,6 +145,7 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **🏠 Home Dashboard**: New start screen like HomeBank's main window — income / expense / balance for a chosen period (this month, last month, last 30 days, this year, last 12 months), top spending by category, income vs expense for the last 6 months, and an account summary with per-currency totals. Transfers between own accounts are not counted as income or spending.
 - **✅ Transaction Status (HomeBank-style)**: Each entry can be *None*, *Cleared (C)* or *Reconciled (R)*. Click the badge to change it, or mark many entries at once. New status filter in the ledger.
 - **🏦 Account Types & Closing**: Accounts now have a type (Bank, Checking, Savings, Cash, Credit Card, Asset, Liability) and can be closed — closed accounts are hidden from lists and new entries, history is kept.
 - **📊 HomeBank Balances**: Account list shows *Reconciled*, *Today* and *Future* balances, grouped by account type.
