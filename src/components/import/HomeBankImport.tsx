@@ -20,6 +20,7 @@ const LABELS: [keyof XhbImportResult['summary'], string][] = [
   ['payees', 'Payees'],
   ['budgets', 'Budget entries'],
   ['scheduled', 'Scheduled'],
+  ['templates', 'Templates'],
   ['rules', 'Rules'],
 ];
 
@@ -110,7 +111,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
             {LABELS.map(([key, label]) => (
               <div key={key} className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800">
                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</div>
-                <div className="text-xl font-black text-slate-100 tabular-nums">{preview.summary[key] as number}</div>
+                <div className="text-xl font-black text-slate-100 tabular-nums">{(preview.summary[key] as number | undefined) ?? 0}</div>
               </div>
             ))}
           </div>

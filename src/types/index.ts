@@ -124,6 +124,10 @@ export interface ScheduledItem {
   target_account_name: string | null;
   category_name: string | null;
   finished: boolean;
+  /** false = plain template (quick entry), true = recurring scheduled transaction */
+  is_scheduled: number | boolean;
+  name: string;
+  tags: string;
 }
 
 export interface ScheduledInput {
@@ -140,6 +144,9 @@ export interface ScheduledInput {
   unit: ScheduleUnit;
   nextDate: string;
   endDate?: string | null;
+  isScheduled?: boolean;
+  name?: string;
+  tags?: string;
 }
 
 /** Assignment rule: when payee/memo match, assign category, payment type and tags */

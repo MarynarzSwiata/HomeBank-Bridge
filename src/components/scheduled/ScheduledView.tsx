@@ -8,7 +8,8 @@ import { formatMoney, toISO } from '../../utils/periodUtils';
 import { scheduledService } from '../../api';
 
 /**
- * Scheduled (recurring) transactions, like HomeBank's "Scheduled" list.
+ * Templates and scheduled (recurring) transactions, like HomeBank's "Manage scheduled/template" list.
+ * A template pre-fills new entries; a scheduled item also repeats on a date.
  * Nothing is posted automatically: due items are posted (or skipped) by the user,
  * which avoids duplicates when the app is open on several computers.
  */
@@ -33,17 +34,23 @@ export const describeRepeat = (item: Pick<ScheduledItem, 'every' | 'unit'>) =>
   item.every === 1 ? `Every ${UNIT_LABEL[item.unit][0]}` : `Every ${item.every} ${UNIT_LABEL[item.unit][1]}`;
 
 export const describeItem = (item: ScheduledItem) =>
-  item.type === 'transfer'
+  item.name ? item.name
+  : item.type === 'transfer'
     ? `${item.account_name} → ${item.target_account_name || '?'}`
     : item.payee || item.category_name || '(no payee)';
 
 export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, accounts, categories, payees, dateFormat, isAnonymized }) => {
-  const [editing, setEditing] = useState<ScheduledItem | 'new' | null>(null);
+  // 'new-scheduled' / 'new-template' open an empty form of that kind
+  const [editing, setEditing] = useState<ScheduledItem | 'new-scheduled' | 'new-template' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ScheduledItem | null>(null);
   const today = toISO(new Date());
   const fmt = (v: number) => formatMoney(v, isAnonymized);
 
-  const dueCount = scheduled.items.filter(i => !i.finished && i.next_date <= today).length;
+  const recurring = scheduled.items.filter(i => i.is_scheduled);
+  const templates = scheduled.items
+    .filter(i => !i.is_scheduled)
+    .sort((a, b) => describeItem(a).localeCompare(describeItem(b)));
+  const dueCount = recurring.filter(i => !i.finished && i.next_date <= today).length;
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 max-w-6xl mx-auto">
@@ -51,13 +58,21 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
 
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Scheduled transactions</h2>
-          <p className="text-[10px] font-bold text-slate-500 mt-1">Recurring bills and income. Post them when they are due.</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Templates &amp; scheduled</h2>
+          <p className="text-[10px] font-bold text-slate-500 mt-1">
+            Scheduled: recurring bills and income, posted when due. Templates: pick one in the entry form to fill it in.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2 md:ml-auto">
           {dueCount > 0 && <PostAllDueButton scheduled={scheduled} dueCount={dueCount} />}
           <button
-            onClick={() => setEditing('new')}
+            onClick={() => setEditing('new-template')}
+            className="px-4 py-2 rounded-xl bg-slate-800 text-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-700"
+          >
+            + Add template
+          </button>
+          <button
+            onClick={() => setEditing('new-scheduled')}
             className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500"
           >
             + Add scheduled
@@ -67,29 +82,37 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
 
       {editing && (
         <ScheduledForm
-          item={editing === 'new' ? null : editing}
+          key={typeof editing === 'string' ? editing : editing.id}
+          item={typeof editing === 'string' ? null : editing}
+          defaultScheduled={editing !== 'new-template'}
           accounts={accounts}
           categories={categories}
           payees={payees}
           isSaving={scheduled.isSaving}
           onCancel={() => setEditing(null)}
           onSave={async data => {
-            const ok = await scheduled.save(data, editing === 'new' ? undefined : editing.id);
+            const ok = await scheduled.save(data, typeof editing === 'string' ? undefined : editing.id);
             if (ok) setEditing(null);
           }}
         />
       )}
 
-      <section className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
-        {scheduled.items.length === 0 ? (
-          <p className="text-sm text-slate-500 py-10 text-center">No scheduled transactions yet. Add rent, salary or subscriptions here.</p>
+      {[
+        { title: `Scheduled (${recurring.length})`, items: recurring, empty: 'No scheduled transactions yet. Add rent, salary or subscriptions here.' },
+        { title: `Templates (${templates.length})`, items: templates, empty: 'No templates yet. A template fills in the entry form for repeated purchases.' },
+      ].map(sectionDef => (
+      <section key={sectionDef.title} className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+        <h3 className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">{sectionDef.title}</h3>
+        {sectionDef.items.length === 0 ? (
+          <p className="text-sm text-slate-500 py-8 text-center">{sectionDef.empty}</p>
         ) : (
           <ul className="divide-y divide-slate-800/60">
-            {scheduled.items.map(item => {
-              const due = !item.finished && item.next_date <= today;
+            {sectionDef.items.map(item => {
+              const due = !!item.is_scheduled && !item.finished && item.next_date <= today;
               const signed = item.type === 'expense' ? -item.amount : item.amount;
               return (
                 <li key={item.id} className={`py-4 px-2 flex flex-col md:flex-row md:items-center gap-3 ${item.finished ? 'opacity-50' : ''}`}>
+                  {item.is_scheduled && (
                   <div className="md:w-40 shrink-0">
                     <div className="text-sm font-black text-slate-100 tabular-nums">{formatDateForDisplay(item.next_date, dateFormat)}</div>
                     {item.finished ? (
@@ -103,11 +126,12 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
                       <span className="text-[10px] font-bold text-slate-500">Next</span>
                     )}
                   </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-slate-100 truncate">{describeItem(item)}</div>
                     <div className="text-[10px] font-bold text-slate-500 truncate">
-                      {describeRepeat(item)}
-                      {item.end_date ? ` · until ${formatDateForDisplay(item.end_date, dateFormat)}` : ''}
+                      {item.is_scheduled ? describeRepeat(item) : item.type}
+                      {item.is_scheduled && item.end_date ? ` · until ${formatDateForDisplay(item.end_date, dateFormat)}` : ''}
                       {item.type !== 'transfer' ? ` · ${item.account_name}` : ''}
                       {item.category_name ? ` · ${item.category_name}` : ''}
                     </div>
@@ -116,7 +140,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
                     {item.type === 'transfer' ? '' : signed < 0 ? '−' : '+'}{fmt(item.amount)} <span className="text-[10px] text-slate-500">{item.currency}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 md:justify-end">
-                    {!item.finished && (
+                    {!!item.is_scheduled && !item.finished && (
                       <>
                         <button
                           onClick={() => scheduled.post(item.id)}
@@ -149,11 +173,12 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
           </ul>
         )}
       </section>
+      ))}
 
       <ConfirmModal
         isOpen={!!confirmDelete}
-        title="Delete scheduled transaction?"
-        message={<>The schedule <span className="text-white font-bold">{confirmDelete ? describeItem(confirmDelete) : ''}</span> will be removed. Transactions already posted stay in the ledger.</>}
+        title={confirmDelete?.is_scheduled ? 'Delete scheduled transaction?' : 'Delete template?'}
+        message={<><span className="text-white font-bold">{confirmDelete ? describeItem(confirmDelete) : ''}</span> will be removed. Transactions already in the ledger stay.</>}
         confirmLabel="Delete"
         onConfirm={async () => {
           if (confirmDelete && (await scheduled.remove(confirmDelete.id)) !== null) setConfirmDelete(null);
@@ -167,13 +192,14 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
 
 const ScheduledForm: React.FC<{
   item: ScheduledItem | null;
+  defaultScheduled: boolean;
   accounts: Account[];
   categories: Category[];
   payees: Payee[];
   isSaving: boolean;
   onCancel: () => void;
   onSave: (data: ScheduledInput) => void;
-}> = ({ item, accounts, categories, payees, isSaving, onCancel, onSave }) => {
+}> = ({ item, defaultScheduled, accounts, categories, payees, isSaving, onCancel, onSave }) => {
   const openAccounts = accounts.filter(a => !a.closed || a.id === item?.account_id || a.id === item?.target_account_id);
   const [type, setType] = useState<ScheduledItem['type']>(item?.type || 'expense');
   const [accountId, setAccountId] = useState(String(item?.account_id ?? openAccounts[0]?.id ?? ''));
@@ -188,6 +214,9 @@ const ScheduledForm: React.FC<{
   const [unit, setUnit] = useState<ScheduleUnit>(item?.unit || 'month');
   const [nextDate, setNextDate] = useState(item?.next_date || toISO(new Date()));
   const [endDate, setEndDate] = useState(item?.end_date || '');
+  const [isScheduled, setIsScheduled] = useState<boolean>(item ? !!item.is_scheduled : defaultScheduled);
+  const [name, setName] = useState(item?.name || '');
+  const [tags, setTags] = useState(item?.tags || '');
   const [localError, setLocalError] = useState<string | null>(null);
 
   const categoryOptions = useMemo(() => {
@@ -216,13 +245,18 @@ const ScheduledForm: React.FC<{
     const tAmt = targetAmount ? parseFloat(targetAmount.replace(/\s/g, '').replace(',', '.')) : null;
     const ev = parseInt(every, 10);
     if (!accountId) return setLocalError('Choose an account');
-    if (!Number.isFinite(amt) || amt <= 0) return setLocalError('Amount must be greater than 0');
+    // A template may keep amount 0 (filled in when used); a scheduled item needs a real amount
+    if (!Number.isFinite(amt) || amt < 0 || (isScheduled && amt === 0)) {
+      return setLocalError(isScheduled ? 'Amount must be greater than 0' : 'Amount must be 0 or more');
+    }
     if (type === 'transfer' && !targetAccountId) return setLocalError('Choose the target account');
     if (type === 'transfer' && targetAccountId === accountId) return setLocalError('Source and target accounts must differ');
     if (tAmt !== null && (!Number.isFinite(tAmt) || tAmt <= 0)) return setLocalError('Target amount must be greater than 0');
-    if (!Number.isInteger(ev) || ev < 1 || ev > 366) return setLocalError('Repeat interval must be between 1 and 366');
-    if (!nextDate) return setLocalError('Choose the next date');
-    if (endDate && endDate < nextDate) return setLocalError('End date cannot be before the next date');
+    if (isScheduled) {
+      if (!Number.isInteger(ev) || ev < 1 || ev > 366) return setLocalError('Repeat interval must be between 1 and 366');
+      if (!nextDate) return setLocalError('Choose the next date');
+      if (endDate && endDate < nextDate) return setLocalError('End date cannot be before the next date');
+    }
     setLocalError(null);
     onSave({
       type,
@@ -234,10 +268,13 @@ const ScheduledForm: React.FC<{
       categoryId: type === 'transfer' || !categoryId ? null : Number(categoryId),
       paymentType: Number(paymentType) || 0,
       memo: memo.trim(),
-      every: ev,
+      every: Number.isInteger(ev) && ev >= 1 && ev <= 366 ? ev : 1,
       unit,
-      nextDate,
-      endDate: endDate || null,
+      nextDate: nextDate || toISO(new Date()),
+      endDate: isScheduled ? endDate || null : null,
+      isScheduled,
+      name: name.trim(),
+      tags,
     });
   };
 
@@ -246,7 +283,19 @@ const ScheduledForm: React.FC<{
 
   return (
     <section className="p-6 md:p-8 bg-slate-900/50 border border-indigo-500/30 rounded-[2rem] space-y-5">
-      <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">{item ? 'Edit scheduled transaction' : 'New scheduled transaction'}</h3>
+      <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">
+        {item ? 'Edit' : 'New'} {isScheduled ? 'scheduled transaction' : 'template'}
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label>
+          <span className={label}>Name (optional)</span>
+          <input value={name} onChange={e => setName(e.target.value)} maxLength={200} className={field} placeholder="e.g. Netflix, Fuel" />
+        </label>
+        <label className="flex items-center gap-3 self-end h-[46px] px-4 bg-slate-950/50 border border-slate-800 rounded-xl cursor-pointer select-none">
+          <input type="checkbox" checked={isScheduled} onChange={e => setIsScheduled(e.target.checked)} className="w-5 h-5 rounded border-slate-700 bg-slate-800 text-indigo-600" />
+          <span className="text-xs font-bold text-slate-300">Repeat on a schedule</span>
+        </label>
+      </div>
       <div className="flex gap-2" role="radiogroup" aria-label="Type">
         {(['expense', 'income', 'transfer'] as const).map(t => (
           <button
@@ -316,7 +365,12 @@ const ScheduledForm: React.FC<{
           <span className={label}>Memo</span>
           <input value={memo} onChange={e => setMemo(e.target.value)} className={field} />
         </label>
+        <label>
+          <span className={label}>Tags</span>
+          <input value={tags} onChange={e => setTags(e.target.value)} className={field} placeholder="e.g. subscription" />
+        </label>
       </div>
+      {isScheduled && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <label>
           <span className={label}>Repeat every</span>
@@ -340,6 +394,7 @@ const ScheduledForm: React.FC<{
           <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={field} />
         </label>
       </div>
+      )}
       {localError && <p className="text-xs font-bold text-rose-400">{localError}</p>}
       <div className="flex gap-3">
         <button onClick={submit} disabled={isSaving} className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40">

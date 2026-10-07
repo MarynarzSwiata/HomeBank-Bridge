@@ -218,21 +218,24 @@ export function buildPlan(xhb) {
     }
   }
 
-  // Scheduled templates
+  // Templates ("fav"). Scheduled ones are flagged either by FAV_AUTO (older files)
+  // or by recflg bit 0 (HomeBank 5.9+); the rest are plain templates for quick entry.
   const scheduled = [];
   let skippedTemplates = 0;
+  const todayISO = new Date().toISOString().slice(0, 10);
   for (const f of xhb.fav) {
     const flags = int(f.flags);
-    const next = julianToISO(f.nextdate);
-    const unit = SCHEDULE_UNITS[int(f.unit)];
     const accountKey = int(f.account);
-    if (!(flags & FAV_AUTO) || !next || !unit || !accountKeys.has(accountKey)) { skippedTemplates++; continue; }
+    if (!accountKeys.has(accountKey)) { skippedTemplates++; continue; }
+    const isScheduled = (flags & FAV_AUTO) !== 0 || (int(f.recflg) & 1) !== 0;
+    const next = julianToISO(f.nextdate) || todayISO;
+    const unit = SCHEDULE_UNITS[int(f.unit)] || 'month';
     const every = Math.min(Math.max(int(f.every), 1), 366);
     const amount = num(f.amount);
     const dst = int(f.dst_account);
     const isTransfer = dst > 0 && accountKeys.has(dst) && dst !== accountKey;
     let endDate = null;
-    if (flags & FAV_LIMIT && int(f.limit) > 0) {
+    if (isScheduled && flags & FAV_LIMIT && int(f.limit) > 0) {
       // Last occurrence = next date advanced (limit - 1) times
       endDate = next;
       const anchor = Number(next.slice(8, 10));
@@ -247,10 +250,12 @@ export function buildPlan(xhb) {
       catKey: isTransfer ? 0 : int(f.category),
       paymode: payMode(f.paymode),
       memo: (f.wording || '').trim(),
+      tags: normalizeTags(f.tags || ''),
       every,
       unit,
       next,
       endDate,
+      isScheduled,
     });
   }
 
@@ -276,13 +281,13 @@ export function buildPlan(xhb) {
   });
 
   const yearAgo = new Date(Date.now() - 365 * 86400000).toISOString().slice(0, 10);
-  const stale = scheduled.filter(s => s.next < yearAgo).length;
+  const stale = scheduled.filter(s => s.isScheduled && s.next < yearAgo).length;
   if (stale) warnings.push(`${stale} scheduled item(s) have a next date more than a year ago - check them in Scheduled before posting`);
   if (skippedVoid) warnings.push(`${skippedVoid} void transaction(s) skipped`);
   if (skippedNoAccount) warnings.push(`${skippedNoAccount} transaction(s) without a valid account or date skipped`);
   if (unpairedTransfers) warnings.push(`${unpairedTransfers} transfer half(s) without a matching side imported as normal entries (tag "transfer")`);
   if (splitCount) warnings.push(`${splitCount} split transaction(s) imported as one entry per part (tag "split")`);
-  if (skippedTemplates) warnings.push(`${skippedTemplates} template(s) that are not scheduled skipped`);
+  if (skippedTemplates) warnings.push(`${skippedTemplates} template(s) without a valid account skipped`);
   if (skippedRules) warnings.push(`${skippedRules} assignment rule(s) skipped (regex, or nothing this app can assign)`);
 
   // Base currency (properties curr) and exchange rates: rate = units of that currency per 1 base unit
@@ -304,7 +309,8 @@ export const planSummary = (plan) => ({
   transactions: plan.transactions.length + plan.transfers.length * 2,
   transfers: plan.transfers.length,
   budgets: plan.budgets.length,
-  scheduled: plan.scheduled.length,
+  scheduled: plan.scheduled.filter(s => s.isScheduled).length,
+  templates: plan.scheduled.filter(s => !s.isScheduled).length,
   rules: plan.rules.length,
   currencies: Array.from(new Set(plan.accounts.map(a => a.currency))),
   baseCurrency: plan.baseCurrency,
@@ -396,10 +402,11 @@ export async function applyPlan(plan, { replace }) {
     for (const s of plan.scheduled) {
       await db.run(
         `INSERT INTO scheduled (type, account_id, target_account_id, amount, payee, category_id, payment_type, memo,
-                                every, unit, next_date, anchor_day, end_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                every, unit, next_date, anchor_day, end_date, is_scheduled, tags)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         s.type, accountId.get(s.accountKey), s.dstKey ? accountId.get(s.dstKey) : null, s.amount, s.payee,
-        cat(s.catKey), s.paymode, s.memo, s.every, s.unit, s.next, Number(s.next.slice(8, 10)), s.endDate
+        cat(s.catKey), s.paymode, s.memo, s.every, s.unit, s.next, Number(s.next.slice(8, 10)), s.endDate,
+        s.isScheduled ? 1 : 0, s.tags
       );
     }
 
