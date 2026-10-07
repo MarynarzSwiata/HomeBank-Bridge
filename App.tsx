@@ -29,6 +29,8 @@ import { CategoriesView } from "./src/components/categories/CategoriesView";
 import { PayeesView } from "./src/components/payees/PayeesView";
 import { ExportHistoryView } from "./src/components/export/ExportHistoryView";
 import { DashboardView } from "./src/components/dashboard/DashboardView";
+import { BudgetView } from "./src/components/budget/BudgetView";
+import { ReportsView } from "./src/components/reports/ReportsView";
 import {
   PAYMENT_LEXICON,
   PAYMENT_OPTIONS,
@@ -93,6 +95,8 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<
     | "home"
+    | "budget"
+    | "reports"
     | "how_to_use"
     | "transactions"
     | "accounts"
@@ -608,7 +612,7 @@ const App: React.FC = () => {
   }) => (
     <button
       onClick={() => setActiveTab(id as any)}
-      className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${
+      className={`shrink-0 min-w-[3.75rem] flex flex-col items-center gap-1.5 transition-all duration-300 ${
         activeTab === id
           ? "text-indigo-400 scale-110 font-black"
           : "text-slate-500"
@@ -1032,6 +1036,8 @@ const App: React.FC = () => {
               icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
               label: "Accounts",
             },
+            { id: "budget", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "Budget" },
+            { id: "reports", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", label: "Reports" },
             {
               id: "categories",
               icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z",
@@ -1457,6 +1463,24 @@ const App: React.FC = () => {
               onOpenAccount={viewAccountHistory}
               onAddTransaction={() => setActiveTab("transactions")}
               onOpenGuide={() => setActiveTab("how_to_use")}
+            />
+          )}
+
+          {activeTab === "budget" && (
+            <BudgetView
+              accounts={accountsHook.accounts}
+              transactions={transactionsHook.transactions}
+              categories={categoriesHook.categories}
+              isAnonymized={isAnonymized}
+            />
+          )}
+
+          {activeTab === "reports" && (
+            <ReportsView
+              accounts={accountsHook.accounts}
+              transactions={transactionsHook.transactions}
+              categories={categoriesHook.categories}
+              isAnonymized={isAnonymized}
             />
           )}
 
@@ -2251,7 +2275,7 @@ const App: React.FC = () => {
           )}
         </section>
 
-        <nav className="md:hidden flex justify-around px-2 py-4 bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
+        <nav className="md:hidden flex justify-between gap-1 overflow-x-auto no-scrollbar px-2 py-4 bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
           <NavItem id="home" icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" label="Home" />
           <NavItem id="transactions" icon="M12 4v16m8-8H4" label="Log" />
           <NavItem
@@ -2259,6 +2283,8 @@ const App: React.FC = () => {
             icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
             label="Vault"
           />
+          <NavItem id="budget" icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" label="Budget" />
+          <NavItem id="reports" icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" label="Reports" />
           <NavItem
             id="categories"
             icon="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"

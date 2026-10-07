@@ -80,3 +80,15 @@ export interface ImportPreview {
   rows: unknown[];
   filename: string;
 }
+
+/** One budget row: month 0 = same amount every month, 1-12 = override for that month */
+export interface BudgetRow {
+  category_id: number;
+  month: number;
+  amount: number;
+}
+
+export type BudgetInput =
+  | { mode: 'none' }
+  | { mode: 'same'; amount: number }
+  | { mode: 'monthly'; months: number[] };

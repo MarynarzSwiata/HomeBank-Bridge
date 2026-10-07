@@ -1,7 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import type { Account, Category, Transaction } from '../../types';
 import { ACCOUNT_TYPE_OPTIONS } from '../../constants';
-import { parseDateForComparison } from '../../utils/dateUtils';
+import {
+  PERIODS,
+  PeriodId,
+  MONTH_NAMES,
+  monthKey,
+  periodRange,
+  currencyInfo,
+  categoryLookup,
+  flowTransactions as getFlowTransactions,
+  formatMoney,
+} from '../../utils/periodUtils';
 
 /**
  * Home screen modelled on HomeBank's main window:
@@ -18,16 +28,6 @@ interface DashboardViewProps {
   onOpenGuide: () => void;
 }
 
-type PeriodId = 'this_month' | 'last_month' | 'last_30' | 'this_year' | 'last_12';
-
-const PERIODS: { id: PeriodId; name: string }[] = [
-  { id: 'this_month', name: 'This month' },
-  { id: 'last_month', name: 'Last month' },
-  { id: 'last_30', name: 'Last 30 days' },
-  { id: 'this_year', name: 'This year' },
-  { id: 'last_12', name: 'Last 12 months' },
-];
-
 // Chart series colours (validated for CVD separation and contrast on the dark surface).
 // Colour follows the entity: income is always blue, expense always orange.
 const INCOME_COLOR = '#3987e5';
@@ -35,31 +35,6 @@ const EXPENSE_COLOR = '#d95926';
 
 const TOP_CATEGORIES = 8;
 const MONTHS_IN_TREND = 6;
-
-const pad = (n: number) => String(n).padStart(2, '0');
-const toISO = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-
-const periodRange = (id: PeriodId, now = new Date()): { from: string; to: string } => {
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  switch (id) {
-    case 'this_month':
-      return { from: toISO(new Date(y, m, 1)), to: toISO(new Date(y, m + 1, 0)) };
-    case 'last_month':
-      return { from: toISO(new Date(y, m - 1, 1)), to: toISO(new Date(y, m, 0)) };
-    case 'last_30': {
-      const from = new Date(now);
-      from.setDate(from.getDate() - 29);
-      return { from: toISO(from), to: toISO(now) };
-    }
-    case 'this_year':
-      return { from: `${y}-01-01`, to: `${y}-12-31` };
-    case 'last_12':
-      return { from: toISO(new Date(y, m - 11, 1)), to: toISO(new Date(y, m + 1, 0)) };
-  }
-};
-
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   accounts,
@@ -70,44 +45,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onAddTransaction,
   onOpenGuide,
 }) => {
-  const currencies = useMemo(
-    () => Array.from(new Set(accounts.map(a => a.currency))).sort(),
-    [accounts]
-  );
-
-  // Default currency: the one holding the most accounts
-  const defaultCurrency = useMemo(() => {
-    const counts = new Map<string, number>();
-    accounts.forEach(a => counts.set(a.currency, (counts.get(a.currency) || 0) + 1));
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
-  }, [accounts]);
+  const { currencies, defaultCurrency } = useMemo(() => currencyInfo(accounts), [accounts]);
 
   const [period, setPeriod] = useState<PeriodId>('this_month');
   const [pickedCurrency, setPickedCurrency] = useState('');
   const currency = currencies.includes(pickedCurrency) ? pickedCurrency : defaultCurrency;
 
-  const fmt = (v: number) =>
-    isAnonymized
-      ? '••••'
-      : v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (v: number) => formatMoney(v, isAnonymized);
 
-  // Top-level category name for any category id (HomeBank groups spending by parent)
-  const topCategoryName = useMemo(() => {
-    const map = new Map<number, string>();
-    categories.forEach(parent => {
-      map.set(parent.id, parent.name);
-      parent.children?.forEach(child => map.set(child.id, parent.name));
-    });
-    return map;
-  }, [categories]);
+  // HomeBank groups spending by top-level category
+  const categoryInfo = useMemo(() => categoryLookup(categories), [categories]);
 
-  // Transactions in the chosen currency, without internal transfers (they are not income or spending)
-  const flowTransactions = useMemo(() => {
-    const currencyByAccount = new Map(accounts.map(a => [a.id, a.currency]));
-    return transactions
-      .filter(t => !t.transfer_id && currencyByAccount.get(t.account_id) === currency)
-      .map(t => ({ ...t, iso: parseDateForComparison(t.date) }));
-  }, [transactions, accounts, currency]);
+  const flowTransactions = useMemo(
+    () => getFlowTransactions(transactions, accounts, currency),
+    [transactions, accounts, currency]
+  );
 
   const range = periodRange(period);
 
@@ -120,7 +72,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       if (t.amount > 0) income += t.amount;
       if (t.amount < 0) {
         expense += -t.amount;
-        const name = (t.category_id && topCategoryName.get(t.category_id)) || 'Unassigned';
+        const name = (t.category_id && categoryInfo.get(t.category_id)?.top) || 'Unassigned';
         byCategory.set(name, (byCategory.get(name) || 0) + -t.amount);
       }
     }
@@ -129,7 +81,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const rest = sorted.slice(TOP_CATEGORIES).reduce((sum, [, v]) => sum + v, 0);
     if (rest > 0) top.push(['Other', rest]);
     return { income, expense, net: income - expense, topSpending: top };
-  }, [flowTransactions, range.from, range.to, topCategoryName]);
+  }, [flowTransactions, range.from, range.to, categoryInfo]);
 
   // Income vs expense for the last N calendar months
   const monthlyTrend = useMemo(() => {
@@ -137,7 +89,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const months = Array.from({ length: MONTHS_IN_TREND }, (_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - (MONTHS_IN_TREND - 1 - i), 1);
       return {
-        key: `${d.getFullYear()}-${pad(d.getMonth() + 1)}`,
+        key: monthKey(d.getFullYear(), d.getMonth()),
         label: `${MONTH_NAMES[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`,
         income: 0,
         expense: 0,

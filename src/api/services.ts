@@ -1,4 +1,5 @@
 import { api, ApiError } from './client';
+import type { BudgetRow, BudgetInput } from '../types';
 import type {
   ApiAccount,
   ApiCategory,
@@ -402,4 +403,14 @@ export const exportLogService = {
   async clearAllLogs(): Promise<{ success: boolean }> {
     return api.delete('/export-log');
   }
+};
+
+export const budgetService = {
+  async getAll(): Promise<BudgetRow[]> {
+    return api.get('/budget');
+  },
+
+  async save(categoryId: number, data: BudgetInput): Promise<{ message: string }> {
+    return api.put(`/budget/${categoryId}`, data);
+  },
 };
