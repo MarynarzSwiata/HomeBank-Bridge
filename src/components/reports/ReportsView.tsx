@@ -66,7 +66,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ accounts, transactions
     const totals = new Map<string, number>();
     let total = 0;
     let count = 0;
-    for (const t of flowTransactions(transactions, accounts, currency)) {
+    for (const t of flowTransactions(transactions, accounts, currency, accountId ? undefined : 'report')) {
       if (t.iso < range.from || t.iso > range.to) continue;
       if (accountId && String(t.account_id) !== accountId) continue;
       const value = flow === 'expense' ? -t.amount : t.amount;

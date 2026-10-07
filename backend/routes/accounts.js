@@ -20,6 +20,9 @@ router.get('/', async (req, res, next) => {
         a.currency,
         a.type,
         a.closed,
+        a.no_summary,
+        a.no_budget,
+        a.no_report,
         a.initial_balance,
         a.initial_balance + IFNULL(SUM(CASE WHEN t.status = 2 THEN t.amount END), 0) as reconciled_balance,
         a.initial_balance + IFNULL(SUM(CASE WHEN t.status >= 1 THEN t.amount END), 0) as cleared_balance,
@@ -45,16 +48,19 @@ router.post('/',
     body('initialBalance').optional().isFloat().withMessage('Initial balance must be a number'),
     body('type').optional().isIn(ACCOUNT_TYPES).withMessage('Invalid account type'),
     body('closed').optional().isBoolean(),
+    body('noSummary').optional().isBoolean(),
+    body('noBudget').optional().isBoolean(),
+    body('noReport').optional().isBoolean(),
     validate
   ],
   async (req, res, next) => {
     try {
-      const { name, currency, initialBalance = 0, type = 'bank', closed = false } = req.body;
+      const { name, currency, initialBalance = 0, type = 'bank', closed = false, noSummary = false, noBudget = false, noReport = false } = req.body;
       
       const result = await db.run(`
-        INSERT INTO accounts (name, currency, initial_balance, type, closed)
-        VALUES (?, ?, ?, ?, ?)
-      `, name, currency, initialBalance, type, closed ? 1 : 0);
+        INSERT INTO accounts (name, currency, initial_balance, type, closed, no_summary, no_budget, no_report)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, name, currency, initialBalance, type, closed ? 1 : 0, noSummary ? 1 : 0, noBudget ? 1 : 0, noReport ? 1 : 0);
 
       res.status(201).json({ id: result.lastID });
     } catch (err) {
@@ -72,12 +78,15 @@ router.put('/:id',
     body('initialBalance').optional().isFloat(),
     body('type').optional().isIn(ACCOUNT_TYPES).withMessage('Invalid account type'),
     body('closed').optional().isBoolean(),
+    body('noSummary').optional().isBoolean(),
+    body('noBudget').optional().isBoolean(),
+    body('noReport').optional().isBoolean(),
     validate
   ],
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { name, currency, initialBalance, type, closed } = req.body;
+      const { name, currency, initialBalance, type, closed, noSummary, noBudget, noReport } = req.body;
 
       const account = await db.get('SELECT id FROM accounts WHERE id = ?', id);
       if (!account) {
@@ -108,6 +117,12 @@ router.put('/:id',
       if (closed !== undefined) {
         updates.push('closed = ?');
         values.push(closed ? 1 : 0);
+      }
+      for (const [column, value] of [['no_summary', noSummary], ['no_budget', noBudget], ['no_report', noReport]]) {
+        if (value !== undefined) {
+          updates.push(`${column} = ?`);
+          values.push(value ? 1 : 0);
+        }
       }
 
       if (updates.length > 0) {
