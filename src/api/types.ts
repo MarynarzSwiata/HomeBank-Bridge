@@ -5,6 +5,9 @@ export interface ApiAccount {
   currency: string;
   type: 'bank' | 'checking' | 'savings' | 'cash' | 'creditcard' | 'asset' | 'liability';
   closed: number;
+  no_summary?: number;
+  no_budget?: number;
+  no_report?: number;
   initial_balance: number;
   reconciled_balance: number;
   cleared_balance: number;
@@ -79,6 +82,9 @@ export interface CreateAccountRequest {
   initialBalance?: number;
   type?: ApiAccount['type'];
   closed?: boolean;
+  noSummary?: boolean;
+  noBudget?: boolean;
+  noReport?: boolean;
 }
 
 export interface CreateCategoryRequest {

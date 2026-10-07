@@ -19,6 +19,7 @@ import payeesRouter from './routes/payees.js';
 import budgetRouter from './routes/budget.js';
 import scheduledRouter from './routes/scheduled.js';
 import rulesRouter from './routes/rules.js';
+import currenciesRouter from './routes/currencies.js';
 import exportLogRouter from './routes/export-log.js';
 import systemRouter from './routes/system.js';
 
@@ -94,6 +95,7 @@ app.use('/api/payees', requireAuth, payeesRouter);
 app.use('/api/budget', requireAuth, budgetRouter);
 app.use('/api/scheduled', requireAuth, scheduledRouter);
 app.use('/api/rules', requireAuth, rulesRouter);
+app.use('/api/currencies', requireAuth, currenciesRouter);
 app.use('/api/export-log', requireAuth, exportLogRouter);
 app.use('/api/system', requireAdmin, systemRouter);
 

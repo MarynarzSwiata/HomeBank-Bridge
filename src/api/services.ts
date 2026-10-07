@@ -493,3 +493,12 @@ export const rulesService = {
     return api.post('/rules/apply', { dryRun });
   },
 };
+
+export const currencyService = {
+  async get(): Promise<{ base: string; rates: Record<string, number> }> {
+    return api.get('/currencies');
+  },
+  async save(base: string, rates: Record<string, number>): Promise<{ message: string }> {
+    return api.put('/currencies', { base, rates });
+  },
+};

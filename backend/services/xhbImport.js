@@ -45,13 +45,13 @@ export function parseXhb(text) {
   if (text.length > MAX_FILE_BYTES) throw userError('The file is too large (max 20 MB)');
   if (!/<homebank[\s>]/.test(text)) throw userError('This is not a HomeBank (.xhb) file');
 
-  const out = { cur: [], account: [], pay: [], cat: [], tag: [], asg: [], fav: [], ope: [], homebank: null };
+  const out = { cur: [], account: [], pay: [], cat: [], tag: [], asg: [], fav: [], ope: [], homebank: null, properties: null };
   for (const m of text.matchAll(/<([a-z]+)(\s[^<>]*?)?\/?>/g)) {
     const tag = m[1];
     if (!WANTED.has(tag)) continue;
     const attrs = parseAttrs(m[2] || '');
-    if (tag === 'homebank') out.homebank = attrs;
-    else if (tag !== 'properties') out[tag].push(attrs);
+    if (tag === 'homebank' || tag === 'properties') out[tag] = attrs;
+    else out[tag].push(attrs);
   }
   return out;
 }
@@ -74,6 +74,9 @@ export const julianToISO = (j) => {
 
 const ACCOUNT_TYPES = { 0: 'bank', 1: 'bank', 2: 'cash', 3: 'asset', 4: 'creditcard', 5: 'liability', 6: 'checking', 7: 'savings' };
 const ACCOUNT_CLOSED = 1 << 1;
+const ACCOUNT_NOSUMMARY = 1 << 4;
+const ACCOUNT_NOBUDGET = 1 << 5;
+const ACCOUNT_NOREPORT = 1 << 6;
 const CAT_INCOME = 1 << 1;
 const CAT_CUSTOM = 1 << 2; // budget differs per month
 const CAT_BUDGET = 1 << 3;
@@ -112,6 +115,9 @@ export function buildPlan(xhb) {
     initial: num(a.initial),
     type: ACCOUNT_TYPES[int(a.type)] || 'bank',
     closed: (int(a.flags) & ACCOUNT_CLOSED) !== 0,
+    noSummary: (int(a.flags) & ACCOUNT_NOSUMMARY) !== 0,
+    noBudget: (int(a.flags) & ACCOUNT_NOBUDGET) !== 0,
+    noReport: (int(a.flags) & ACCOUNT_NOREPORT) !== 0,
   }));
   const accountKeys = new Set(accounts.map(a => a.key));
 
@@ -279,7 +285,16 @@ export function buildPlan(xhb) {
   if (skippedTemplates) warnings.push(`${skippedTemplates} template(s) that are not scheduled skipped`);
   if (skippedRules) warnings.push(`${skippedRules} assignment rule(s) skipped (regex, or nothing this app can assign)`);
 
-  return { accounts, categories: cats, budgets, payees, transactions, transfers, scheduled, rules, warnings };
+  // Base currency (properties curr) and exchange rates: rate = units of that currency per 1 base unit
+  const baseCurrency = currencies.get(int(xhb.properties?.curr)) || '';
+  const rates = {};
+  for (const c of xhb.cur) {
+    const code = currencies.get(int(c.key));
+    const rate = parseFloat(c.rate);
+    if (code && code !== baseCurrency && Number.isFinite(rate) && rate > 0) rates[code] = rate;
+  }
+
+  return { accounts, categories: cats, budgets, payees, transactions, transfers, scheduled, rules, warnings, baseCurrency, rates };
 }
 
 export const planSummary = (plan) => ({
@@ -292,12 +307,14 @@ export const planSummary = (plan) => ({
   scheduled: plan.scheduled.length,
   rules: plan.rules.length,
   currencies: Array.from(new Set(plan.accounts.map(a => a.currency))),
+  baseCurrency: plan.baseCurrency,
+  rates: plan.rates,
   warnings: plan.warnings,
 });
 
 // --- Write ----------------------------------------------------------------
 
-const DATA_TABLES = ['transactions', 'scheduled', 'rules', 'budgets', 'payees', 'accounts', 'categories'];
+const DATA_TABLES = ['transactions', 'scheduled', 'rules', 'budgets', 'payees', 'accounts', 'categories', 'currency_rates'];
 
 export async function hasExistingData() {
   const row = await db.get('SELECT (SELECT COUNT(*) FROM accounts) + (SELECT COUNT(*) FROM transactions) + (SELECT COUNT(*) FROM categories) AS n');
@@ -315,10 +332,18 @@ export async function applyPlan(plan, { replace }) {
     const accountId = new Map();
     for (const a of plan.accounts) {
       const r = await db.run(
-        'INSERT INTO accounts (name, currency, initial_balance, type, closed) VALUES (?, ?, ?, ?, ?)',
-        a.name, a.currency, a.initial, a.type, a.closed ? 1 : 0
+        `INSERT INTO accounts (name, currency, initial_balance, type, closed, no_summary, no_budget, no_report)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        a.name, a.currency, a.initial, a.type, a.closed ? 1 : 0, a.noSummary ? 1 : 0, a.noBudget ? 1 : 0, a.noReport ? 1 : 0
       );
       accountId.set(a.key, r.lastID);
+    }
+
+    if (plan.baseCurrency) {
+      await db.run("INSERT OR REPLACE INTO app_settings (key, value) VALUES ('base_currency', ?)", plan.baseCurrency);
+    }
+    for (const [code, rate] of Object.entries(plan.rates)) {
+      await db.run('INSERT OR REPLACE INTO currency_rates (code, rate) VALUES (?, ?)', code, rate);
     }
 
     const categoryId = new Map();

@@ -79,7 +79,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
   const actualByCategory = useMemo(() => {
     const key = monthKey(month.year, month.month0);
     const map = new Map<number | null, number>();
-    flowTransactions(transactions, accounts, currency)
+    flowTransactions(transactions, accounts, currency, 'budget')
       .filter(t => t.iso.slice(0, 7) === key)
       .forEach(t => map.set(t.category_id, (map.get(t.category_id) || 0) + t.amount));
     return map;

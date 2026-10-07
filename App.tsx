@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { ApiError, accountsService, systemService, rulesService } from "./src/api";
+import { ApiError, accountsService, systemService, rulesService, currencyService } from "./src/api";
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import type {
@@ -35,6 +35,8 @@ import { ReportsView } from "./src/components/reports/ReportsView";
 import { ScheduledView } from "./src/components/scheduled/ScheduledView";
 import { RulesView } from "./src/components/rules/RulesView";
 import { HomeBankImport } from "./src/components/import/HomeBankImport";
+import { CurrencyRatesEditor } from "./src/components/import/CurrencyRatesEditor";
+import { CurrencyRates, EMPTY_RATES } from "./src/utils/currencyUtils";
 import { useScheduled } from "./src/hooks/useScheduled";
 import {
   PAYMENT_LEXICON,
@@ -510,6 +512,30 @@ const App: React.FC = () => {
       refreshScheduled();
     }
   }, [auth.isAuthenticated, activeTab, refreshScheduled]);
+
+  // Exchange rates for totals converted to the base currency
+  const [rates, setRates] = useState<CurrencyRates>(EMPTY_RATES);
+  const refreshRates = useCallback(async () => {
+    try {
+      setRates(await currencyService.get());
+    } catch (err) {
+      console.error("Failed to load exchange rates:", err);
+    }
+  }, []);
+  useEffect(() => {
+    if (auth.isAuthenticated) refreshRates();
+  }, [auth.isAuthenticated, refreshRates]);
+  const saveRates = useCallback(async (base: string, newRates: Record<string, number>) => {
+    try {
+      await currencyService.save(base, newRates);
+      await refreshRates();
+      showToast("Exchange rates saved", "success");
+      return true;
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to save exchange rates", "error");
+      return false;
+    }
+  }, [refreshRates, showToast]);
 
   // Assignment rules: used by the entry form and managed in the Rules tab
   const [rules, setRules] = useState<Rule[]>([]);
@@ -1499,6 +1525,7 @@ const App: React.FC = () => {
               scheduled={scheduled}
               dateFormat={dateFormat}
               onOpenScheduled={() => setActiveTab("scheduled")}
+              rates={rates}
             />
           )}
 
@@ -1840,6 +1867,7 @@ const App: React.FC = () => {
           {activeTab === "accounts" && (
             <AccountsView
               accounts={accountsHook.accounts}
+              rates={rates}
               createAccount={handleCreateAccount}
               updateAccount={handleUpdateAccount}
               deleteAccount={handleDeleteAccount}
@@ -1977,9 +2005,15 @@ const App: React.FC = () => {
                 <HomeBankImport
                   onBackup={handleBackup}
                   onImported={async () => {
-                    await Promise.all([refreshAll(), refreshScheduled(), refreshRules()]).catch(() => {});
+                    await Promise.all([refreshAll(), refreshScheduled(), refreshRules(), refreshRates()]).catch(() => {});
                   }}
                   notify={(msg, type) => showToast(msg, type)}
+                />
+
+                <CurrencyRatesEditor
+                  rates={rates}
+                  currencies={availableCurrencies}
+                  onSave={saveRates}
                 />
 
                 {/* Localization Settings */}

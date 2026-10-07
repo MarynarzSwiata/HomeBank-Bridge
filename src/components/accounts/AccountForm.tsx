@@ -34,6 +34,10 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     const [initialBalance, setInitialBalance] = useState('0');
     const [type, setType] = useState<AccountType>('bank');
     const [closed, setClosed] = useState(false);
+    // HomeBank account options
+    const [noSummary, setNoSummary] = useState(false);
+    const [noBudget, setNoBudget] = useState(false);
+    const [noReport, setNoReport] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
     // Use passed currencies
@@ -46,12 +50,18 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             setInitialBalance(String(editingAccount.initial_balance));
             setType(editingAccount.type);
             setClosed(editingAccount.closed);
+            setNoSummary(editingAccount.no_summary);
+            setNoBudget(editingAccount.no_budget);
+            setNoReport(editingAccount.no_report);
         } else {
             setName('');
             setCurrency('EUR');
             setInitialBalance('0');
             setType('bank');
             setClosed(false);
+            setNoSummary(false);
+            setNoBudget(false);
+            setNoReport(false);
         }
         setLocalError(null);
     }, [editingAccount, isExpanded]);
@@ -67,7 +77,10 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 currency,
                 initialBalance: bal,
                 type,
-                closed
+                closed,
+                noSummary,
+                noBudget,
+                noReport
             };
             
             let success = false;
@@ -85,6 +98,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     setInitialBalance('0');
                     setType('bank');
                     setClosed(false);
+                    setNoSummary(false);
+                    setNoBudget(false);
+                    setNoReport(false);
                 }
             }
         } catch (err) {
@@ -193,6 +209,28 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     </label>
                 )}
             </div>
+
+            <fieldset className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <legend className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2 mb-2">Options (as in HomeBank)</legend>
+                {([
+                    [noSummary, setNoSummary, 'Exclude from summary', 'Hidden on Home and in totals'],
+                    [noBudget, setNoBudget, 'Exclude from budget', 'Not counted in the Budget tab'],
+                    [noReport, setNoReport, 'Exclude from reports', 'Not counted in Home charts and Reports'],
+                ] as const).map(([value, setter, label, hint]) => (
+                    <label key={label} className="flex items-center gap-3 px-5 py-3 bg-slate-950/50 border border-slate-800 rounded-2xl cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={value}
+                            onChange={(e) => setter(e.target.checked)}
+                            className="w-5 h-5 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-300">
+                            {label}
+                            <span className="block text-[10px] font-medium text-slate-500">{hint}</span>
+                        </span>
+                    </label>
+                ))}
+            </fieldset>
             
              <div className="flex gap-4 mt-8">
                 <button

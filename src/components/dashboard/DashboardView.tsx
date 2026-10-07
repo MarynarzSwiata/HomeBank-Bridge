@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { Account, Category, Transaction } from '../../types';
 import { ACCOUNT_TYPE_OPTIONS } from '../../constants';
+import { CurrencyRates, convertedTotals, isInSummary } from '../../utils/currencyUtils';
 import type { UseScheduledResult } from '../../hooks/useScheduled';
 import { describeItem, PostAllDueButton } from '../scheduled/ScheduledView';
 import { formatDateForDisplay } from '../../utils/dateUtils';
@@ -33,6 +34,7 @@ interface DashboardViewProps {
   scheduled: UseScheduledResult;
   dateFormat: string;
   onOpenScheduled: () => void;
+  rates: CurrencyRates;
 }
 
 const UPCOMING_DAYS = 14;
@@ -57,6 +59,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   scheduled,
   dateFormat,
   onOpenScheduled,
+  rates,
 }) => {
   const { currencies, defaultCurrency } = useMemo(() => currencyInfo(accounts), [accounts]);
 
@@ -70,7 +73,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const categoryInfo = useMemo(() => categoryLookup(categories), [categories]);
 
   const flowTransactions = useMemo(
-    () => getFlowTransactions(transactions, accounts, currency),
+    () => getFlowTransactions(transactions, accounts, currency, 'report'),
     [transactions, accounts, currency]
   );
 
@@ -118,10 +121,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return months;
   }, [flowTransactions]);
 
-  const openAccounts = accounts.filter(a => !a.closed);
+  // Like HomeBank's summary: hide closed accounts and those excluded from the summary
+  const openAccounts = accounts.filter(isInSummary);
+  const hiddenCount = accounts.length - openAccounts.length;
   const accountGroups = ACCOUNT_TYPE_OPTIONS
     .map(t => ({ label: t.name, items: openAccounts.filter(a => a.type === t.id) }))
-    .filter(g => g.items.length > 0);
+    .filter(g => g.items.length > 0)
+    .map(g => ({ ...g, converted: rates.base ? convertedTotals(g.items, rates) : null }));
+  const grandTotal = rates.base ? convertedTotals(openAccounts, rates) : null;
 
   const totalsByCurrency = useMemo(() => {
     const totals = new Map<string, { reconciled: number; today: number; future: number }>();
@@ -301,10 +308,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <BalanceCell value={a.current_balance} fmt={fmt} strong />
                   </tr>
                 ))}
+                {group.converted && (
+                  <tr className="border-t border-slate-700/80">
+                    <td className="py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Total {rates.base}{group.converted.missing.length > 0 ? ` (without ${group.converted.missing.join(', ')})` : ''}
+                    </td>
+                    <BalanceCell value={group.converted.totals.reconciled} fmt={fmt} wideOnly />
+                    <BalanceCell value={group.converted.totals.today} fmt={fmt} wideOnly />
+                    <BalanceCell value={group.converted.totals.future} fmt={fmt} strong />
+                  </tr>
+                )}
               </tbody>
             ))}
             <tfoot>
-              {totalsByCurrency.map(([cur, t]) => (
+              {grandTotal && (
+                <tr className="border-t-2 border-slate-600">
+                  <td className="py-3 text-[11px] font-black uppercase tracking-widest text-slate-200">
+                    Grand total {rates.base}{grandTotal.missing.length > 0 ? ` (without ${grandTotal.missing.join(', ')})` : ''}
+                  </td>
+                  <BalanceCell value={grandTotal.totals.reconciled} fmt={fmt} wideOnly />
+                  <BalanceCell value={grandTotal.totals.today} fmt={fmt} wideOnly />
+                  <BalanceCell value={grandTotal.totals.future} fmt={fmt} strong />
+                </tr>
+              )}
+              {!grandTotal && totalsByCurrency.map(([cur, t]) => (
                 <tr key={cur} className="border-t-2 border-slate-700">
                   <td className="py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Total {cur}</td>
                   <BalanceCell value={t.reconciled} fmt={fmt} wideOnly />
@@ -315,6 +342,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </tfoot>
           </table>
         </div>
+        <p className="text-[10px] font-bold text-slate-500">
+          {hiddenCount > 0 ? `${hiddenCount} closed or hidden account(s) not shown. ` : ''}
+          {rates.base
+            ? `Totals converted to ${rates.base} with the exchange rates in Options.`
+            : 'Set a base currency in Options to see totals converted to one currency.'}
+        </p>
       </section>
     </div>
   );

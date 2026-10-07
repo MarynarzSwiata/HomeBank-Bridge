@@ -10,6 +10,7 @@ import {
 } from '../common';
 import { transactionsService } from '../../api/services';
 import { ACCOUNT_TYPE_OPTIONS, ACCOUNT_TYPE_LABELS } from '../../constants';
+import { CurrencyRates, EMPTY_RATES, convertedTotals, isInSummary } from '../../utils/currencyUtils';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -26,6 +27,7 @@ interface AccountsViewProps {
   decimalSeparator: string;
   onExportLogged?: () => Promise<void>;
   onToggleAnonymize: () => void;
+  rates?: CurrencyRates;
 }
 
 export const AccountsView: React.FC<AccountsViewProps> = ({
@@ -41,18 +43,20 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   dateFormat,
   decimalSeparator,
   onExportLogged,
-  onToggleAnonymize
+  onToggleAnonymize,
+  rates = EMPTY_RATES
 }) => {
     const [isFormExpanded, setIsFormExpanded] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Account | null>(null);
     const [showClosed, setShowClosed] = useState(false);
 
-    const closedCount = accounts.filter(a => a.closed).length;
+    // Closed accounts and those excluded from the summary are hidden by default (like HomeBank)
+    const closedCount = accounts.filter(a => !isInSummary(a)).length;
 
     // Group accounts by type (HomeBank order), closed ones last in each group
     const groupedAccounts = useMemo(() => {
-        const visible = accounts.filter(a => showClosed || !a.closed);
+        const visible = accounts.filter(a => showClosed || isInSummary(a));
         return ACCOUNT_TYPE_OPTIONS
             .map(t => ({ type: t.id, label: t.name, items: visible.filter(a => a.type === t.id) }))
             .filter(g => g.items.length > 0);
@@ -168,7 +172,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   }`}
                   title="Show or hide closed accounts"
                 >
-                  {showClosed ? 'Hide' : 'Show'} closed ({closedCount})
+                  {showClosed ? 'Hide' : 'Show'} hidden ({closedCount})
                 </button>
               )}
               {accounts.length > 0 && (
@@ -229,7 +233,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                         <div 
                             key={acc.id} 
                             onClick={() => viewAccountHistory?.(acc.id)}
-                            className={`group relative rounded-[2.5rem] bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40 transition-all cursor-pointer overflow-hidden ${acc.closed ? 'opacity-50' : ''}`}
+                            className={`group relative rounded-[2.5rem] bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40 transition-all cursor-pointer overflow-hidden ${!isInSummary(acc) ? 'opacity-50' : ''}`}
                         >
                             {/* Desktop Layout */}
                             <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-6 items-center">
@@ -237,8 +241,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                                     <div className="text-sm font-black text-slate-100 uppercase tracking-tight truncate">
                                         {acc.name} <span className="text-indigo-400/60 ml-1 text-[10px]">({acc.currency})</span>
                                     </div>
-                                    {acc.closed && (
-                                        <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">Closed</div>
+                                    {!isInSummary(acc) && (
+                                        <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">{acc.closed ? 'Closed' : 'Hidden from summary'}</div>
                                     )}
                                 </div>
                                 <div className={`col-span-2 text-right text-sm font-bold tracking-tight ${tone(acc.reconciled_balance)}`}>
@@ -278,7 +282,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                                 <div className="flex justify-between items-start">
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
-                                            {ACCOUNT_TYPE_LABELS[acc.type]}{acc.closed ? ' · Closed' : ''}
+                                            {ACCOUNT_TYPE_LABELS[acc.type]}{acc.closed ? ' · Closed' : acc.no_summary ? ' · Hidden' : ''}
                                         </span>
                                         <span className="text-lg font-black text-slate-100 uppercase tracking-tight truncate leading-none">
                                             {acc.name}
@@ -321,8 +325,27 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                             </div>
                         </div>
                     ))}
+                    {rates.base && (() => {
+                        // Group total in the base currency (only accounts shown in the summary, like HomeBank)
+                        const { totals, missing } = convertedTotals(group.items.filter(isInSummary), rates);
+                        return (
+                            <div className="flex justify-end gap-6 px-8 text-xs font-bold text-slate-400 tabular-nums">
+                                <span className="uppercase tracking-widest text-[10px] text-slate-500">Total {group.label}{missing.length ? ` (without ${missing.join(', ')})` : ''}</span>
+                                <span className={tone(totals.future)}>{fmt(totals.future)} {rates.base}</span>
+                            </div>
+                        );
+                    })()}
                     </div>
                   ))}
+                  {rates.base && (() => {
+                      const { totals, missing } = convertedTotals(accounts.filter(isInSummary), rates);
+                      return (
+                          <div className="flex justify-end gap-6 px-8 pt-4 border-t border-slate-800 text-sm font-black tabular-nums">
+                              <span className="uppercase tracking-widest text-[10px] text-slate-300 self-center">Grand total{missing.length ? ` (without ${missing.join(', ')})` : ''}</span>
+                              <span className={tone(totals.future)}>{fmt(totals.future)} {rates.base}</span>
+                          </div>
+                      );
+                  })()}
                 </div>
             )}
       </div>

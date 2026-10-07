@@ -16,6 +16,10 @@ export interface Account {
   currency: string;
   type: AccountType;
   closed: boolean;
+  /** HomeBank account options */
+  no_summary: boolean;
+  no_budget: boolean;
+  no_report: boolean;
   initial_balance: number;
   reconciled_balance: number;
   cleared_balance: number;
@@ -29,6 +33,9 @@ export interface AccountInput {
   initialBalance?: number;
   type?: AccountType;
   closed?: boolean;
+  noSummary?: boolean;
+  noBudget?: boolean;
+  noReport?: boolean;
 }
 
 export interface Category {

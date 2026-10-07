@@ -62,9 +62,15 @@ export type FlowTransaction = Transaction & { iso: string };
 export const flowTransactions = (
   transactions: Transaction[],
   accounts: Account[],
-  currency: string
+  currency: string,
+  // HomeBank account options: leave out accounts excluded from reports or from the budget
+  exclude?: 'report' | 'budget'
 ): FlowTransaction[] => {
-  const currencyByAccount = new Map(accounts.map(a => [a.id, a.currency]));
+  const currencyByAccount = new Map(
+    accounts
+      .filter(a => !(exclude === 'report' && a.no_report) && !(exclude === 'budget' && a.no_budget))
+      .map(a => [a.id, a.currency])
+  );
   return transactions
     .filter(t => !t.transfer_id && currencyByAccount.get(t.account_id) === currency)
     .map(t => ({ ...t, iso: parseDateForComparison(t.date) }));
