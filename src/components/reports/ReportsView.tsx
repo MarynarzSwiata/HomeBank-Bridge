@@ -41,7 +41,7 @@ const GROUPS: { id: GroupBy; name: string }[] = [
 ];
 
 // Colour follows the entity (same as Home): income blue, expense orange
-const FLOW_COLOR: Record<Flow, string> = { income: '#2a78d6', expense: '#eb6834' };
+const FLOW_COLOR: Record<Flow, string> = { income: 'var(--chart-income)', expense: 'var(--chart-expense)' };
 
 const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, categories, isAnonymized }) => {
   const [period, setPeriod] = useState<PeriodId | 'custom'>('this_year');

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import type { Transaction, Account, Category, Payee, Rule, ScheduledItem, TransactionStatus } from '../../types';
 import { splitTags } from '../../utils/tagUtils';
 import { TRANSACTION_STATUS } from '../../constants';
@@ -13,7 +12,8 @@ import {
   Card, 
   ConfirmModal, 
   Alert, 
-  Spinner 
+  Spinner,
+  Drawer,
 } from '../common';
 import { exportLogService } from '../../api/services';
 import { 
@@ -436,14 +436,6 @@ export function TransactionsView({
     setDuplicatingTransaction(null);
   }, []);
 
-  // Escape closes the form drawer
-  React.useEffect(() => {
-    if (!isDrawerOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleCancel(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isDrawerOpen, handleCancel]);
-
   // Save handler
   const handleSave = useCallback(async (data: TransactionSaveData, keepOpen: boolean = false): Promise<boolean> => {
     const success = await onSaveTransaction(data);
@@ -610,34 +602,11 @@ export function TransactionsView({
           className={editingTransaction ? 'border-amber-500/50 bg-amber-950/10' : ''}
         />
 
-        {isDrawerOpen && createPortal(
-          <div className="fixed inset-0 z-[300] flex justify-end">
-            <button
-              type="button"
-              aria-label="Close form"
-              tabIndex={-1}
-              onClick={handleCancel}
-              className="absolute inset-0 bg-slate-50/30 cursor-default"
-            />
-            <aside
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="tx-drawer-title"
-              className="relative w-full sm:w-[480px] h-full overflow-y-auto bg-slate-900 border-l border-slate-800 shadow-2xl animate-in slide-in-from-right duration-300"
-            >
-              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-6 py-4 bg-slate-900 border-b border-slate-800">
-                <h2 id="tx-drawer-title" className="text-lg font-semibold text-slate-100">
-                  {editingTransaction ? 'Edit transaction' : duplicatingTransaction ? 'Duplicate transaction' : 'New transaction'}
-                </h2>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  aria-label="Close"
-                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-950 text-slate-400 hover:text-slate-100"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeWidth="2.2" d="M6 6l12 12M18 6L6 18" /></svg>
-                </button>
-              </div>
+        <Drawer
+          open={isDrawerOpen}
+          title={editingTransaction ? 'Edit transaction' : duplicatingTransaction ? 'Duplicate transaction' : 'New transaction'}
+          onClose={handleCancel}
+        >
             <TransactionForm
               key={editingTransaction ? `edit-${editingTransaction.id}` : duplicatingTransaction ? `dup-${duplicatingTransaction.id}` : 'new'}
               mode={editingTransaction ? 'edit' : 'create'}
@@ -659,10 +628,7 @@ export function TransactionsView({
               rules={rules}
               templates={templates}
             />
-            </aside>
-          </div>,
-          document.body
-        )}
+        </Drawer>
       </div>
 
       {/* Filters (Collapsible) */}

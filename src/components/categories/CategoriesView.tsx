@@ -10,7 +10,7 @@ import type { Category, CategoryType } from "../../types";
 
 import { categoriesService } from "../../api/services";
 import { ImportModal } from "../shared/ImportModal";
-import { Button, ActionBar, Card, ConfirmModal, Alert } from "../common";
+import { Button, ActionBar, Card, ConfirmModal, Alert, Drawer } from "../common";
 
 interface CategoriesViewProps {
   categories: Category[];
@@ -328,25 +328,10 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
       {/* Actions & Form Section */}
       <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-4">
         <ActionBar
-          title={
-            editingCategory
-              ? "Edit Category"
-              : isCatFormExpanded
-              ? "New Category"
-              : "Category Dictionary"
-          }
-          subtitle={
-            editingCategory
-              ? `Modifying ${editingCategory.name}`
-              : "Organize your financial taxonomy"
-          }
-          isExpanded={isCatFormExpanded || !!editingCategory}
-          onToggle={() => {
-            if (editingCategory) resetForm();
-            else setIsCatFormExpanded(!isCatFormExpanded);
-          }}
-          expandLabel="Add Category"
-          collapseLabel={editingCategory ? "Cancel Edit" : "Close"}
+          title="Categories"
+          subtitle="Income and expense categories with subcategories"
+          onToggle={() => { setEditingCategory(null); setIsCatFormExpanded(true); }}
+          expandLabel="Add category"
           actions={
             <div className="flex gap-2">
               <Button
@@ -395,19 +380,15 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               </Button>
             </div>
           }
-          className={
-            editingCategory ? "border-indigo-500/50 bg-indigo-950/10" : ""
-          }
         />
 
-        {(isCatFormExpanded || editingCategory) && (
-          <Card
-            variant="default"
-            className={
-              editingCategory ? "border-indigo-500/50 bg-indigo-950/5" : ""
-            }
-          >
-            <CategoryForm
+        <Drawer
+          open={isCatFormExpanded || !!editingCategory}
+          title={editingCategory ? 'Edit category' : 'New category'}
+          onClose={resetForm}
+        >
+          <div className="p-6">
+<CategoryForm
               isExpanded={true}
               onClose={() => setIsCatFormExpanded(false)}
               editingCategory={editingCategory}
@@ -418,8 +399,8 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               isSaving={isSaving}
               error={error}
             />
-          </Card>
-        )}
+          </div>
+        </Drawer>
       </div>
 
       <ImportModal

@@ -9,6 +9,8 @@ import { ApiError, accountsService, systemService, rulesService, currencyService
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import { AnimatedLogo } from "./src/components/shared/AnimatedLogo";
+import { ThemeSwitch } from "./src/components/common";
+import { watchSystemTheme } from "./src/utils/theme";
 import type {
   Account,
   AccountInput,
@@ -47,6 +49,9 @@ import {
   DATE_FORMATS,
 } from "./src/constants";
 import SearchableSelect from "./src/components/shared/SearchableSelect";
+
+// Shown in the sidebar, mobile header and changelog; keep in sync with package.json
+const APP_VERSION = "2.0";
 
 const INITIAL_CURRENCIES = ["EUR", "USD", "PLN", "GBP", "CHF", "JPY"];
 
@@ -152,6 +157,9 @@ const App: React.FC = () => {
   const [transactionsAccountFilter, setTransactionsAccountFilter] =
     useState("");
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+
+  // Follow the device theme while "Auto" is selected
+  useEffect(() => watchSystemTheme(), []);
 
   // App Settings State
   const [appSettings, setAppSettings] = useState<Record<string, string>>({});
@@ -816,7 +824,7 @@ const App: React.FC = () => {
     );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="h-screen h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
       <aside
         className={`hidden md:flex flex-col shrink-0 bg-slate-900 border-slate-800 transition-all duration-300 overflow-hidden ${
           isSidebarOpen ? "w-64 border-r" : "w-0 border-r-0"
@@ -871,13 +879,18 @@ const App: React.FC = () => {
             },
             {
               id: "export_log",
-              icon: "M9 12h6m-6 4h6m2 5",
+              icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
               label: "Export history",
             },
             {
               id: "options",
               icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
               label: "Settings",
+            },
+            {
+              id: "changelog",
+              icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z",
+              label: "What's new",
             },
 ].map((tab) => (
               <button
@@ -886,7 +899,7 @@ const App: React.FC = () => {
                 aria-current={activeTab === tab.id ? "page" : undefined}
                 className={`w-full flex items-center gap-2.5 min-h-[40px] px-2.5 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-indigo-50 text-indigo-600"
+                    ? "bg-indigo-50 text-indigo-400"
                     : "text-slate-300 hover:text-slate-100 hover:bg-slate-950"
                 }`}
               >
@@ -894,6 +907,9 @@ const App: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={tab.icon} />
                 </svg>
                 <span className="flex-1 text-left">{tab.label}</span>
+                {tab.id === "changelog" && (
+                  <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-md bg-indigo-950 text-indigo-400">v{APP_VERSION}</span>
+                )}
               </button>
             ))}
           </nav>
@@ -912,14 +928,15 @@ const App: React.FC = () => {
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${isAnonymized ? "left-[18px]" : "left-0.5"}`} />
               </button>
             </label>
+            <ThemeSwitch className="mx-2.5" />
             <div className="flex items-center gap-2.5 px-2.5 pt-2">
               <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-semibold text-slate-300 uppercase">
                 {(auth.user?.username || "?").slice(0, 2)}
               </div>
               <div className="flex flex-col flex-1 min-w-0">
                 <span className="text-[13px] font-medium text-slate-100 truncate">{auth.user?.username || "User"}</span>
-                <button onClick={() => setActiveTab("changelog")} className="text-xs text-slate-600 hover:text-indigo-600 text-left">
-                  Version 1.0.3
+                <button onClick={() => setActiveTab("changelog")} className="text-xs text-slate-600 hover:text-indigo-400 text-left">
+                  Version {APP_VERSION}
                 </button>
               </div>
               <button
@@ -934,14 +951,14 @@ const App: React.FC = () => {
               </button>
             </div>
             <div className="flex gap-3 px-2.5 pt-1 text-xs text-slate-600">
-              <a href="https://github.com/MarynarzSwiata/HomeBank-Bridge" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">GitHub</a>
-              <button onClick={() => setIsDonateModalOpen(true)} className="hover:text-indigo-600">Donate</button>
+              <a href="https://github.com/MarynarzSwiata/HomeBank-Bridge" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400">GitHub</a>
+              <button onClick={() => setIsDonateModalOpen(true)} className="hover:text-indigo-400">Donate</button>
             </div>
           </div>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <main className="flex-1 min-h-0 flex flex-col h-full overflow-hidden relative">
         {/* Desktop Sidebar Toggle (Open) */}
         {!isSidebarOpen && (
           <button
@@ -977,7 +994,7 @@ const App: React.FC = () => {
                 onClick={() => setActiveTab("changelog")}
                 className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-slate-100 transition-colors animate-pulse"
               >
-                Version 1.0.3
+                Version {APP_VERSION}
               </button>
             </div>
           </div>
@@ -1015,6 +1032,73 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-12">
+                <div className="relative pl-12 border-l-2 border-indigo-500/30">
+                  <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
+                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="text-2xl font-black text-slate-100">
+                        Version 2.0
+                      </h3>
+                      <span className="text-[10px] font-black text-indigo-400 bg-indigo-600/10 px-3 py-1 rounded-full">
+                        HomeBank replacement
+                      </span>
+                    </div>
+                    <p className="text-slate-400 text-sm leading-relaxed pb-4 border-b border-slate-800">
+                      Brings the app close to HomeBank desktop and gives it a new look.
+                    </p>
+                    <ul className="space-y-4 text-sm text-slate-300">
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Import & export HomeBank (.xhb):</strong>{" "}
+                          Move your whole HomeBank file in (accounts, categories, payees, transactions, budgets, templates, rules) and export everything back to a file HomeBank desktop opens.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Overview dashboard:</strong>{" "}
+                          Income, expense, balance and net worth for a chosen period, top spending, income vs expense for 6 months and account totals.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Budget & reports:</strong>{" "}
+                          Monthly budget per category with budget vs actual; reports by category, payee, month or tag; balance over time chart.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Templates & scheduled entries:</strong>{" "}
+                          Fill the entry form from a template; post or skip recurring entries (nothing is posted automatically).
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">Tags & assignment rules:</strong>{" "}
+                          Tag any entry; rules set category, payment and tags from the payee or memo.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">HomeBank accounts:</strong>{" "}
+                          Transaction status (cleared / reconciled), account types, closed accounts, reconciled / today / future balances, account options and exchange rates.
+                        </span>
+                      </li>
+                      <li className="flex gap-4">
+                        <span className="text-indigo-400 font-black">★</span>
+                        <span>
+                          <strong className="text-slate-100">New look:</strong>{" "}
+                          Calmer light design, a dark theme (Light / Dark / Auto), page headers, and forms in a side panel.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
                 <div className="relative pl-12 border-l-2 border-indigo-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
                   <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
@@ -1676,6 +1760,10 @@ const App: React.FC = () => {
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">
                   Control center for application data and global preferences.
                 </p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-sm text-slate-500">Theme</span>
+                  <ThemeSwitch className="w-56" />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

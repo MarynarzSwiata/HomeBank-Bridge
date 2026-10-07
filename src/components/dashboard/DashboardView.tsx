@@ -42,8 +42,8 @@ const UPCOMING_LIMIT = 6;
 
 // Chart series colours (validated for CVD separation and contrast on the light surface).
 // Colour follows the entity: income is always blue, expense always orange.
-const INCOME_COLOR = '#2a78d6';
-const EXPENSE_COLOR = '#eb6834';
+const INCOME_COLOR = 'var(--chart-income)';
+const EXPENSE_COLOR = 'var(--chart-expense)';
 
 const TOP_CATEGORIES = 8;
 const MONTHS_IN_TREND = 6;
@@ -213,7 +213,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             label={`Net worth${grandTotal.missing.length ? ` (without ${grandTotal.missing.join(', ')})` : ''}`}
             value={fmt(grandTotal.totals.today)}
             currency={rates.base}
-            swatch="#16181D"
+            swatch="var(--chart-ink)"
           />
         )}
         <StatTile label="Income" value={fmt(periodStats.income)} currency={currency} swatch={INCOME_COLOR} />
@@ -416,17 +416,17 @@ const MonthlyChart: React.FC<{ months: MonthPoint[]; fmt: (v: number) => string;
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={`Income and expense per month in ${currency}`}>
         {[0.5, 1].map(f => (
-          <line key={f} x1={M.left} x2={W - M.right} y1={baseline - plotH * f} y2={baseline - plotH * f} stroke="#EDEFF2" strokeWidth={1} />
+          <line key={f} x1={M.left} x2={W - M.right} y1={baseline - plotH * f} y2={baseline - plotH * f} style={{ stroke: 'var(--chart-grid)' }} strokeWidth={1} />
         ))}
-        <line x1={M.left} x2={W - M.right} y1={baseline} y2={baseline} stroke="#C9CDD4" strokeWidth={1} />
+        <line x1={M.left} x2={W - M.right} y1={baseline} y2={baseline} style={{ stroke: 'var(--chart-axis)' }} strokeWidth={1} />
         {months.map((m, i) => {
           const cx = M.left + band * i + band / 2;
           return (
             <g key={m.key}>
-              {hover === i && <rect x={cx - band / 2} y={M.top} width={band} height={plotH} fill="#16181D" opacity={0.04} />}
-              <path d={column(cx - barW - GAP / 2, y(m.income))} fill={INCOME_COLOR} />
-              <path d={column(cx + GAP / 2, y(m.expense))} fill={EXPENSE_COLOR} />
-              <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="#5B616E" fontWeight={700}>{m.label}</text>
+              {hover === i && <rect x={cx - band / 2} y={M.top} width={band} height={plotH} style={{ fill: 'var(--chart-ink)' }} opacity={0.04} />}
+              <path d={column(cx - barW - GAP / 2, y(m.income))} style={{ fill: INCOME_COLOR }} />
+              <path d={column(cx + GAP / 2, y(m.expense))} style={{ fill: EXPENSE_COLOR }} />
+              <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} style={{ fill: 'var(--chart-label)' }} fontWeight={700}>{m.label}</text>
               {/* Hit target: the whole month band */}
               <rect
                 x={cx - band / 2}

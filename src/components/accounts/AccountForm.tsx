@@ -139,13 +139,13 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             </div>
         )}
         
-        <div className={`space-y-8 transition-all duration-500 ease-in-out ${isExpanded ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0 pointer-events-none p-0 overflow-hidden"}`}>
+        <div className={`space-y-8 transition-all duration-500 ease-in-out ${isExpanded ? "opacity-100" : "max-h-0 opacity-0 pointer-events-none p-0 overflow-hidden"}`}>
              {currentError && (
                  <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-bold">
                     {currentError}
                  </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                      <label className="text-[13px] font-medium text-slate-500 ml-2 mb-1.5 block">Account Name</label>
                      <input 
@@ -182,7 +182,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                      <SearchableSelect
                         label="Account Type"
@@ -195,7 +195,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                      />
                 </div>
                 {editingAccount && (
-                    <label className="md:col-span-2 flex items-center gap-4 h-[60px] mt-auto px-6 bg-slate-950/50 border border-slate-800 rounded-3xl cursor-pointer select-none">
+                    <label className="sm:col-span-2 flex items-center gap-4 h-[60px] mt-auto px-6 bg-slate-950/50 border border-slate-800 rounded-3xl cursor-pointer select-none">
                         <input
                             type="checkbox"
                             checked={closed}
@@ -210,7 +210,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 )}
             </div>
 
-            <fieldset className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <fieldset className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <legend className="text-[13px] font-medium text-slate-500 ml-2 mb-2">Options (as in HomeBank)</legend>
                 {([
                     [noSummary, setNoSummary, 'Exclude from summary', 'Hidden on Home and in totals'],

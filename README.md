@@ -1,7 +1,7 @@
 # 🌉 HomeBank Bridge
 
-> **A High-Performance, Minimalist Financial Logging Engine**
-> Fully compliant CSV bridge for the HomeBank ecosystem, built with React 19 and SQLite WASM.
+> **Your HomeBank finances in the browser**
+> A web replacement for HomeBank desktop that works on any computer or phone, with two-way `.xhb` file support and HomeBank-compatible CSV export. Built with React 19, Express and SQLite.
 
 ---
 
@@ -31,6 +31,10 @@ This project eliminates the friction of manual CSV editing by providing a mobile
 
 ## ✨ Key Features
 
+- **🏠 HomeBank in the browser**: Overview dashboard, transaction status (cleared / reconciled), account types and balances (reconciled / today / future), monthly budgets, reports, balance over time, templates and scheduled entries, tags and assignment rules — modelled on HomeBank desktop.
+- **📂 Two-way HomeBank (.xhb) files**: Import your whole HomeBank file and export everything back to a file HomeBank desktop can open.
+- **💱 Multi-currency totals**: Base currency and exchange rates convert account totals, like HomeBank's grand total.
+- **🌙 Light & dark themes**: Calm, readable design with Light, Dark and Auto (follows your device) themes; forms open in a side panel.
 - **🧠 Smart Entry Engine**: Intelligent autofill that learns from your history. Once you log a payee (e.g., "Mercadona"), the Bridge automatically suggests the correct Category and Payment Type for the next time.
 - **🔄 Dual-Record Transfer**: A unified form logic that atomically creates two linked transactions (Debit/Credit) for internal transfers, maintaining absolute balance integrity.
 - **📥 Advanced Import Logic**: Resilient CSV processing with dynamic date parsing, decimal separator normalization, and case-insensitive category matching. Automatically detects and skips duplicates.
@@ -134,7 +138,13 @@ docker run -d \
 
 ## 📊 HomeBank Compatibility
 
-The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
+**HomeBank file (.xhb)** — Settings → Import from HomeBank / Export .xhb:
+- Accounts (type, currency, closed and summary / budget / report options), currencies and exchange rates.
+- Categories with budgets, payees, transactions (status, tags, memo, info), transfers between accounts.
+- Templates and scheduled entries, assignment rules.
+- Not supported: split transactions (imported as separate entries tagged `split`), void entries and regex rules (skipped), vehicle cost data.
+
+**HomeBank CSV** — the Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 - **Date Format**: Customizable (`DD-MM-YYYY`, `MM-DD-YYYY`, `YYYY-MM-DD`).
 - **Decimal Separator**: Customizable (`.`, `,`).
 - **Field Separator**: `;` (Semicolon).
@@ -144,7 +154,10 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 
 ## 📜 Changelog
 
-### Unreleased
+### Version 2.0 (2026-10-07)
+The biggest update so far: HomeBank Bridge becomes a web replacement for HomeBank desktop, with two-way `.xhb` file support and a new design.
+
+- **🌙 Dark theme & side-panel forms everywhere**: Choose Light, Dark or Auto (follows your device) in the sidebar or in Settings; the choice is remembered on each device. Accounts, categories and payees are now added and edited in the same side panel as transactions.
 - **🧭 Page headers & side-panel form**: Every view starts with a clear title, a short summary and its main action on the right. New, edited and duplicated transactions open in a side panel (full screen on phones) that closes with Esc or a click outside. Overview shows a "Net worth" tile in the base currency.
 - **🎨 New look**: Light, calmer interface — Geist typeface, sentence case instead of all caps, moderate corner radii, tabular figures for amounts, a compact sidebar, a dense transaction and account table, and plain-language labels ("Transactions", "Categories", "Settings"). Charts use colours validated for contrast and colour-blind separation on the light background.
 - **📤 Export to HomeBank (.xhb)**: Options → "Export .xhb" downloads all your data as a file HomeBank desktop can open (accounts with their options, currencies and rates, categories and budgets, payees, transactions with status and tags, transfers, templates and scheduled items, rules).

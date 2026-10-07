@@ -9,7 +9,7 @@ import { PAYMENT_LEXICON } from "../../constants";
 import type { Payee, Category } from "../../types";
 import { payeesService } from "../../api/services";
 import { ImportModal } from "../shared/ImportModal";
-import { Button, ActionBar, Card, ConfirmModal, Alert } from "../common";
+import { Button, ActionBar, Card, ConfirmModal, Alert, Drawer } from "../common";
 
 interface PayeesViewProps {
   payees: Payee[];
@@ -284,25 +284,10 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
       {/* Actions & Form Section */}
       <div className="space-y-4">
         <ActionBar
-          title={
-            editingPayee
-              ? "Edit Payee"
-              : isFormExpanded
-              ? "New Payee"
-              : "Payees"
-          }
-          subtitle={
-            editingPayee
-              ? `Modifying ${editingPayee.name}`
-              : "Manage your frequent payees"
-          }
-          isExpanded={isFormExpanded || !!editingPayee}
-          onToggle={() => {
-            if (editingPayee) resetForm();
-            else setIsFormExpanded(!isFormExpanded);
-          }}
-          expandLabel="Add Payee"
-          collapseLabel={editingPayee ? "Cancel Edit" : "Close"}
+          title="Payees"
+          subtitle="People and shops you pay or get paid by"
+          onToggle={() => { setEditingPayee(null); setIsFormExpanded(true); }}
+          expandLabel="Add payee"
           actions={
             <div className="flex gap-2">
               <Button
@@ -351,19 +336,15 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
               </Button>
             </div>
           }
-          className={
-            editingPayee ? "border-indigo-500/50 bg-indigo-950/10" : ""
-          }
         />
 
-        {(isFormExpanded || editingPayee) && (
-          <Card
-            variant="default"
-            className={
-              editingPayee ? "border-indigo-500/50 bg-indigo-950/5" : ""
-            }
-          >
-            <PayeeForm
+        <Drawer
+          open={isFormExpanded || !!editingPayee}
+          title={editingPayee ? 'Edit payee' : 'New payee'}
+          onClose={resetForm}
+        >
+          <div className="p-6">
+<PayeeForm
               isExpanded={true}
               onClose={() => setIsFormExpanded(false)}
               editingPayee={editingPayee}
@@ -375,8 +356,8 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
               error={error}
               inlineMode={true}
             />
-          </Card>
-        )}
+          </div>
+        </Drawer>
       </div>
 
       <ImportModal
