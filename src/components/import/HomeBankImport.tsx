@@ -29,7 +29,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<XhbImportResult | null>(null);
   const [replace, setReplace] = useState(false);
-  const [busy, setBusy] = useState<'preview' | 'import' | 'backup' | null>(null);
+  const [busy, setBusy] = useState<'preview' | 'import' | 'backup' | 'export' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
@@ -70,24 +70,45 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
     }
   };
 
+  const runExport = async () => {
+    try {
+      setBusy('export');
+      setError(null);
+      await systemService.exportXhb();
+      notify('HomeBank file downloaded', 'success');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const mustConfirmReplace = !!preview?.hasExistingData;
   const canImport = !!preview && !busy && (!mustConfirmReplace || replace);
 
   return (
     <div className="md:col-span-2 bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
-      <div className="flex items-start gap-4">
+      <div className="flex flex-wrap items-start gap-4">
         <div className="w-12 h-12 shrink-0 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
         </div>
         <div>
-          <h3 className="text-xl font-black text-white uppercase italic">Import from HomeBank</h3>
+          <h3 className="text-xl font-black text-white uppercase italic">HomeBank file (.xhb)</h3>
           <p className="text-slate-400 text-sm leading-relaxed mt-2">
             Move your history from HomeBank desktop: choose your <span className="text-emerald-400 font-bold">.xhb</span> file.
             You will see what will be imported before anything is saved. The import is all-or-nothing.
+            Export saves everything from this app as a file HomeBank desktop can open.
           </p>
         </div>
+        <button
+          onClick={runExport}
+          disabled={!!busy}
+          className="ml-auto shrink-0 px-5 py-3 rounded-xl bg-slate-800 text-slate-200 text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 disabled:opacity-40"
+        >
+          {busy === 'export' ? 'Exporting…' : 'Export .xhb'}
+        </button>
       </div>
 
       <label className="block">

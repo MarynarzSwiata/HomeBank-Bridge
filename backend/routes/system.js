@@ -5,6 +5,8 @@ import config from '../config/database.js';
 import db, { initDb, closeDb } from '../db/index.js';
 import runMigrations from '../db/migrate.js';
 import { parseXhb, buildPlan, planSummary, applyPlan, hasExistingData } from '../services/xhbImport.js';
+import { buildXhb } from '../services/xhbExport.js';
+import { advanceDate } from './scheduled.js';
 
 import multer from 'multer';
 
@@ -180,6 +182,19 @@ router.post('/import-xhb', (req, res, next) => {
     res.json({ message: 'HomeBank file imported', summary });
   } catch (err) {
     if (err.status === 400) return res.status(400).json({ error: err.message });
+    next(err);
+  }
+});
+
+// GET /api/system/export-xhb - Download all data as a HomeBank .xhb file
+router.get('/export-xhb', async (req, res, next) => {
+  try {
+    const xml = await buildXhb({ advanceDate });
+    const date = new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="homebank-bridge-${date}.xhb"`);
+    res.send(xml);
+  } catch (err) {
     next(err);
   }
 });
