@@ -14,7 +14,7 @@ export const Card: React.FC<CardProps> = ({
   variant = 'default',
 }) => {
   return (
-    <div className={`bg-slate-900/50 border border-slate-800 rounded-3xl transition-all duration-500 ${className}`}>
+    <div className={`bg-slate-900 border border-slate-800 rounded-3xl transition-all duration-500 ${className}`}>
       {header && (
         <div className="px-6 py-4 border-b border-slate-800 bg-white/5">
           {header}

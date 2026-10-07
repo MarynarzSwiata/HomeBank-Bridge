@@ -28,7 +28,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-[1000] flex items-start justify-center p-6 pt-24 backdrop-blur-md bg-slate-950/60 animate-in fade-in duration-300"
+      className="fixed inset-0 z-[1000] flex items-start justify-center p-6 pt-24 backdrop-blur-md bg-slate-50/40 animate-in fade-in duration-300"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -50,7 +50,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         </div>
         
         <div className="text-center space-y-4">
-          <h3 id="modal-title" className="text-2xl font-black text-white uppercase tracking-tight">
+          <h3 id="modal-title" className="text-2xl font-black text-slate-100 uppercase tracking-tight">
             {title}
           </h3>
           <div id="modal-description" className="text-slate-400 text-sm font-medium leading-relaxed">

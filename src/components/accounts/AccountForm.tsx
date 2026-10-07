@@ -117,7 +117,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     } ${
         editingAccount && !inlineMode
             ? "border-amber-500 bg-amber-950/10"
-            : !inlineMode ? "border-indigo-500/30 bg-slate-900/30" : ""
+            : !inlineMode ? "border-indigo-500/30 bg-slate-900" : ""
         } relative z-[100]`}>
         
         {!inlineMode && (
@@ -130,8 +130,8 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                     </h2>
                 </div>
                 <div className="flex gap-4 items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 group-hover:bg-indigo-600 transition-all ${isExpanded ? "rotate-45" : "rotate-0"}`}>
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-800 group-hover:bg-indigo-600 transition-all hover:text-white${isExpanded ? "rotate-45" : "rotate-0"}`}>
+                        <svg className="w-5 h-5 text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                     </div>
@@ -152,7 +152,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                         placeholder="e.g. Main Checking"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-white h-[60px]"
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-100 h-[60px]"
                      />
                 </div>
                 <div>
@@ -177,7 +177,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                         type="text"
                         value={initialBalance}
                         onChange={(e) => setInitialBalance(e.target.value)}
-                        className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-white h-[60px]"
+                        className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-100 h-[60px]"
                      />
                 </div>
             </div>
@@ -243,7 +243,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                             <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
                             Processing
                         </>
-                    ) : editingAccount ? "Commit Update" : "Establish Account"}
+                    ) : editingAccount ? "Save changes" : "Create account"}
                 </button>
                 {editingAccount && (
                     <button

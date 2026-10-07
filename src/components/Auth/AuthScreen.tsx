@@ -90,7 +90,7 @@ export function AuthScreen({
           <div className="inline-flex items-center justify-center mb-6">
             <AnimatedLogo scale={2.5} />
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">HomeBank Bridge</h1>
+          <h1 className="text-3xl font-black text-slate-100 tracking-tight">HomeBank Bridge</h1>
           <p className="text-slate-400 mt-2 text-sm font-medium">
             {isFirstUser 
               ? 'Create Administrator Account' 
@@ -101,7 +101,7 @@ export function AuthScreen({
         </div>
 
         {/* Form Card */}
-        <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Username */}
             <div>
@@ -113,7 +113,7 @@ export function AuthScreen({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-5 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+                className="w-full px-5 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
                 placeholder="admin"
                 autoComplete="username"
                 autoFocus
@@ -130,7 +130,7 @@ export function AuthScreen({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="w-full px-5 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+                className="w-full px-5 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
                 placeholder="********"
                 autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
               />
@@ -147,7 +147,7 @@ export function AuthScreen({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
-                  className="w-full px-5 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
+                  className="w-full px-5 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50"
                   placeholder="********"
                   autoComplete="new-password"
                 />
@@ -156,14 +156,14 @@ export function AuthScreen({
 
             {/* Error Message */}
             {displayError && (
-              <div className="p-4 bg-rose-950/40 border border-rose-500/30 rounded-2xl">
+              <div className="p-4 bg-[#FEF3F2] border border-[#FECDCA] rounded-xl">
                 <p className="text-rose-400 text-sm font-medium">{displayError}</p>
               </div>
             )}
 
             {/* Registration disabled message (only when single-admin mode) */}
             {hasUsers && !registrationAllowed && (
-              <div className="p-4 bg-amber-950/40 border border-amber-500/30 rounded-2xl">
+              <div className="p-4 bg-[#FFF7ED] border border-[#FED7AA] rounded-xl">
                 <p className="text-amber-400 text-sm font-medium">
                   Registration is disabled. Contact the administrator.
                 </p>
@@ -174,7 +174,7 @@ export function AuthScreen({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-3">

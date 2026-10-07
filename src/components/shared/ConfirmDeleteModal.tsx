@@ -18,7 +18,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 backdrop-blur-md bg-slate-950/60 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 backdrop-blur-md bg-slate-50/40 animate-in fade-in duration-300">
       <div className="bg-slate-900 border-2 border-rose-500/50 p-6 sm:p-12 rounded-[2rem] sm:rounded-[3.5rem] shadow-2xl max-w-md w-full space-y-8 animate-in slide-in-from-bottom-4 duration-500">
         <div className="flex justify-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-rose-500/10 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center text-rose-500">
@@ -38,7 +38,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
           </div>
         </div>
         <div className="text-center space-y-4">
-          <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+          <h3 className="text-xl sm:text-2xl font-black text-slate-100 uppercase tracking-tight">
             Confirm Purge
           </h3>
           <p className="text-slate-400 text-xs sm:text-sm font-medium leading-relaxed">
@@ -58,7 +58,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
         <div className="flex flex-col gap-3">
           <button
             onClick={onConfirm}
-            className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl sm:rounded-3xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-rose-600/20 transition-all active:scale-95"
+            className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl sm:rounded-3xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-rose-600/20 transition-all active:scale-95 hover:text-white"
           >
             Confirm Erasure
           </button>

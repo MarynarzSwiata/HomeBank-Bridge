@@ -63,7 +63,7 @@ export const ExportHistoryView: React.FC<ExportHistoryViewProps> = ({
   return (
     <div className="space-y-6 animate-in slide-in-from-right-8 duration-500">
       <ActionBar
-        title="Export Archives"
+        title="Export history"
         subtitle="Full history of generated manifests"
         actions={
           <div className="flex gap-6 items-center">
@@ -117,7 +117,7 @@ export const ExportHistoryView: React.FC<ExportHistoryViewProps> = ({
                         </svg>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm sm:text-base font-black text-white mb-1 truncate pr-4 uppercase tracking-tight">
+                        <div className="text-sm sm:text-base font-black text-slate-100 mb-1 truncate pr-4 uppercase tracking-tight">
                           {log.filename}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500">
@@ -160,9 +160,9 @@ export const ExportHistoryView: React.FC<ExportHistoryViewProps> = ({
                     <div className="mt-4 p-6 bg-slate-950 rounded-2xl border border-slate-800 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="flex justify-between items-center mb-4">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Content Snapshot</h4>
-                            <button onClick={() => setExpandedLogId(null)} className="text-slate-500 hover:text-white text-xs font-bold uppercase">Close</button>
+                            <button onClick={() => setExpandedLogId(null)} className="text-slate-500 hover:text-slate-100 text-xs font-bold uppercase">Close</button>
                         </div>
-                        <pre className="text-[11px] font-mono text-slate-400 overflow-x-auto p-4 bg-slate-900/50 rounded-xl leading-relaxed max-h-60 overflow-y-auto thin-scrollbar">
+                        <pre className="text-[11px] font-mono text-slate-400 overflow-x-auto p-4 bg-slate-900 rounded-xl leading-relaxed max-h-60 overflow-y-auto thin-scrollbar">
                             {previewContent}
                         </pre>
                     </div>
@@ -177,7 +177,7 @@ export const ExportHistoryView: React.FC<ExportHistoryViewProps> = ({
       <ConfirmModal 
         isOpen={!!confirmDelete}
         title="Remove Export Record?"
-        message={<>Are you sure you want to delete the record for <span className="text-white font-bold">{confirmDelete?.filename}</span>? This will only remove the log, not any files you have already downloaded.</>}
+        message={<>Are you sure you want to delete the record for <span className="text-slate-100 font-bold">{confirmDelete?.filename}</span>? This will only remove the log, not any files you have already downloaded.</>}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(null)}
         isLoading={exportLogHook.isDeleting}

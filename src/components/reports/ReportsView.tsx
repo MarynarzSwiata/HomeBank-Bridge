@@ -41,7 +41,7 @@ const GROUPS: { id: GroupBy; name: string }[] = [
 ];
 
 // Colour follows the entity (same as Home): income blue, expense orange
-const FLOW_COLOR: Record<Flow, string> = { income: '#3987e5', expense: '#d95926' };
+const FLOW_COLOR: Record<Flow, string> = { income: '#2a78d6', expense: '#eb6834' };
 
 const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, categories, isAnonymized }) => {
   const [period, setPeriod] = useState<PeriodId | 'custom'>('this_year');
@@ -133,13 +133,13 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
     triggerDownload(csv, `report_${flow}_by_${groupBy}_${from}_${to}.csv`);
   };
 
-  const selectClass = 'bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500';
+  const selectClass = 'bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
   const labelClass = 'flex flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500';
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 max-w-6xl mx-auto">
       {/* Filters: one row above the report */}
-      <div className="p-5 bg-slate-900/40 border border-slate-800 rounded-[2rem] flex flex-wrap items-end gap-4">
+      <div className="p-5 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-wrap items-end gap-4">
         <label className={labelClass}>
           Show
           <select value={flow} onChange={e => setFlow(e.target.value as Flow)} className={selectClass}>
@@ -192,7 +192,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
         <button
           onClick={exportCsv}
           disabled={report.rows.length === 0}
-          className="md:ml-auto px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-white disabled:opacity-30"
+          className="md:ml-auto px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-[10px] font-black uppercase tracking-widest text-slate-300 hover:text-slate-100 disabled:opacity-30"
         >
           Export CSV
         </button>
@@ -211,7 +211,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
       </div>
 
       {/* Result */}
-      <section className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+      <section className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-4">
         <header>
           <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">
             {flow === 'expense' ? 'Expense' : 'Income'} by {GROUPS.find(g => g.id === groupBy)?.name.toLowerCase()}
@@ -276,7 +276,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
 };
 
 const Tile: React.FC<{ label: string; value: string; swatch?: string }> = ({ label, value, swatch }) => (
-  <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+  <div className="p-6 bg-slate-900 border border-slate-800 rounded-[2rem]">
     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
       {swatch && <span className="w-2.5 h-2.5 rounded-sm" style={{ background: swatch }} aria-hidden="true" />}
       {label}
@@ -298,7 +298,7 @@ export const ReportsView: React.FC<ReportsViewProps> = (props) => {
             aria-selected={view === id}
             onClick={() => setView(id)}
             className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-              view === id ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:text-white'
+              view === id ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-100'
             }`}
           >
             {label}

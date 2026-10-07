@@ -5,5 +5,27 @@
 @layer base {
   body {
     @apply bg-slate-950 text-slate-100;
+    font-family: 'Geist', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
+
+/*
+ * 2026 redesign: calmer typography and shapes applied app-wide on top of the
+ * existing utility classes (sentence case, normal letter spacing, readable
+ * small text, moderate radii). Component-level styling can still override.
+ */
+.uppercase { text-transform: none; }
+.italic { font-style: normal; }
+[class*="tracking-["] { letter-spacing: 0 !important; }
+[class*="rounded-[1"], [class*="rounded-[2"], [class*="rounded-[3"], [class*="rounded-[4"] { border-radius: 14px !important; }
+.text-\[8px\] { font-size: 11px; }
+.text-\[9px\] { font-size: 11px; }
+.text-\[10px\] { font-size: 12px; }
+.text-\[11px\] { font-size: 13px; }
+
+/* Amounts line up in columns */
+.tabular-nums, .font-mono { font-variant-numeric: tabular-nums; }
+
+/* Visible keyboard focus everywhere */
+:focus-visible { outline: 2px solid #2F5BD3; outline-offset: 2px; }

@@ -73,7 +73,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
           </button>
           <button
             onClick={() => setEditing('new-scheduled')}
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500"
+            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white"
           >
             + Add scheduled
           </button>
@@ -101,7 +101,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
         { title: `Scheduled (${recurring.length})`, items: recurring, empty: 'No scheduled transactions yet. Add rent, salary or subscriptions here.' },
         { title: `Templates (${templates.length})`, items: templates, empty: 'No templates yet. A template fills in the entry form for repeated purchases.' },
       ].map(sectionDef => (
-      <section key={sectionDef.title} className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+      <section key={sectionDef.title} className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem]">
         <h3 className="px-2 pb-2 text-[10px] font-black uppercase tracking-widest text-slate-400">{sectionDef.title}</h3>
         {sectionDef.items.length === 0 ? (
           <p className="text-sm text-slate-500 py-8 text-center">{sectionDef.empty}</p>
@@ -178,7 +178,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
       <ConfirmModal
         isOpen={!!confirmDelete}
         title={confirmDelete?.is_scheduled ? 'Delete scheduled transaction?' : 'Delete template?'}
-        message={<><span className="text-white font-bold">{confirmDelete ? describeItem(confirmDelete) : ''}</span> will be removed. Transactions already in the ledger stay.</>}
+        message={<><span className="text-slate-100 font-bold">{confirmDelete ? describeItem(confirmDelete) : ''}</span> will be removed. Transactions already in the ledger stay.</>}
         confirmLabel="Delete"
         onConfirm={async () => {
           if (confirmDelete && (await scheduled.remove(confirmDelete.id)) !== null) setConfirmDelete(null);
@@ -278,11 +278,11 @@ const ScheduledForm: React.FC<{
     });
   };
 
-  const field = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500';
+  const field = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
   const label = 'block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1';
 
   return (
-    <section className="p-6 md:p-8 bg-slate-900/50 border border-indigo-500/30 rounded-[2rem] space-y-5">
+    <section className="p-6 md:p-8 bg-slate-900 border border-indigo-500/30 rounded-[2rem] space-y-5">
       <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">
         {item ? 'Edit' : 'New'} {isScheduled ? 'scheduled transaction' : 'template'}
       </h3>
@@ -304,7 +304,7 @@ const ScheduledForm: React.FC<{
             role="radio"
             aria-checked={type === t}
             onClick={() => setType(t)}
-            className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest ${type === t ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900/50 border-slate-800 text-slate-400'}`}
+            className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest ${type === t ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
           >
             {t}
           </button>
@@ -397,7 +397,7 @@ const ScheduledForm: React.FC<{
       )}
       {localError && <p className="text-xs font-bold text-rose-400">{localError}</p>}
       <div className="flex gap-3">
-        <button onClick={submit} disabled={isSaving} className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40">
+        <button onClick={submit} disabled={isSaving} className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40 hover:text-white">
           {isSaving ? 'Saving…' : 'Save'}
         </button>
         <button onClick={onCancel} className="px-6 py-3 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest">
@@ -445,7 +445,7 @@ export const PostAllDueButton: React.FC<{ scheduled: UseScheduledResult; dueCoun
         title="Post all due transactions?"
         message={
           <>
-            This will add <span className="text-white font-bold">{pending}</span> transaction(s) to the ledger
+            This will add <span className="text-slate-100 font-bold">{pending}</span> transaction(s) to the ledger
             {pending !== null && pending > dueCount * 3 ? ' – some schedules have many missed dates. Consider Skip or editing the next date instead.' : '.'}
           </>
         }

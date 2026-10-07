@@ -212,7 +212,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
     return (
       <div className="space-y-1">
         <div
-          className={`group grid grid-cols-12 md:grid-cols-12 gap-4 px-6 md:px-8 py-4 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900/40 border transition-all items-center ${
+          className={`group grid grid-cols-12 md:grid-cols-12 gap-4 px-6 md:px-8 py-4 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border transition-all items-center ${
             isSelected
               ? "border-indigo-500 bg-indigo-500/5"
               : "border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/60"
@@ -240,7 +240,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
             <div className="flex flex-wrap items-baseline gap-x-2">
               <span
                 className={`text-sm md:text-sm font-black uppercase tracking-tight ${
-                  isChild ? "text-slate-300" : "text-white"
+                  isChild ? "text-slate-300" : "text-slate-100"
                 }`}
               >
                 {cat.name}
@@ -441,7 +441,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               placeholder="Search by name..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              className="w-full bg-slate-900/50 border border-slate-800 rounded-3xl px-8 h-[60px] text-sm font-black focus:ring-4 focus:ring-indigo-500/10 outline-none text-white placeholder:text-slate-600"
+              className="w-full bg-slate-900 border border-slate-800 rounded-3xl px-8 h-[60px] text-sm font-black focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-100 placeholder:text-slate-600"
             />
             <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600">
               <svg
@@ -461,7 +461,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="bg-slate-900/50 border border-slate-800 rounded-3xl px-8 h-[60px] flex items-center justify-between sm:justify-start gap-4 flex-1">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl px-8 h-[60px] flex items-center justify-between sm:justify-start gap-4 flex-1">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                 Total
@@ -475,7 +475,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                 Selected
               </span>
-              <span className="text-sm font-black text-white">
+              <span className="text-sm font-black text-slate-100">
                 {selectedIds.size}
               </span>
             </div>
@@ -503,7 +503,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-3">
         {/* Header (Desktop Only) */}
-        <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900/30 rounded-3xl border border-slate-800/50">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900 rounded-3xl border border-slate-800/50">
           <div className="col-span-1 flex items-center justify-center">
             <input
               type="checkbox"
@@ -517,7 +517,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           </div>
           <div
             className={`col-span-1 flex items-center gap-2 ${
-              filterText ? "cursor-pointer hover:text-white" : ""
+              filterText ? "cursor-pointer hover:text-slate-100" : ""
             } transition-colors`}
             onClick={() => filterText && handleSort("type")}
           >
@@ -542,7 +542,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           </div>
           <div
             className={`col-span-6 flex items-center gap-2 ${
-              filterText ? "cursor-pointer hover:text-white" : ""
+              filterText ? "cursor-pointer hover:text-slate-100" : ""
             } transition-colors`}
             onClick={() => filterText && handleSort("name")}
           >
@@ -574,7 +574,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           // Search Mode - Flat List
           <div className="space-y-3">
             {filteredResults.length === 0 ? (
-              <div className="text-center py-20 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-[3rem]">
+              <div className="text-center py-20 bg-slate-900 border-2 border-dashed border-slate-800 rounded-[3rem]">
                 <p className="text-lg font-black uppercase tracking-widest text-slate-500">
                   Zero matches found
                 </p>
@@ -591,7 +591,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                 return (
                   <div
                     key={cat.id}
-                    className={`group grid grid-cols-12 gap-4 px-6 md:px-8 py-4 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900/40 border transition-all items-center ${
+                    className={`group grid grid-cols-12 gap-4 px-6 md:px-8 py-4 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border transition-all items-center ${
                       isSelected
                         ? "border-indigo-500 bg-indigo-500/5"
                         : "border-slate-800/80 hover:border-slate-700"
@@ -616,7 +616,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                       </span>
                       <div className="flex flex-col">
                         <div className="flex items-baseline gap-2">
-                          <span className="text-sm font-black text-white uppercase">
+                          <span className="text-sm font-black text-slate-100 uppercase">
                             {cat.name}
                           </span>
                           <span className="text-[10px] font-black text-indigo-400/80">
@@ -645,7 +645,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
                     <div className="col-span-6 md:col-span-2 flex justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-all">
                       <button
                         onClick={() => startEditingCat(cat)}
-                        className="w-10 h-10 md:w-9 md:h-9 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+                        className="w-10 h-10 md:w-9 md:h-9 rounded-xl bg-slate-800 text-slate-400 hover:text-slate-100"
                       >
                         <svg
                           className="w-4 h-4 mx-auto"
@@ -668,7 +668,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
         ) : (
           <div className="space-y-3">
             {categories.length === 0 ? (
-              <div className="text-center py-20 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-[3rem]">
+              <div className="text-center py-20 bg-slate-900 border-2 border-dashed border-slate-800 rounded-[3rem]">
                 <p className="text-lg font-black uppercase tracking-widest text-slate-500">
                   Empty Dictionary
                 </p>
@@ -685,13 +685,13 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
         isOpen={!!confirmDelete}
         title={
           confirmDelete?.id === -1
-            ? "Mass Erase Categories?"
+            ? "Delete selected categories?"
             : "Delete Category?"
         }
         message={
           <>
             Are you sure you want to delete{" "}
-            <span className="text-white font-bold">{confirmDelete?.name}</span>?
+            <span className="text-slate-100 font-bold">{confirmDelete?.name}</span>?
             {confirmDelete?.id === -1
               ? " All associated transaction links for these categories will be removed."
               : " All associated transaction tags and subcategories will be unlinked."}
@@ -699,7 +699,7 @@ export const CategoriesView: React.FC<CategoriesViewProps> = ({
           </>
         }
         confirmLabel={
-          confirmDelete?.id === -1 ? "Erase Selected" : "Confirm Erasure"
+          confirmDelete?.id === -1 ? "Erase Selected" : "Delete"
         }
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(null)}

@@ -8,6 +8,7 @@ import React, {
 import { ApiError, accountsService, systemService, rulesService, currencyService } from "./src/api";
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
+import { AnimatedLogo } from "./src/components/shared/AnimatedLogo";
 import type {
   Account,
   AccountInput,
@@ -78,21 +79,6 @@ const parseDateForComparison = (dateStr: string) => {
 
 // --- Shared UI Components ---
 
-const AnimatedLogo = () => (
-  <div className="relative flex items-center justify-center w-10 h-10 group shrink-0">
-    <div className="absolute inset-0 bg-indigo-600 rounded-xl rotate-3 group-hover:rotate-12 transition-transform duration-500 shadow-xl shadow-indigo-500/20"></div>
-    <div className="absolute inset-0 bg-slate-900 rounded-xl -rotate-3 group-hover:rotate-0 transition-transform duration-500 border border-indigo-500/30 flex items-center justify-center text-white">
-      <div className="flex gap-[1px]">
-        <span className="text-[8px] font-black animate-hbb-pulse-1">H</span>
-        <span className="text-[8px] font-black text-indigo-400 animate-hbb-pulse-2">
-          B
-        </span>
-        <span className="text-[8px] font-black animate-hbb-pulse-3">B</span>
-      </div>
-    </div>
-    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-[2px] bg-indigo-400 rounded-full animate-bridge-glow"></div>
-  </div>
-);
 
 // SearchableSelect moved to src/components/shared/SearchableSelect.tsx
 
@@ -699,7 +685,7 @@ const App: React.FC = () => {
   // Auth loading state
   if (auth.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 font-sans">
         <div className="text-center space-y-8">
           <div className="flex justify-center scale-150 mb-10">
             <AnimatedLogo />
@@ -720,7 +706,7 @@ const App: React.FC = () => {
     // If authStatus is null (backend unavailable), show connection error
     if (!auth.authStatus) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans p-8">
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 font-sans p-8">
           <div className="text-center space-y-8 max-w-lg">
             <div className="scale-150 mb-8">
               <AnimatedLogo />
@@ -748,7 +734,7 @@ const App: React.FC = () => {
             </div>
             <button
               onClick={() => auth.checkAuth()}
-              className="mt-6 py-4 px-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-indigo-600/20 transition-all active:scale-95"
+              className="mt-6 py-4 px-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-indigo-600/20 transition-all active:scale-95 hover:text-white"
             >
               Retry Connection
             </button>
@@ -773,7 +759,7 @@ const App: React.FC = () => {
 
   if (isBootstrapping)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 font-sans">
         <div className="text-center space-y-8">
           <div className="flex justify-center scale-150 mb-10">
             <AnimatedLogo />
@@ -790,7 +776,7 @@ const App: React.FC = () => {
 
   if (bootstrapError)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans p-8">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 font-sans p-8">
         <div className="text-center space-y-8 max-w-lg">
           <div className="flex justify-center scale-150 mb-10">
             <AnimatedLogo />
@@ -820,7 +806,7 @@ const App: React.FC = () => {
             </div>
             <button
               onClick={() => refreshAll()}
-              className="mt-6 py-4 px-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-indigo-600/20 transition-all active:scale-95"
+              className="mt-6 py-4 px-8 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-xl shadow-indigo-600/20 transition-all active:scale-95 hover:text-white"
             >
               Retry Connection
             </button>
@@ -832,262 +818,38 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
       <aside
-        className={`hidden md:flex flex-col transition-all duration-500 ease-in-out relative overflow-hidden shrink-0 bg-slate-900/40 backdrop-blur-3xl border-slate-800 ${
-          isSidebarOpen ? "w-80 p-8 border-r" : "w-0 p-0 border-r-0"
+        className={`hidden md:flex flex-col shrink-0 bg-slate-900 border-slate-800 transition-all duration-300 overflow-hidden ${
+          isSidebarOpen ? "w-64 border-r" : "w-0 border-r-0"
         }`}
       >
-        <div className="flex items-center justify-between gap-4 w-64 shrink-0 mb-8">
-          <div className="flex items-center gap-4 group cursor-default">
+        <div className="w-64 flex flex-col h-full px-3.5 py-5">
+          <div className="flex items-center gap-2.5 px-2 pb-5">
             <AnimatedLogo />
-            <h1 className="font-black tracking-[-0.05em] text-lg text-white uppercase truncate">
-              HomeBank Bridge
-            </h1>
-          </div>
-          <button
-            onClick={() => auth.logout()}
-            className="p-3 bg-slate-950/50 border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-500/50 rounded-xl transition-all active:scale-90"
-            title="Wyloguj"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-          </button>
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="p-3 bg-slate-950/50 border border-slate-800 text-slate-500 hover:text-white hover:border-indigo-500/50 rounded-xl transition-all active:scale-90"
-            title="Collapse Sidebar"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Financial Overview Module at the Top */}
-        <div className="w-64 space-y-6 shrink-0 mb-8 pb-8 border-b border-slate-800/50">
-          <div className="px-6 py-2 flex items-center justify-between group/anon">
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-              Anonymize
-            </span>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm font-semibold text-slate-100 truncate">HomeBank Bridge</span>
+              <span className="text-xs text-slate-600">Personal finances</span>
+            </div>
             <button
-              onClick={toggleAnonymize}
-              className={`w-11 h-6 rounded-full transition-all relative flex items-center shadow-inner ${
-                isAnonymized ? "bg-indigo-600" : "bg-slate-800"
-              }`}
+              onClick={() => setIsSidebarOpen(false)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-100 hover:bg-slate-950"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
             >
-              <div
-                className={`absolute w-4.5 h-4.5 bg-white rounded-full shadow-lg transition-all duration-300 ease-out ${
-                  isAnonymized ? "translate-x-5.5" : "translate-x-1"
-                }`}
-              ></div>
-            </button>
-          </div>
-
-          <div className="w-full">
-            <button
-              onClick={() => setIsTotalValueExpanded(!isTotalValueExpanded)}
-              className="w-full px-6 py-2 flex items-center justify-between group/total"
-            >
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover/total:text-slate-300 transition-colors">
-                Total Value
-              </span>
-              <svg
-                className={`w-4 h-4 text-slate-600 transition-transform duration-300 ${
-                  isTotalValueExpanded ? "rotate-180 text-indigo-400" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M19 9l-7 7-7-7"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
               </svg>
             </button>
-            {isTotalValueExpanded && (
-              <div className="mt-2 space-y-2 px-6 animate-in fade-in slide-in-from-top-1 duration-300">
-                {currencyGroupedLiquidity.map(([cur, total]) => (
-                  <div
-                    key={cur}
-                    className="flex justify-between items-baseline p-3 bg-slate-950/40 rounded-2xl border border-slate-800/50"
-                  >
-                    <span className="text-[8px] font-black text-indigo-500 uppercase">
-                      {cur}
-                    </span>
-                    <span className="text-base font-black text-white tracking-tight">
-                      {isAnonymized
-                        ? "xxxx"
-                        : total.toLocaleString("pl-PL", {
-                            minimumFractionDigits: 2,
-                          })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
-          <div className="w-full">
-            <button
-              onClick={() => setIsAccountListExpanded(!isAccountListExpanded)}
-              className="w-full px-6 py-2 flex items-center justify-between group/acc"
-            >
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover/acc:text-slate-300 transition-colors">
-                Current Balances
-              </span>
-              <svg
-                className={`w-4 h-4 text-slate-600 transition-transform duration-300 ${
-                  isAccountListExpanded ? "rotate-180 text-indigo-400" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {isAccountListExpanded && (
-              <div className="mt-2 space-y-1 px-4 animate-in fade-in slide-in-from-top-1 duration-300 max-h-40 overflow-y-auto no-scrollbar">
-                {accountsHook.accounts.filter((acc) => !acc.closed).map((acc) => (
-                  <div
-                    key={acc.id}
-                    className="px-3 py-2 flex justify-between items-center hover:bg-white/5 rounded-xl transition-all"
-                  >
-                    <span className="text-[10px] font-bold text-slate-400 uppercase truncate max-w-[100px]">
-                      {acc.name}
-                    </span>
-                    <span className="text-[10px] font-black text-slate-200">
-                      {isAnonymized
-                        ? "xxxx"
-                        : (acc.current_balance || 0).toLocaleString("pl-PL", {
-                            minimumFractionDigits: 2,
-                          })}
-                      <span className="ml-1 text-[8px] text-indigo-500 font-bold tracking-tight">
-                        {acc.currency}
-                      </span>
-                    </span>
-                  </div>
-                ))}
-                {accountsHook.accounts.length === 0 && (
-                  <p className="px-3 text-[9px] text-slate-600 italic">
-                    No accounts
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Last 30 Days Summary Accordion */}
-          <div className="w-full">
-            <button
-              onClick={() => setIsLast30DaysExpanded(!isLast30DaysExpanded)}
-              className="w-full px-6 py-2 flex items-center justify-between group/last30"
-            >
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover/last30:text-slate-300 transition-colors">
-                Last 30 Days
-              </span>
-              <svg
-                className={`w-4 h-4 text-slate-600 transition-transform duration-300 ${
-                  isLast30DaysExpanded ? "rotate-180 text-indigo-400" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {isLast30DaysExpanded && (
-              <div className="mt-2 space-y-3 px-6 animate-in fade-in slide-in-from-top-1 duration-300">
-                {last30DaysStats.length === 0 ? (
-                  <p className="text-[9px] text-slate-600 italic px-2">
-                    No data for last 30 days
-                  </p>
-                ) : (
-                  last30DaysStats.map(([cur, s]) => (
-                    <div
-                      key={cur}
-                      className="p-3 bg-slate-950/40 rounded-2xl border border-slate-800/50 space-y-2"
-                    >
-                      <div className="flex justify-between items-baseline mb-1">
-                        <span className="text-[8px] font-black text-indigo-500 uppercase">
-                          {cur}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] font-bold">
-                        <span className="text-slate-500 uppercase tracking-tighter">
-                          Income
-                        </span>
-                        <span className="text-emerald-400">
-                          {isAnonymized
-                            ? "xxxx"
-                            : s.income.toLocaleString("pl-PL", {
-                                minimumFractionDigits: 2,
-                              })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] font-bold">
-                        <span className="text-slate-500 uppercase tracking-tighter">
-                          Expense
-                        </span>
-                        <span className="text-rose-400">
-                          {isAnonymized
-                            ? "xxxx"
-                            : s.expense.toLocaleString("pl-PL", {
-                                minimumFractionDigits: 2,
-                              })}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <nav className="flex-1 space-y-3 w-64 overflow-y-auto no-scrollbar">
-          {[
-            { id: "home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6", label: "Home" },
+          <nav aria-label="Main" className="flex-1 flex flex-col gap-0.5 overflow-y-auto no-scrollbar">
+            {[
+            { id: "home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6", label: "Overview" },
             {
               id: "how_to_use",
               icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
               label: "How to use",
             },
-            { id: "transactions", icon: "M12 4v16m8-8H4", label: "Entries" },
+            { id: "transactions", icon: "M12 4v16m8-8H4", label: "Transactions" },
             {
               id: "accounts",
               icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z",
@@ -1100,7 +862,7 @@ const App: React.FC = () => {
             {
               id: "categories",
               icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z",
-              label: "Taxonomy",
+              label: "Categories",
             },
             {
               id: "payees",
@@ -1110,87 +872,73 @@ const App: React.FC = () => {
             {
               id: "export_log",
               icon: "M9 12h6m-6 4h6m2 5",
-              label: "Export Logs",
+              label: "Export history",
             },
             {
               id: "options",
               icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
-              label: "Options",
+              label: "Settings",
             },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`w-full flex items-center gap-5 px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-300 ${
-                activeTab === tab.id
-                  ? "bg-indigo-600 text-white shadow-2xl shadow-indigo-600/30 translate-x-1"
-                  : "text-slate-500 hover:text-slate-200 hover:bg-slate-800/50"
-              }`}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                aria-current={activeTab === tab.id ? "page" : undefined}
+                className={`w-full flex items-center gap-2.5 min-h-[40px] px-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-slate-300 hover:text-slate-100 hover:bg-slate-950"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d={tab.icon}
-                />
-              </svg>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+                <svg className="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={tab.icon} />
+                </svg>
+                <span className="flex-1 text-left">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
 
-        <footer className="w-64 pt-8 mt-8 border-t border-slate-800/50 space-y-4 shrink-0 overflow-hidden transition-all duration-500">
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => setActiveTab("changelog")}
-              className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] hover:text-indigo-400 transition-colors text-left"
-            >
-              Version 1.0.3
-            </button>
-            <a
-              href="https://github.com/MarynarzSwiata/HomeBank-Bridge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 transition-colors group"
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="currentColor"
-                viewBox="0 0 24 24"
+          <div className="border-t border-slate-800 pt-3 mt-3 flex flex-col gap-1">
+            <label className="flex items-center justify-between gap-3 min-h-[40px] px-2.5 rounded-lg text-sm text-slate-300 cursor-pointer hover:bg-slate-950">
+              <span>Hide amounts</span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isAnonymized}
+                aria-label="Hide amounts"
+                onClick={toggleAnonymize}
+                className={`w-9 h-5 rounded-full relative transition-colors ${isAnonymized ? "bg-indigo-600" : "bg-slate-700"}`}
               >
-                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-              </svg>
-              GitHub Project
-            </a>
-            <button
-              onClick={() => setIsDonateModalOpen(true)}
-              className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 transition-colors group text-left"
-            >
-              <svg
-                className="w-3.5 h-3.5 text-indigo-400"
-                fill="currentColor"
-                viewBox="0 0 24 24"
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${isAnonymized ? "left-[18px]" : "left-0.5"}`} />
+              </button>
+            </label>
+            <div className="flex items-center gap-2.5 px-2.5 pt-2">
+              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-semibold text-slate-300 uppercase">
+                {(auth.user?.username || "?").slice(0, 2)}
+              </div>
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="text-[13px] font-medium text-slate-100 truncate">{auth.user?.username || "User"}</span>
+                <button onClick={() => setActiveTab("changelog")} className="text-xs text-slate-600 hover:text-indigo-600 text-left">
+                  Version 1.0.3
+                </button>
+              </div>
+              <button
+                onClick={() => auth.logout()}
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-rose-500 hover:bg-slate-950"
+                title="Log out"
+                aria-label="Log out"
               >
-                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.016.393 5.464 0 5.972 0h10.362c3.567 0 5.166 1.765 4.88 4.417-.168 1.551-.838 3.13-1.927 4.544-1.22 1.587-2.863 2.628-4.75 3.023l-.116.024c-.754.148-1.206.561-1.34 1.23l-1.35 6.757c-.085.424-.455.742-.887.742h-3.955l.82-4.102c.022-.112.12-.193.234-.193h2.32c.321 0 .58-.26.58-.582a.582.582 0 0 0-.012-.117l-.582-2.91a.583.583 0 0 0-.57-.468h-2.32c-.322 0-.58.26-.58.582a.58.58 0 0 0 .012.117l-.82 4.1z" />
-              </svg>
-              Donate via PayPal
-            </button>
-            <div className="space-y-0.5 pt-1">
-              <p className="text-[8px] font-bold text-slate-600 uppercase tracking-tighter">
-                © 2025 HomeBank Bridge contributors
-              </p>
-              <p className="text-[8px] font-bold text-slate-700 uppercase tracking-tighter">
-                Licensed under MIT License
-              </p>
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex gap-3 px-2.5 pt-1 text-xs text-slate-600">
+              <a href="https://github.com/MarynarzSwiata/HomeBank-Bridge" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">GitHub</a>
+              <button onClick={() => setIsDonateModalOpen(true)} className="hover:text-indigo-600">Donate</button>
             </div>
           </div>
-        </footer>
+        </div>
       </aside>
 
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
@@ -1198,7 +946,7 @@ const App: React.FC = () => {
         {!isSidebarOpen && (
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="hidden md:flex absolute top-10 left-10 z-[150] p-4 bg-slate-900/80 backdrop-blur-xl border border-slate-800 text-indigo-400 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-2xl active:scale-95 group animate-in fade-in slide-in-from-left-4"
+            className="hidden md:flex absolute top-10 left-10 z-[150] p-4 bg-slate-900 backdrop-blur-xl border border-slate-800 text-indigo-400 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-2xl active:scale-95 group animate-in fade-in slide-in-from-left-4"
           >
             <svg
               className="w-6 h-6 transition-transform group-hover:scale-110"
@@ -1218,16 +966,16 @@ const App: React.FC = () => {
 
 
 
-        <header className="md:hidden flex justify-between items-center p-6 border-b border-slate-900 bg-slate-900/80 backdrop-blur-2xl sticky top-0 z-[100]">
+        <header className="md:hidden flex justify-between items-center p-6 border-b border-slate-900 bg-slate-900 backdrop-blur-2xl sticky top-0 z-[100]">
           <div className="flex items-center gap-3">
             <AnimatedLogo />
             <div className="flex flex-col gap-0.5">
-              <h1 className="font-black text-lg tracking-[-0.05em] uppercase text-white leading-none">
+              <h1 className="font-black text-lg tracking-[-0.05em] uppercase text-slate-100 leading-none">
                 HomeBank Bridge
               </h1>
               <button
                 onClick={() => setActiveTab("changelog")}
-                className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-white transition-colors animate-pulse"
+                className="text-[9px] font-black uppercase tracking-widest text-indigo-400 self-start hover:text-slate-100 transition-colors animate-pulse"
               >
                 Version 1.0.3
               </button>
@@ -1258,7 +1006,7 @@ const App: React.FC = () => {
           {activeTab === "changelog" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-4xl mx-auto py-10">
               <div className="space-y-6 text-center">
-                <h2 className="text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter">
+                <h2 className="text-2xl md:text-4xl font-black text-slate-100 uppercase italic tracking-tighter">
                   System Changelog
                 </h2>
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">
@@ -1269,9 +1017,9 @@ const App: React.FC = () => {
               <div className="space-y-12">
                 <div className="relative pl-12 border-l-2 border-indigo-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/40"></div>
-                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-white uppercase italic">
+                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                         Version 1.0.3
                       </h3>
                       <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-600/10 px-3 py-1 rounded-full">
@@ -1285,7 +1033,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Transaction Duplication:
                           </strong>{" "}
                           Instantly clone records using the new duplicate button in ledger actions.
@@ -1294,16 +1042,16 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Multi-Entry Mode:
                           </strong>{" "}
-                          New "Finalize & Repeat" button keeps form data populated for rapid sequential logging.
+                          New "Save & add another" button keeps form data populated for rapid sequential logging.
                         </span>
                       </li>
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Toast Notifications:
                           </strong>{" "}
                           Visual feedback for every data change, including success confirmations and detailed error reporting.
@@ -1312,7 +1060,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Persistent State:
                           </strong>{" "}
                           Global settings (Privacy Mode, Date Format) are now saved to the backend, surviving refreshes and re-logins.
@@ -1321,7 +1069,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Validation Fix:
                           </strong>{" "}
                           Solved a major engine flaw that caused the app to crash during category creation due to strict parent-child validation.
@@ -1330,7 +1078,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Export Tracking:
                           </strong>{" "}
                           Visual indicators for transactions already included in a manifest log.
@@ -1342,9 +1090,9 @@ const App: React.FC = () => {
 
                 <div className="relative pl-12 border-l-2 border-emerald-500/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/40"></div>
-                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-white uppercase italic">
+                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                         Version 1.0.2
                       </h3>
                       <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-600/10 px-3 py-1 rounded-full">
@@ -1358,7 +1106,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-emerald-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Registration Shield:
                           </strong>{" "}
                           Strict backend enforcement of registration settings to prevent unauthorized account creation via API.
@@ -1367,7 +1115,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-emerald-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             TypeScript Guard:
                           </strong>{" "}
                           Resolved project-wide type definition errors for Node and Vite, ensuring a stable development environment.
@@ -1376,7 +1124,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-emerald-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Dependency Sync:
                           </strong>{" "}
                           Fixed missing package states in both root and backend ecosystems.
@@ -1388,9 +1136,9 @@ const App: React.FC = () => {
 
                 <div className="relative pl-12 border-l-2 border-slate-800/50">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-slate-800 shadow-lg shadow-slate-800/40"></div>
-                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-white uppercase italic">
+                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                         Version 1.0.1
                       </h3>
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-800/40 px-3 py-1 rounded-full">
@@ -1405,7 +1153,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-slate-500 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Taxonomy Balances:
                           </strong>{" "}
                           Real-time balance calculations for all categories,
@@ -1415,7 +1163,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-slate-500 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Import Engine XL:
                           </strong>{" "}
                           Fixed 500 errors and payload limits; optimized
@@ -1429,9 +1177,9 @@ const App: React.FC = () => {
 
                 <div className="relative pl-12 border-l-2 border-indigo-600/30">
                   <div className="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-indigo-600 shadow-lg shadow-indigo-600/40"></div>
-                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                     <div className="flex justify-between items-baseline">
-                      <h3 className="text-2xl font-black text-white uppercase italic">
+                      <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                         Version 1.0.0
                       </h3>
                       <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-600/10 px-3 py-1 rounded-full">
@@ -1446,7 +1194,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Smart Manifest:
                           </strong>{" "}
                           Intelligent payee prediction system based on
@@ -1456,7 +1204,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Vault Management:
                           </strong>{" "}
                           Real-time liquidity tracking across multiple bank
@@ -1466,7 +1214,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Taxonomy Leveling:
                           </strong>{" "}
                           Hierarchical category structures with parent/child
@@ -1476,7 +1224,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">
+                          <strong className="text-slate-100">
                             Dual-Record Transfers:
                           </strong>{" "}
                           Linked atomic operations between accounts.
@@ -1485,7 +1233,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">Export Engine:</strong>{" "}
+                          <strong className="text-slate-100">Export Engine:</strong>{" "}
                           Native HomeBank CSV compatibility with transaction
                           bundling.
                         </span>
@@ -1493,7 +1241,7 @@ const App: React.FC = () => {
                       <li className="flex gap-4">
                         <span className="text-indigo-400 font-black">★</span>
                         <span>
-                          <strong className="text-white">SQLite Core:</strong>{" "}
+                          <strong className="text-slate-100">SQLite Core:</strong>{" "}
                           In-browser high-performance relational database.
                         </span>
                       </li>
@@ -1505,7 +1253,7 @@ const App: React.FC = () => {
               <div className="text-center">
                 <button
                   onClick={() => setActiveTab("how_to_use")}
-                  className="px-10 py-5 bg-slate-800 text-slate-300 hover:text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all"
+                  className="px-10 py-5 bg-slate-800 text-slate-300 hover:text-slate-100 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all"
                 >
                   Return to Documentation
                 </button>
@@ -1571,7 +1319,7 @@ const App: React.FC = () => {
           {activeTab === "how_to_use" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-5xl mx-auto py-10">
               <div className="space-y-6 text-center">
-                <h2 className="text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter">
+                <h2 className="text-2xl md:text-4xl font-black text-slate-100 uppercase italic tracking-tighter">
                   Documentation & Guide
                 </h2>
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm max-w-2xl mx-auto">
@@ -1583,7 +1331,7 @@ const App: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                   <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
                     <svg
                       className="w-6 h-6"
@@ -1599,25 +1347,25 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-white uppercase italic">
+                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
                     Smart Logging & Mobile
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
                     The{" "}
                     <span className="text-indigo-400 font-bold">Entries</span>{" "}
                     tab is your main hub, now fully optimized for mobile devices
-                    with <span className="text-white font-bold">Card View</span>{" "}
+                    with <span className="text-slate-100 font-bold">Card View</span>{" "}
                     and a bottom navigation bar.
                     <br />
                     <br />
-                    <span className="text-white font-bold block mb-1">
+                    <span className="text-slate-100 font-bold block mb-1">
                       Smart Autofill:
                     </span>{" "}
                     When you type a payee, the system predicts the category,
                     account, and payment mode based on your history.
                     <br />
                     <br />
-                    <span className="text-white font-bold block mb-1">
+                    <span className="text-slate-100 font-bold block mb-1">
                       Atomic Transfers:
                     </span>{" "}
                     Transfers automatically create two linked records
@@ -1626,7 +1374,7 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                   <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
                     <svg
                       className="w-6 h-6"
@@ -1642,7 +1390,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-white uppercase italic">
+                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
                     Export & Archives
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1654,7 +1402,7 @@ const App: React.FC = () => {
                     defined in Options.
                     <br />
                     <br />
-                    <span className="text-white font-bold block mb-1">
+                    <span className="text-slate-100 font-bold block mb-1">
                       Export Logs:
                     </span>{" "}
                     Every export is archived in the{" "}
@@ -1667,7 +1415,7 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                   <div className="w-12 h-12 bg-amber-600/10 rounded-2xl flex items-center justify-center text-amber-400">
                     <svg
                       className="w-6 h-6"
@@ -1683,7 +1431,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-white uppercase italic">
+                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
                     Vault & Advanced Import
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1693,7 +1441,7 @@ const App: React.FC = () => {
                     keeps you informed.
                     <br />
                     <br />
-                    <span className="text-white font-bold block mb-1">
+                    <span className="text-slate-100 font-bold block mb-1">
                       Smart CSV Import:
                     </span>{" "}
                     The Import Wizard features intelligent duplicate detection
@@ -1703,7 +1451,7 @@ const App: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
                   <div className="w-12 h-12 bg-rose-600/10 rounded-2xl flex items-center justify-center text-rose-400">
                     <svg
                       className="w-6 h-6"
@@ -1719,7 +1467,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-white uppercase italic">
+                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
                     Security & System
                   </h3>
                   <p className="text-slate-400 text-sm leading-relaxed">
@@ -1728,11 +1476,11 @@ const App: React.FC = () => {
                       Single-Admin
                     </span>{" "}
                     system with encrypted sessions. Use the{" "}
-                    <span className="text-white font-bold">Anonymize</span>{" "}
+                    <span className="text-slate-100 font-bold">Anonymize</span>{" "}
                     toggle in the sidebar to hide sensitive numbers in public.
                     <br />
                     <br />
-                    <span className="text-white font-bold block mb-1">
+                    <span className="text-slate-100 font-bold block mb-1">
                       System Options:
                     </span>{" "}
                     Access the Options tab to perform full database backups,
@@ -1748,7 +1496,7 @@ const App: React.FC = () => {
                   href="https://github.com/MarynarzSwiata/HomeBank-Bridge"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
+                  className="flex items-center justify-center gap-3 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
                 >
                   <svg
                     className="w-4 h-4"
@@ -1761,7 +1509,7 @@ const App: React.FC = () => {
                 </a>
                 <button
                   onClick={() => setIsDonateModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-3 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
+                  className="w-full flex items-center justify-center gap-3 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-black text-slate-400 uppercase tracking-widest hover:text-indigo-400 hover:bg-slate-800 transition-all active:scale-95 group"
                 >
                   <svg
                     className="w-4 h-4 text-indigo-400"
@@ -1820,7 +1568,7 @@ const App: React.FC = () => {
                   </p>
                   <button
                     onClick={refreshAll}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg"
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-all shadow-lg hover:text-white"
                   >
                     Retry Connection
                   </button>
@@ -1922,7 +1670,7 @@ const App: React.FC = () => {
           {activeTab === "options" && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-16 max-w-5xl mx-auto py-10">
               <div className="space-y-6 text-center">
-                <h2 className="text-2xl md:text-4xl font-black text-white uppercase italic tracking-tighter">
+                <h2 className="text-2xl md:text-4xl font-black text-slate-100 uppercase italic tracking-tighter">
                   System Options
                 </h2>
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">
@@ -1932,7 +1680,7 @@ const App: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {/* Data Backup & Snapshots */}
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
                     <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
                       <svg
@@ -1949,7 +1697,7 @@ const App: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase italic">
+                    <h3 className="text-xl font-black text-slate-100 uppercase italic">
                       Database Management
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
@@ -1965,7 +1713,7 @@ const App: React.FC = () => {
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={handleBackup}
-                      className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-3"
+                      className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 hover:text-white"
                     >
                       <svg
                         className="w-5 h-5"
@@ -2019,7 +1767,7 @@ const App: React.FC = () => {
                 />
 
                 {/* Localization Settings */}
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
                     <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
                       <svg
@@ -2036,7 +1784,7 @@ const App: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase italic">
+                    <h3 className="text-xl font-black text-slate-100 uppercase italic">
                       Localization & Formats
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
@@ -2079,7 +1827,7 @@ const App: React.FC = () => {
 
                       <div className="flex justify-between items-center py-4 px-5 bg-slate-800/50 rounded-2xl border border-slate-700/50">
                         <div className="space-y-1">
-                          <span className="text-xs font-black text-white uppercase">
+                          <span className="text-xs font-black text-slate-100 uppercase">
                             Privacy Mode (Anonymize)
                           </span>
                           <p className="text-[10px] text-slate-500 font-medium">
@@ -2107,7 +1855,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Currency Management */}
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
                   <div className="space-y-6">
                     <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-400">
                       <svg
@@ -2124,7 +1872,7 @@ const App: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-black text-white uppercase italic">
+                    <h3 className="text-xl font-black text-slate-100 uppercase italic">
                       Currency Lexicon
                     </h3>
                     <p className="text-slate-400 text-sm leading-relaxed">
@@ -2191,7 +1939,7 @@ const App: React.FC = () => {
                                         className="px-2 py-1 bg-indigo-600 text-white rounded text-[10px] font-black uppercase outline-none w-16"
                                       />
                                     ) : (
-                                      <span className="text-[11px] font-black text-white uppercase">
+                                      <span className="text-[11px] font-black text-slate-100 uppercase">
                                         {cur}
                                       </span>
                                     )}
@@ -2225,7 +1973,7 @@ const App: React.FC = () => {
                 </div>
 
                 {/* System Diagnostics */}
-                <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-8">
+                <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8">
                   <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
                     <svg
                       className="w-6 h-6"
@@ -2241,7 +1989,7 @@ const App: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-black text-white uppercase italic">
+                  <h3 className="text-xl font-black text-slate-100 uppercase italic">
                     Environment Stats
                   </h3>
                   <div className="space-y-4">
@@ -2249,7 +1997,7 @@ const App: React.FC = () => {
                       <span className="text-[10px] font-black text-slate-500 uppercase">
                         Engine
                       </span>
-                      <span className="text-[10px] font-black text-white uppercase">
+                      <span className="text-[10px] font-black text-slate-100 uppercase">
                         REST API + SQLite
                       </span>
                     </div>
@@ -2257,7 +2005,7 @@ const App: React.FC = () => {
                       <span className="text-[10px] font-black text-slate-500 uppercase">
                         Records
                       </span>
-                      <span className="text-[10px] font-black text-white uppercase">
+                      <span className="text-[10px] font-black text-slate-100 uppercase">
                         {transactionsHook.transactions.length} Transactions
                       </span>
                     </div>
@@ -2265,7 +2013,7 @@ const App: React.FC = () => {
                       <span className="text-[10px] font-black text-slate-500 uppercase">
                         Last Export
                       </span>
-                      <span className="text-[10px] font-black text-white uppercase">
+                      <span className="text-[10px] font-black text-slate-100 uppercase">
                         {exportLogHook.exportLogs[0]?.timestamp
                           ? new Date(
                               exportLogHook.exportLogs[0].timestamp
@@ -2280,7 +2028,7 @@ const App: React.FC = () => {
 
                 {/* User Management (Admin only) */}
                 {auth.user?.isAdmin && (
-                  <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-8">
+                  <div className="bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-8">
                     <div className="space-y-6">
                       <div className="w-12 h-12 bg-purple-600/10 rounded-2xl flex items-center justify-center text-purple-400">
                         <svg
@@ -2297,7 +2045,7 @@ const App: React.FC = () => {
                           />
                         </svg>
                       </div>
-                      <h3 className="text-xl font-black text-white uppercase italic">
+                      <h3 className="text-xl font-black text-slate-100 uppercase italic">
                         User Management
                       </h3>
                       <p className="text-slate-400 text-sm leading-relaxed">
@@ -2308,7 +2056,7 @@ const App: React.FC = () => {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center py-4 px-5 bg-slate-800/50 rounded-2xl border border-slate-700">
                         <div className="space-y-1">
-                          <span className="text-xs font-black text-white uppercase">
+                          <span className="text-xs font-black text-slate-100 uppercase">
                             Allow Registration
                           </span>
                           <p className="text-[10px] text-slate-500 font-medium">
@@ -2376,13 +2124,13 @@ const App: React.FC = () => {
           )}
         </section>
 
-        <nav className="md:hidden flex justify-between gap-1 overflow-x-auto no-scrollbar px-2 py-4 bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
+        <nav className="md:hidden flex justify-between gap-1 overflow-x-auto no-scrollbar px-2 py-4 bg-slate-900 backdrop-blur-3xl border-t border-slate-800 fixed bottom-0 left-0 right-0 z-[100]">
           <NavItem id="home" icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" label="Home" />
-          <NavItem id="transactions" icon="M12 4v16m8-8H4" label="Log" />
+          <NavItem id="transactions" icon="M12 4v16m8-8H4" label="Entries" />
           <NavItem
             id="accounts"
             icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-            label="Vault"
+            label="Accounts"
           />
           <NavItem id="scheduled" icon="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" label="Templates" />
           <NavItem id="rules" icon="M13 10V3L4 14h7v7l9-11h-7z" label="Rules" />
@@ -2391,18 +2139,18 @@ const App: React.FC = () => {
           <NavItem
             id="categories"
             icon="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-            label="Taxonomy"
+            label="Categories"
           />
           <NavItem
             id="payees"
             icon="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m16-10a4 4 0 11-8 0 4 4 0 018 0z"
-            label="Entities"
+            label="Payees"
           />
-          <NavItem id="export_log" icon="M9 12h6m-6 4h6m2 5" label="Archives" />
+          <NavItem id="export_log" icon="M9 12h6m-6 4h6m2 5" label="Exports" />
           <NavItem
             id="options"
             icon="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            label="Opt"
+            label="Settings"
           />
         </nav>
 
@@ -2412,7 +2160,7 @@ const App: React.FC = () => {
 
         {/* Reset Confirmation Modal */}
         {isResetModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-50/40 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-slate-900 border-2 border-rose-500/30 rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8">
               <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
                 <svg
@@ -2430,7 +2178,7 @@ const App: React.FC = () => {
                 </svg>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-white uppercase italic">
+                <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                   Hard Reset?
                 </h3>
                 <p className="text-slate-400 text-sm">
@@ -2465,7 +2213,7 @@ const App: React.FC = () => {
 
         {/* Restore Confirmation Modal */}
         {isRestoreModalOpen && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-slate-50/40 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-slate-900 border-2 border-indigo-500/30 rounded-[3rem] p-10 max-w-lg w-full shadow-2xl space-y-8">
               <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 mx-auto">
                 <svg
@@ -2483,7 +2231,7 @@ const App: React.FC = () => {
                 </svg>
               </div>
               <div className="text-center space-y-2">
-                <h3 className="text-2xl font-black text-white uppercase italic">
+                <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                   Restore System?
                 </h3>
                 <p className="text-slate-400 text-sm">
@@ -2539,7 +2287,7 @@ const App: React.FC = () => {
         {/* Donate Modal */}
         {isDonateModalOpen && (
           <div
-            className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300"
+            className="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-slate-50/40 backdrop-blur-xl animate-in fade-in duration-300"
             onClick={() => setIsDonateModalOpen(false)}
           >
             <div
@@ -2548,7 +2296,7 @@ const App: React.FC = () => {
             >
               <button
                 onClick={() => setIsDonateModalOpen(false)}
-                className="absolute top-6 right-6 p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+                className="absolute top-6 right-6 p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-100"
               >
                 <svg
                   className="w-5 h-5"
@@ -2575,7 +2323,7 @@ const App: React.FC = () => {
                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.016.393 5.464 0 5.972 0h10.362c3.567 0 5.166 1.765 4.88 4.417-.168 1.551-.838 3.13-1.927 4.544-1.22 1.587-2.863 2.628-4.75 3.023l-.116.024c-.754.148-1.206.561-1.34 1.23l-1.35 6.757c-.085.424-.455.742-.887.742h-3.955l.82-4.102c.022-.112.12-.193.234-.193h2.32c.321 0 .58-.26.58-.582a.582.582 0 0 0-.012-.117l-.582-2.91a.583.583 0 0 0-.57-.468h-2.32c-.322 0-.58.26-.58.582a.58.58 0 0 0 .012.117l-.82 4.1z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-black text-white uppercase italic">
+                <h3 className="text-2xl font-black text-slate-100 uppercase italic">
                   Support the Bridge
                 </h3>
                 <p className="text-slate-400 text-sm">
@@ -2597,7 +2345,7 @@ const App: React.FC = () => {
                   href="https://paypal.me/newbes"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-400 text-xs font-bold hover:text-white transition-colors uppercase tracking-widest"
+                  className="text-indigo-400 text-xs font-bold hover:text-slate-100 transition-colors uppercase tracking-widest"
                 >
                   paypal.me/newbes
                 </a>

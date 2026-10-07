@@ -224,11 +224,11 @@ export const ImportModal: React.FC<ImportModalProps> = ({
     }) || [];
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-start justify-center p-2 md:p-4 pt-[2vh] md:pt-[5vh] backdrop-blur-md bg-slate-950/80 animate-in fade-in duration-300 overflow-y-auto">
+    <div className="fixed inset-0 z-[1000] flex items-start justify-center p-2 md:p-4 pt-[2vh] md:pt-[5vh] backdrop-blur-md bg-slate-50/40 animate-in fade-in duration-300 overflow-y-auto">
       <div className="bg-slate-900 border border-slate-800 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[92vh] md:max-h-[85vh] flex flex-col space-y-4 md:space-y-6 relative overflow-hidden">
         <div className="flex justify-between items-start shrink-0">
           <div>
-            <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
+            <h3 className="text-xl md:text-2xl font-black text-slate-100 uppercase tracking-tight">
               Import {type}
             </h3>
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">
@@ -343,7 +343,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                         onChange={(e) => setIgnoreDuplicates(e.target.checked)}
                         className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className="text-[9px] font-black text-slate-400 group-hover:text-white transition-colors uppercase tracking-tight">
+                      <span className="text-[9px] font-black text-slate-400 group-hover:text-slate-100 transition-colors uppercase tracking-tight">
                         Import anyway?
                       </span>
                     </label>
@@ -365,7 +365,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                   setPreview(null);
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
-                className="text-[10px] text-slate-500 hover:text-white underline font-bold uppercase"
+                className="text-[10px] text-slate-500 hover:text-slate-100 underline font-bold uppercase"
               >
                 Change File
               </button>

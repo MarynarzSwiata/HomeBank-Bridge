@@ -19,7 +19,7 @@ interface BalanceReportProps {
 
 type RangeId = PeriodId | 'all';
 
-const LINE_COLOR = '#3987e5';
+const LINE_COLOR = '#2a78d6';
 const DAY_MS = 86400000;
 const MAX_DAILY_POINTS = 400; // longer ranges switch to month-end points
 
@@ -98,12 +98,12 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
       }
     : null;
 
-  const selectClass = 'bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500';
+  const selectClass = 'bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
   const labelClass = 'flex flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500';
 
   return (
     <div className="space-y-8">
-      <div className="p-5 bg-slate-900/40 border border-slate-800 rounded-[2rem] flex flex-wrap items-end gap-4">
+      <div className="p-5 bg-slate-900 border border-slate-800 rounded-[2rem] flex flex-wrap items-end gap-4">
         <label className={labelClass}>
           Account
           <select value={accountId} onChange={e => setAccountId(e.target.value)} className={selectClass}>
@@ -123,7 +123,7 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
       </div>
 
       {!currency ? (
-        <p className="text-sm text-slate-400 p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+        <p className="text-sm text-slate-400 p-6 bg-slate-900 border border-slate-800 rounded-[2rem]">
           To chart all accounts together, set a base currency in Options → Exchange rates, or pick a single account.
         </p>
       ) : result && stats ? (
@@ -134,7 +134,7 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
             <Tile label="Change" value={`${stats.end - stats.start >= 0 ? '+' : '−'}${fmt(Math.abs(stats.end - stats.start))} ${currency}`} />
             <Tile label="Lowest" value={`${fmt(stats.min)} ${currency}`} />
           </div>
-          <section className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-3">
+          <section className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-3">
             <header>
               <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">
                 Balance · {selected ? selected.name : 'all summary accounts'}
@@ -154,7 +154,7 @@ export const BalanceReport: React.FC<BalanceReportProps> = ({ accounts, transact
 };
 
 const Tile: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="p-5 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+  <div className="p-5 bg-slate-900 border border-slate-800 rounded-[2rem]">
     <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</div>
     <div className="mt-2 text-lg font-black text-slate-100 tabular-nums">{value}</div>
   </div>
@@ -230,12 +230,12 @@ const LineChart: React.FC<{ points: Point[]; fmt: (v: number) => string; currenc
       >
         {ticks.map((t, k) => (
           <g key={k}>
-            <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke="#1e293b" strokeWidth={1} />
-            <text x={M.left - 8} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#94a3b8">{axisFmt(t)}</text>
+            <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke="#EDEFF2" strokeWidth={1} />
+            <text x={M.left - 8} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#5B616E">{axisFmt(t)}</text>
           </g>
         ))}
         {min < 0 && max > 0 && (
-          <line x1={M.left} x2={W - M.right} y1={y(0)} y2={y(0)} stroke="#64748b" strokeWidth={1} strokeDasharray="4 4" />
+          <line x1={M.left} x2={W - M.right} y1={y(0)} y2={y(0)} stroke="#9CA3AF" strokeWidth={1} strokeDasharray="4 4" />
         )}
         <path d={path} fill="none" stroke={LINE_COLOR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => showLabel(i) && (
@@ -245,15 +245,15 @@ const LineChart: React.FC<{ points: Point[]; fmt: (v: number) => string; currenc
             y={H - 8}
             textAnchor={i === points.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'}
             fontSize={11}
-            fill="#94a3b8"
+            fill="#5B616E"
           >
             {shortDate(p.date, monthly)}
           </text>
         ))}
         {hp && hover !== null && (
           <g>
-            <line x1={x(hover)} x2={x(hover)} y1={M.top} y2={M.top + plotH} stroke="#64748b" strokeWidth={1} />
-            <circle cx={x(hover)} cy={y(hp.value)} r={5} fill={LINE_COLOR} stroke="#0b1120" strokeWidth={2} />
+            <line x1={x(hover)} x2={x(hover)} y1={M.top} y2={M.top + plotH} stroke="#9CA3AF" strokeWidth={1} />
+            <circle cx={x(hover)} cy={y(hp.value)} r={5} fill={LINE_COLOR} stroke="#FFFFFF" strokeWidth={2} />
           </g>
         )}
       </svg>
