@@ -206,13 +206,28 @@ router.post('/:id/skip', [param('id').isInt(), validate], async (req, res, next)
   }
 });
 
-// POST /api/scheduled/post-due - Post every occurrence dated up to `until` (the client's "today")
+/** Number of occurrences dated up to `until` that post-due would create for one item */
+function countDue(row, until) {
+  let count = 0;
+  let next = row.next_date;
+  while (next <= until && !(row.end_date && next > row.end_date) && count < MAX_POSTS_PER_ITEM) {
+    count += 1;
+    next = advanceDate(next, row.every, row.unit, row.anchor_day);
+  }
+  return count;
+}
+
+// POST /api/scheduled/post-due - Post every occurrence dated up to `until` (the client's "today").
+// With dryRun: true nothing is written; returns how many transactions would be created.
 router.post('/post-due',
-  [body('until').isISO8601({ strict: true }).withMessage('Invalid date'), validate],
+  [body('until').isISO8601({ strict: true }).withMessage('Invalid date'), body('dryRun').optional().isBoolean(), validate],
   async (req, res, next) => {
     try {
       const until = req.body.until.slice(0, 10);
       const due = await db.all('SELECT * FROM scheduled WHERE next_date <= ? ORDER BY next_date, id', until);
+      if (req.body.dryRun === true) {
+        return res.json({ wouldPost: due.reduce((sum, row) => sum + countDue(row, until), 0), items: due.length });
+      }
       let posted = 0;
       for (const row of due) {
         if (isFinished(row)) continue;

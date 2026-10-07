@@ -5,6 +5,7 @@ import { Alert, ConfirmModal } from '../common';
 import { PAYMENT_OPTIONS } from '../../constants';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import { formatMoney, toISO } from '../../utils/periodUtils';
+import { scheduledService } from '../../api';
 
 /**
  * Scheduled (recurring) transactions, like HomeBank's "Scheduled" list.
@@ -54,15 +55,7 @@ export const ScheduledView: React.FC<ScheduledViewProps> = ({ scheduled, account
           <p className="text-[10px] font-bold text-slate-500 mt-1">Recurring bills and income. Post them when they are due.</p>
         </div>
         <div className="flex flex-wrap gap-2 md:ml-auto">
-          {dueCount > 0 && (
-            <button
-              onClick={() => scheduled.postDue()}
-              disabled={scheduled.isSaving}
-              className="px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 disabled:opacity-40"
-            >
-              Post all due ({dueCount})
-            </button>
-          )}
+          {dueCount > 0 && <PostAllDueButton scheduled={scheduled} dueCount={dueCount} />}
           <button
             onClick={() => setEditing('new')}
             className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500"
@@ -357,5 +350,59 @@ const ScheduledForm: React.FC<{
         </button>
       </div>
     </section>
+  );
+};
+
+/**
+ * "Post all due" with a confirmation that shows how many transactions will be created
+ * (an old next date can mean many missed occurrences).
+ */
+export const PostAllDueButton: React.FC<{ scheduled: UseScheduledResult; dueCount: number }> = ({ scheduled, dueCount }) => {
+  const [pending, setPending] = useState<number | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const ask = async () => {
+    try {
+      setChecking(true);
+      setError(null);
+      const { wouldPost } = await scheduledService.countDue(toISO(new Date()));
+      setPending(wouldPost);
+    } catch {
+      setError('Could not check due transactions');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={ask}
+        disabled={scheduled.isSaving || checking}
+        className="px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 disabled:opacity-40"
+      >
+        Post all due ({dueCount})
+      </button>
+      {error && <span role="alert" className="text-xs font-bold text-rose-400">{error}</span>}
+      <ConfirmModal
+        isOpen={pending !== null}
+        title="Post all due transactions?"
+        message={
+          <>
+            This will add <span className="text-white font-bold">{pending}</span> transaction(s) to the ledger
+            {pending !== null && pending > dueCount * 3 ? ' – some schedules have many missed dates. Consider Skip or editing the next date instead.' : '.'}
+          </>
+        }
+        confirmLabel={`Post ${pending ?? ''}`}
+        variant={pending !== null && pending > dueCount * 3 ? 'danger' : 'primary'}
+        onConfirm={async () => {
+          await scheduled.postDue();
+          setPending(null);
+        }}
+        onCancel={() => setPending(null)}
+        isLoading={scheduled.isSaving}
+      />
+    </>
   );
 };

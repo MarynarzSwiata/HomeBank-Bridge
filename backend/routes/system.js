@@ -4,6 +4,7 @@ import path from 'path';
 import config from '../config/database.js';
 import db, { initDb, closeDb } from '../db/index.js';
 import runMigrations from '../db/migrate.js';
+import { parseXhb, buildPlan, planSummary, applyPlan, hasExistingData } from '../services/xhbImport.js';
 
 import multer from 'multer';
 
@@ -14,6 +15,8 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 const upload = multer({ dest: uploadDir });
+// HomeBank files are read in memory (never written to disk)
+const xhbUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024, files: 1 } });
 
 // Backup database
 router.get('/backup', async (req, res) => {
@@ -140,6 +143,44 @@ router.post('/reset', async (req, res) => {
     try { await db.run('ROLLBACK'); } catch (e) {}
     console.error('Reset failed:', err);
     res.status(500).json({ error: 'Reset failed: ' + err.message });
+  }
+});
+
+// POST /api/system/import-xhb - Import a HomeBank .xhb file
+// Form fields: file (the .xhb), mode = 'preview' | 'import', replace = 'true' to wipe existing finance data first.
+// Preview only parses and counts. Import runs in one DB transaction (all or nothing).
+router.post('/import-xhb', (req, res, next) => {
+  xhbUpload.single('file')(req, res, (uploadErr) => {
+    if (uploadErr) {
+      const msg = uploadErr.code === 'LIMIT_FILE_SIZE' ? 'The file is too large (max 20 MB)' : 'Upload failed';
+      return res.status(400).json({ error: msg });
+    }
+    next();
+  });
+}, async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const mode = req.body.mode === 'import' ? 'import' : 'preview';
+    const replace = req.body.replace === 'true';
+
+    const text = req.file.buffer.toString('utf8').replace(/^\uFEFF/, '');
+    const plan = buildPlan(parseXhb(text));
+    const summary = planSummary(plan);
+    const existing = await hasExistingData();
+
+    if (mode === 'preview') {
+      return res.json({ summary, hasExistingData: existing });
+    }
+    if (existing && !replace) {
+      return res.status(409).json({ error: 'The app already contains data. Confirm replacing it to import.' });
+    }
+
+    await applyPlan(plan, { replace });
+    console.log(`📥 HomeBank import: ${summary.accounts} accounts, ${summary.transactions} transactions`);
+    res.json({ message: 'HomeBank file imported', summary });
+  } catch (err) {
+    if (err.status === 400) return res.status(400).json({ error: err.message });
+    next(err);
   }
 });
 

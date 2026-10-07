@@ -34,6 +34,23 @@ export const accountsService = {
   },
 };
 
+export interface XhbImportResult {
+  summary: {
+    accounts: number;
+    categories: number;
+    payees: number;
+    transactions: number;
+    transfers: number;
+    budgets: number;
+    scheduled: number;
+    rules: number;
+    currencies: string[];
+    warnings: string[];
+  };
+  hasExistingData?: boolean;
+  message?: string;
+}
+
 export const systemService = {
   async backup(): Promise<void> {
     const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -88,6 +105,23 @@ export const systemService = {
     }
     
     return response.json();
+  },
+
+  /** Preview or import a HomeBank .xhb file (admin only) */
+  async importXhb(file: File, mode: 'preview' | 'import', replace = false): Promise<XhbImportResult> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('mode', mode);
+    formData.append('replace', replace ? 'true' : 'false');
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
+    const response = await fetch(`${API_BASE}/system/import-xhb`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `Import failed (${response.status})`);
+    return data;
   },
 
   async getSettings(): Promise<Record<string, string>> {
@@ -436,6 +470,9 @@ export const scheduledService = {
   },
   async postDue(until: string): Promise<{ posted: number }> {
     return api.post('/scheduled/post-due', { until });
+  },
+  async countDue(until: string): Promise<{ wouldPost: number; items: number }> {
+    return api.post('/scheduled/post-due', { until, dryRun: true });
   },
 };
 
