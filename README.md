@@ -145,6 +145,7 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **📉 Balance over time**: Reports → "Balance over time" charts one account in its own currency, or all summary accounts converted to the base currency, for any period up to all time (daily points, or month-end for long ranges), with start / end / change / lowest values and a hover tooltip.
 - **📋 Templates**: The Scheduled tab is now "Templates": plain templates (pick one in the entry form to fill it in) and scheduled items. HomeBank import brings all templates and recognises HomeBank 5.9+ scheduled items (`recflg`), which were previously skipped.
 - **🏦 Account options & converted totals**: Exclude accounts from summary / budget / reports (imported from HomeBank) and see group and grand totals in your base currency using the exchange rates in Options.
 - **📂 Import from HomeBank (.xhb)**: Options → Import from HomeBank reads your desktop file and moves accounts (types, closed state, currencies), categories, payees, transactions (status, tags, info), transfers, budgets, scheduled transactions and assignment rules. A preview shows what will be imported first; replacing existing data needs explicit confirmation and offers a backup download. Split transactions become one entry per part (tag `split`); void entries and regex rules are skipped.

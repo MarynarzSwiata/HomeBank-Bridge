@@ -1564,6 +1564,7 @@ const App: React.FC = () => {
               transactions={transactionsHook.transactions}
               categories={categoriesHook.categories}
               isAnonymized={isAnonymized}
+              rates={rates}
             />
           )}
 

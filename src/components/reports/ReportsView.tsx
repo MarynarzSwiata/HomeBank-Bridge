@@ -13,6 +13,8 @@ import {
 } from '../../utils/periodUtils';
 import { sanitizeCSVField, triggerDownload } from '../../utils/exportUtils';
 import { splitTags } from '../../utils/tagUtils';
+import { BalanceReport } from './BalanceReport';
+import type { CurrencyRates } from '../../utils/currencyUtils';
 
 /**
  * Statistics report modelled on HomeBank's "Statistics" and "Trend time" reports:
@@ -24,6 +26,7 @@ interface ReportsViewProps {
   transactions: Transaction[];
   categories: Category[];
   isAnonymized: boolean;
+  rates?: CurrencyRates;
 }
 
 type GroupBy = 'category' | 'subcategory' | 'payee' | 'tag' | 'month';
@@ -40,7 +43,7 @@ const GROUPS: { id: GroupBy; name: string }[] = [
 // Colour follows the entity (same as Home): income blue, expense orange
 const FLOW_COLOR: Record<Flow, string> = { income: '#3987e5', expense: '#d95926' };
 
-export const ReportsView: React.FC<ReportsViewProps> = ({ accounts, transactions, categories, isAnonymized }) => {
+const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, categories, isAnonymized }) => {
   const [period, setPeriod] = useState<PeriodId | 'custom'>('this_year');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
@@ -281,3 +284,30 @@ const Tile: React.FC<{ label: string; value: string; swatch?: string }> = ({ lab
     <div className="mt-2 text-xl font-black text-slate-100 tabular-nums">{value}</div>
   </div>
 );
+
+/** Reports tab: statistics (totals by group) or balance over time */
+export const ReportsView: React.FC<ReportsViewProps> = (props) => {
+  const [view, setView] = useState<'stats' | 'balance'>('stats');
+  return (
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="flex gap-2" role="tablist" aria-label="Report type">
+        {([['stats', 'Statistics'], ['balance', 'Balance over time']] as const).map(([id, label]) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={view === id}
+            onClick={() => setView(id)}
+            className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+              view === id ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {view === 'stats'
+        ? <StatisticsReport {...props} />
+        : <BalanceReport accounts={props.accounts} transactions={props.transactions} isAnonymized={props.isAnonymized} rates={props.rates || { base: '', rates: {} }} />}
+    </div>
+  );
+};
