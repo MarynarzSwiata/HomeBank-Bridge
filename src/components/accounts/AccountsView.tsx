@@ -6,7 +6,8 @@ import {
   ActionBar, 
   Card, 
   ConfirmModal, 
-  Alert 
+  Alert,
+  Drawer,
 } from '../common';
 import { transactionsService } from '../../api/services';
 import { ACCOUNT_TYPE_OPTIONS, ACCOUNT_TYPE_LABELS } from '../../constants';
@@ -132,15 +133,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* Actions & Form Section */}
       <div className="space-y-4">
         <ActionBar
-          title={editingAccount ? 'Edit Account' : isFormExpanded ? 'New Account' : 'Accounts'}
-          subtitle={editingAccount ? `Modifying ${editingAccount.name}` : 'Balances and account settings'}
-          isExpanded={isFormExpanded || !!editingAccount}
-          onToggle={() => {
-            if (editingAccount) resetForm();
-            else setIsFormExpanded(!isFormExpanded);
-          }}
-          expandLabel="Add Account"
-          collapseLabel={editingAccount ? "Cancel Edit" : "Close"}
+          title="Accounts"
+          subtitle="Balances and account settings"
+          onToggle={() => { setEditingAccount(null); setIsFormExpanded(true); }}
+          expandLabel="Add account"
           actions={
             <div className="flex gap-2">
               <button
@@ -187,12 +183,15 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               )}
             </div>
           }
-          className={editingAccount ? 'border-indigo-500/50 bg-indigo-950/10' : ''}
         />
 
-        {(isFormExpanded || editingAccount) && (
-           <Card variant="default" className={editingAccount ? 'border-indigo-500/50 bg-indigo-950/5' : ''}>
-             <AccountForm 
+        <Drawer
+          open={isFormExpanded || !!editingAccount}
+          title={editingAccount ? 'Edit account' : 'New account'}
+          onClose={resetForm}
+        >
+          <div className="p-6">
+<AccountForm 
                 isExpanded={true}
                 onClose={() => setIsFormExpanded(false)}
                 editingAccount={editingAccount}
@@ -204,8 +203,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 currencies={currencies}
                 inlineMode={true}
             />
-           </Card>
-        )}
+          </div>
+        </Drawer>
       </div>
 
       <div className="space-y-2">

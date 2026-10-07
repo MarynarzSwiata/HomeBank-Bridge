@@ -113,7 +113,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
              <Alert variant="error" message={currentError} onClose={() => setLocalError(null)} />
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
             <label className="text-[13px] font-medium text-slate-500 ml-2 mb-1.5 block">
                 Category Name

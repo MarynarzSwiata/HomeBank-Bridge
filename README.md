@@ -145,6 +145,7 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **🌙 Dark theme & side-panel forms everywhere**: Choose Light, Dark or Auto (follows your device) in the sidebar or in Settings; the choice is remembered on each device. Accounts, categories and payees are now added and edited in the same side panel as transactions.
 - **🧭 Page headers & side-panel form**: Every view starts with a clear title, a short summary and its main action on the right. New, edited and duplicated transactions open in a side panel (full screen on phones) that closes with Esc or a click outside. Overview shows a "Net worth" tile in the base currency.
 - **🎨 New look**: Light, calmer interface — Geist typeface, sentence case instead of all caps, moderate corner radii, tabular figures for amounts, a compact sidebar, a dense transaction and account table, and plain-language labels ("Transactions", "Categories", "Settings"). Charts use colours validated for contrast and colour-blind separation on the light background.
 - **📤 Export to HomeBank (.xhb)**: Options → "Export .xhb" downloads all your data as a file HomeBank desktop can open (accounts with their options, currencies and rates, categories and budgets, payees, transactions with status and tags, transfers, templates and scheduled items, rules).

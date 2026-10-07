@@ -19,7 +19,7 @@ interface BalanceReportProps {
 
 type RangeId = PeriodId | 'all';
 
-const LINE_COLOR = '#2a78d6';
+const LINE_COLOR = 'var(--chart-income)';
 const DAY_MS = 86400000;
 const MAX_DAILY_POINTS = 400; // longer ranges switch to month-end points
 
@@ -230,14 +230,14 @@ const LineChart: React.FC<{ points: Point[]; fmt: (v: number) => string; currenc
       >
         {ticks.map((t, k) => (
           <g key={k}>
-            <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke="#EDEFF2" strokeWidth={1} />
-            <text x={M.left - 8} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#5B616E">{axisFmt(t)}</text>
+            <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} style={{ stroke: 'var(--chart-grid)' }} strokeWidth={1} />
+            <text x={M.left - 8} y={y(t) + 4} textAnchor="end" fontSize={11} style={{ fill: 'var(--chart-label)' }}>{axisFmt(t)}</text>
           </g>
         ))}
         {min < 0 && max > 0 && (
-          <line x1={M.left} x2={W - M.right} y1={y(0)} y2={y(0)} stroke="#9CA3AF" strokeWidth={1} strokeDasharray="4 4" />
+          <line x1={M.left} x2={W - M.right} y1={y(0)} y2={y(0)} style={{ stroke: 'var(--chart-guide)' }} strokeWidth={1} strokeDasharray="4 4" />
         )}
-        <path d={path} fill="none" stroke={LINE_COLOR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path} fill="none" style={{ stroke: LINE_COLOR }} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => showLabel(i) && (
           <text
             key={p.date}
@@ -245,15 +245,15 @@ const LineChart: React.FC<{ points: Point[]; fmt: (v: number) => string; currenc
             y={H - 8}
             textAnchor={i === points.length - 1 ? 'end' : i === 0 ? 'start' : 'middle'}
             fontSize={11}
-            fill="#5B616E"
+            style={{ fill: 'var(--chart-label)' }}
           >
             {shortDate(p.date, monthly)}
           </text>
         ))}
         {hp && hover !== null && (
           <g>
-            <line x1={x(hover)} x2={x(hover)} y1={M.top} y2={M.top + plotH} stroke="#9CA3AF" strokeWidth={1} />
-            <circle cx={x(hover)} cy={y(hp.value)} r={5} fill={LINE_COLOR} stroke="#FFFFFF" strokeWidth={2} />
+            <line x1={x(hover)} x2={x(hover)} y1={M.top} y2={M.top + plotH} style={{ stroke: 'var(--chart-guide)' }} strokeWidth={1} />
+            <circle cx={x(hover)} cy={y(hp.value)} r={5} style={{ fill: LINE_COLOR, stroke: 'var(--chart-surface)' }} strokeWidth={2} />
           </g>
         )}
       </svg>

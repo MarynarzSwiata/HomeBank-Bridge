@@ -156,14 +156,14 @@ export function AuthScreen({
 
             {/* Error Message */}
             {displayError && (
-              <div className="p-4 bg-[#FEF3F2] border border-[#FECDCA] rounded-xl">
+              <div className="p-4 bg-red-950 border border-rose-500/30 rounded-xl">
                 <p className="text-rose-400 text-sm font-medium">{displayError}</p>
               </div>
             )}
 
             {/* Registration disabled message (only when single-admin mode) */}
             {hasUsers && !registrationAllowed && (
-              <div className="p-4 bg-[#FFF7ED] border border-[#FED7AA] rounded-xl">
+              <div className="p-4 bg-amber-950 border border-amber-500/30 rounded-xl">
                 <p className="text-amber-400 text-sm font-medium">
                   Registration is disabled. Contact the administrator.
                 </p>

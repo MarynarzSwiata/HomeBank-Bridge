@@ -9,6 +9,8 @@ import { ApiError, accountsService, systemService, rulesService, currencyService
 import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import { AnimatedLogo } from "./src/components/shared/AnimatedLogo";
+import { ThemeSwitch } from "./src/components/common";
+import { watchSystemTheme } from "./src/utils/theme";
 import type {
   Account,
   AccountInput,
@@ -152,6 +154,9 @@ const App: React.FC = () => {
   const [transactionsAccountFilter, setTransactionsAccountFilter] =
     useState("");
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+
+  // Follow the device theme while "Auto" is selected
+  useEffect(() => watchSystemTheme(), []);
 
   // App Settings State
   const [appSettings, setAppSettings] = useState<Record<string, string>>({});
@@ -886,7 +891,7 @@ const App: React.FC = () => {
                 aria-current={activeTab === tab.id ? "page" : undefined}
                 className={`w-full flex items-center gap-2.5 min-h-[40px] px-2.5 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-indigo-50 text-indigo-600"
+                    ? "bg-indigo-50 text-indigo-400"
                     : "text-slate-300 hover:text-slate-100 hover:bg-slate-950"
                 }`}
               >
@@ -912,13 +917,14 @@ const App: React.FC = () => {
                 <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${isAnonymized ? "left-[18px]" : "left-0.5"}`} />
               </button>
             </label>
+            <ThemeSwitch className="mx-2.5" />
             <div className="flex items-center gap-2.5 px-2.5 pt-2">
               <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-semibold text-slate-300 uppercase">
                 {(auth.user?.username || "?").slice(0, 2)}
               </div>
               <div className="flex flex-col flex-1 min-w-0">
                 <span className="text-[13px] font-medium text-slate-100 truncate">{auth.user?.username || "User"}</span>
-                <button onClick={() => setActiveTab("changelog")} className="text-xs text-slate-600 hover:text-indigo-600 text-left">
+                <button onClick={() => setActiveTab("changelog")} className="text-xs text-slate-600 hover:text-indigo-400 text-left">
                   Version 1.0.3
                 </button>
               </div>
@@ -934,8 +940,8 @@ const App: React.FC = () => {
               </button>
             </div>
             <div className="flex gap-3 px-2.5 pt-1 text-xs text-slate-600">
-              <a href="https://github.com/MarynarzSwiata/HomeBank-Bridge" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600">GitHub</a>
-              <button onClick={() => setIsDonateModalOpen(true)} className="hover:text-indigo-600">Donate</button>
+              <a href="https://github.com/MarynarzSwiata/HomeBank-Bridge" target="_blank" rel="noopener noreferrer" className="hover:text-indigo-400">GitHub</a>
+              <button onClick={() => setIsDonateModalOpen(true)} className="hover:text-indigo-400">Donate</button>
             </div>
           </div>
         </div>
@@ -1676,6 +1682,10 @@ const App: React.FC = () => {
                 <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">
                   Control center for application data and global preferences.
                 </p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-sm text-slate-500">Theme</span>
+                  <ThemeSwitch className="w-56" />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
