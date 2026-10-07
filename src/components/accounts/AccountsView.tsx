@@ -132,8 +132,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* Actions & Form Section */}
       <div className="space-y-4">
         <ActionBar
-          title={editingAccount ? 'Edit Account' : isFormExpanded ? 'New Account' : 'Vault Management'}
-          subtitle={editingAccount ? `Modifying ${editingAccount.name}` : 'Manage your financial roots'}
+          title={editingAccount ? 'Edit Account' : isFormExpanded ? 'New Account' : 'Accounts'}
+          subtitle={editingAccount ? `Modifying ${editingAccount.name}` : 'Balances and account settings'}
           isExpanded={isFormExpanded || !!editingAccount}
           onToggle={() => {
             if (editingAccount) resetForm();
@@ -148,7 +148,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all ${
                   isAnonymized 
                     ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-100'
                 }`}
                 title={isAnonymized ? "Show values" : "Hide values"}
               >
@@ -168,7 +168,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 <button
                   onClick={() => setShowClosed(!showClosed)}
                   className={`px-3 py-1.5 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
-                    showClosed ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                    showClosed ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-100'
                   }`}
                   title="Show or hide closed accounts"
                 >
@@ -210,8 +210,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
       <div className="space-y-2">
             {/* Header (Desktop Only) */}
-            <div className="hidden md:grid grid-cols-12 gap-2 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900/30 rounded-3xl border border-slate-800/50">
-                <div className="col-span-4">Account / Vault</div>
+            <div className="hidden md:grid grid-cols-12 gap-2 px-5 py-2.5 text-xs font-medium text-slate-600 bg-slate-900 rounded-xl border border-slate-800">
+                <div className="col-span-4">Account</div>
                 <div className="col-span-2 text-right" title="Reconciled transactions only">Reconciled</div>
                 <div className="col-span-2 text-right" title="All transactions up to today">Today</div>
                 <div className="col-span-2 text-right" title="All transactions, including future-dated">Future</div>
@@ -220,23 +220,23 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
             {/* List */}
             {accounts.length === 0 ? (
-                <div className="text-center py-24 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-[3rem]">
-                    <p className="text-lg font-black uppercase tracking-widest text-slate-500">No Active Wallets</p>
-                    <p className="text-xs font-bold text-slate-700 uppercase mt-2">Establish your first account to begin tracking.</p>
+                <div className="text-center py-24 bg-slate-900 border-2 border-dashed border-slate-800 rounded-[3rem]">
+                    <p className="text-lg font-black uppercase tracking-widest text-slate-500">No accounts yet</p>
+                    <p className="text-xs font-bold text-slate-600 uppercase mt-2">Create your first account to start tracking.</p>
                 </div>
             ) : (
                 <div className="space-y-6">
                   {groupedAccounts.map(group => (
-                    <div key={group.type} className="space-y-3">
-                    <div className="px-8 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400/70">{group.label}</div>
+                    <div key={group.type} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800">
+                    <div className="px-5 py-2 text-xs font-semibold text-slate-300 bg-slate-950/60">{group.label}</div>
                     {group.items.map(acc => (
                         <div 
                             key={acc.id} 
                             onClick={() => viewAccountHistory?.(acc.id)}
-                            className={`group relative rounded-[2.5rem] bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40 transition-all cursor-pointer overflow-hidden ${!isInSummary(acc) ? 'opacity-50' : ''}`}
+                            className={`group relative hover:bg-slate-950 transition-colors cursor-pointer overflow-hidden ${!isInSummary(acc) ? 'opacity-50' : ''}`}
                         >
                             {/* Desktop Layout */}
-                            <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-6 items-center">
+                            <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 items-center">
                                 <div className="col-span-4">
                                     <div className="text-sm font-black text-slate-100 uppercase tracking-tight truncate">
                                         {acc.name} <span className="text-indigo-400/60 ml-1 text-[10px]">({acc.currency})</span>
@@ -291,13 +291,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                                     <div className="flex gap-2">
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); startEditing(acc); }} 
-                                            className="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 hover:bg-indigo-500 active:scale-90 transition-all flex items-center justify-center"
+                                            className="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 hover:bg-indigo-500 active:scale-90 transition-all flex items-center justify-center hover:text-white"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                         </button>
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); setConfirmDelete(acc); }} 
-                                            className="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 hover:bg-rose-500 active:scale-90 transition-all flex items-center justify-center"
+                                            className="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 hover:bg-rose-500 active:scale-90 transition-all flex items-center justify-center hover:text-white"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
@@ -329,7 +329,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                         // Group total in the base currency (only accounts shown in the summary, like HomeBank)
                         const { totals, missing } = convertedTotals(group.items.filter(isInSummary), rates);
                         return (
-                            <div className="flex justify-end gap-6 px-8 text-xs font-bold text-slate-400 tabular-nums">
+                            <div className="flex justify-end gap-6 px-5 py-2.5 text-xs font-bold text-slate-400 tabular-nums">
                                 <span className="uppercase tracking-widest text-[10px] text-slate-500">Total {group.label}{missing.length ? ` (without ${missing.join(', ')})` : ''}</span>
                                 <span className={tone(totals.future)}>{fmt(totals.future)} {rates.base}</span>
                             </div>
@@ -355,11 +355,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
         title="Delete Account?"
         message={
           <>
-            Are you sure you want to delete <span className="text-white font-bold">{confirmDelete?.name}</span>? 
+            Are you sure you want to delete <span className="text-slate-100 font-bold">{confirmDelete?.name}</span>? 
             This will permanently remove the account and all associated data.
           </>
         }
-        confirmLabel="Confirm Erasure"
+        confirmLabel="Delete"
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(null)}
         isLoading={isSaving}

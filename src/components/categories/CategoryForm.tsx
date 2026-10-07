@@ -122,7 +122,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
                 placeholder="e.g. Groceries, Hobby..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-white h-[60px] uppercase placeholder:lowercase"
+                className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-100 h-[60px] uppercase placeholder:lowercase"
             />
             </div>
             {/* Swapped Parent and Flow Type */}
@@ -140,7 +140,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
             </div>
             <div>
             <SearchableSelect
-                label="Flow Type"
+                label="Type"
                 options={FLOW_TYPE_OPTIONS}
                 value={type}
                 onChange={setType}
@@ -157,7 +157,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({
                 className="flex-1"
                 icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>}
             >
-                {editingCategory ? "Commit Update" : "Forge Category"}
+                {editingCategory ? "Save changes" : "Forge Category"}
             </Button>
             {editingCategory && (
                 <Button

@@ -168,7 +168,7 @@ export function TransactionsView({
   // Header Cell for sorting
   const SortableHeader = ({ field, label, colSpan }: { field: SortField; label: string; colSpan: string }) => (
     <div 
-      className={`${colSpan} flex items-center gap-1 cursor-pointer hover:text-white transition-colors group`}
+      className={`${colSpan} flex items-center gap-1 cursor-pointer hover:text-slate-100 transition-colors group`}
       onClick={() => handleSort(field)}
     >
       {label}
@@ -488,7 +488,7 @@ export function TransactionsView({
         title="Delete Transaction?"
         message={
           <>
-            Are you sure you want to delete <span className="text-white font-bold">{deleteConfirm?.name}</span>? 
+            Are you sure you want to delete <span className="text-slate-100 font-bold">{deleteConfirm?.name}</span>? 
             This action cannot be undone.
           </>
         }
@@ -502,8 +502,8 @@ export function TransactionsView({
       {/* Actions & Form Section */}
       <div className="space-y-4">
         <ActionBar
-          title={editingTransaction ? 'Edit Transaction' : isFormExpanded ? 'New Transaction' : 'Ledger Actions'}
-          subtitle={editingTransaction ? 'Modifying existing entry' : 'Manage your money movement'}
+          title={editingTransaction ? 'Edit Transaction' : isFormExpanded ? 'New Transaction' : 'Transactions'}
+          subtitle={editingTransaction ? 'Modifying existing entry' : 'All your entries'}
           isExpanded={isFormExpanded || !!editingTransaction}
           onToggle={() => {
             if (editingTransaction || duplicatingTransaction) handleCancel();
@@ -630,14 +630,14 @@ export function TransactionsView({
       <div className="space-y-4">
         <div 
           onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
-          className="flex items-center justify-between px-8 py-5 bg-slate-900/50 border border-slate-800 rounded-3xl cursor-pointer hover:bg-slate-800/50 transition-all group"
+          className="flex items-center justify-between px-8 py-5 bg-slate-900 border border-slate-800 rounded-3xl cursor-pointer hover:bg-slate-800/50 transition-all group"
         >
           <div className="flex items-center gap-4">
-            <div className={`p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 transition-all ${isFiltersExpanded ? 'bg-indigo-500 text-white' : ''}`}>
+            <div className={`p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 transition-all hover:text-white${isFiltersExpanded ? 'bg-indigo-500 text-white' : ''}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
             </div>
             <div>
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">Refine Ledger</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">Filters</h3>
               <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">Filter by account, category, date or entity</p>
             </div>
           </div>
@@ -650,9 +650,9 @@ export function TransactionsView({
         </div>
 
         {isFiltersExpanded && (
-          <div className="p-8 bg-slate-900/50 border border-slate-800 rounded-3xl grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in slide-in-from-top-4 duration-500">
+          <div className="p-8 bg-slate-900 border border-slate-800 rounded-3xl grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in slide-in-from-top-4 duration-500">
             <SearchableSelect
-              label="Vault / Account"
+              label="Account"
               options={accountOptions}
               value={filterAccount}
               onChange={(val) => {
@@ -664,7 +664,7 @@ export function TransactionsView({
               }}
               placeholder="All Accounts"
               showAllOption
-              allLabel="ALL VAULTS"
+              allLabel="All accounts"
             />
             <SearchableSelect
               label="Category"
@@ -680,7 +680,7 @@ export function TransactionsView({
               }}
             />
             <SearchableSelect
-              label="Flow Type"
+              label="Type"
               options={typeOptions}
               value={filterType}
               onChange={setFilterType}
@@ -708,13 +708,13 @@ export function TransactionsView({
               allLabel="ALL TAGS"
             />
             <div className="relative">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">Entity Name</label>
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">Payee</label>
               <input
                 type="text"
                 placeholder="Search entity..."
                 value={filterPayee}
                 onChange={(e) => setFilterPayee(e.target.value)}
-                className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white placeholder:text-slate-700"
+                className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-100 placeholder:text-slate-600"
               />
             </div>
             <div className="relative group">
@@ -724,7 +724,7 @@ export function TransactionsView({
                   type="date"
                   value={filterDateFrom}
                   onChange={(e) => setFilterDateFrom(e.target.value)}
-                  className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-5 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white cursor-pointer"
+                  className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-5 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-100 cursor-pointer"
                   onClick={(e) => e.currentTarget.showPicker?.()}
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600 group-hover:text-indigo-400 transition-colors">
@@ -742,7 +742,7 @@ export function TransactionsView({
                   type="date"
                   value={filterDateTo}
                   onChange={(e) => setFilterDateTo(e.target.value)}
-                  className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-5 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-white cursor-pointer"
+                  className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-5 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-100 cursor-pointer"
                   onClick={(e) => e.currentTarget.showPicker?.()}
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600 group-hover:text-indigo-400 transition-colors">
@@ -783,7 +783,7 @@ export function TransactionsView({
             className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all ${
               isAnonymized 
                 ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' 
-                : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-100'
             }`}
             title={isAnonymized ? "Show values" : "Hide values"}
           >
@@ -807,7 +807,7 @@ export function TransactionsView({
           )}
           <button
             onClick={toggleAllSelection}
-            className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-white transition-all active:scale-95"
+            className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-100 transition-all active:scale-95"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -834,32 +834,32 @@ export function TransactionsView({
             className="h-10 px-6 rounded-xl animate-in fade-in zoom-in-95 duration-300 w-full md:w-auto"
             icon={<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>}
           >
-            Delete Mass
+            Delete selected
           </Button>
         )}
       </div>
 
       {/* Transactions List */}
-      <div className="space-y-3">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         {/* Header (Desktop) */}
-        <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900/30 rounded-3xl border border-slate-800/50">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2.5 text-xs font-medium text-slate-600 border-b border-slate-800 bg-slate-950/60">
           <div className="col-span-1 flex items-center justify-center">
             <input
               type="checkbox"
               checked={selectedIds.size > 0 && selectedIds.size === filteredAndSortedTransactions.length}
               onChange={toggleAllSelection}
-              className="w-5 h-5 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 focus:ring-offset-slate-900 transition-all cursor-pointer"
+              className="w-4 h-4 rounded border-slate-700 text-indigo-600 cursor-pointer"
             />
           </div>
           <SortableHeader field="date" label="Date" colSpan="col-span-2" />
-          <SortableHeader field="payee" label="Entity / Payee" colSpan="col-span-2" />
+          <SortableHeader field="payee" label="Payee" colSpan="col-span-2" />
           <SortableHeader field="category" label="Category" colSpan="col-span-2" />
           <SortableHeader field="amount" label="Amount" colSpan="col-span-2 text-right justify-end" />
-          <div className="col-span-3 text-right uppercase tracking-[0.2em] font-black py-1 pr-6">Actions</div>
+          <div className="col-span-3 text-right pr-2">Actions</div>
         </div>
 
         {/* Rows */}
-        <div className="space-y-3">
+        <div className="divide-y divide-slate-800">
           {visibleTransactions.map((t) => {
             const isSelected = selectedIds.has(t.id);
             const isExpense = (t.amount || 0) < 0;
@@ -869,39 +869,39 @@ export function TransactionsView({
             return (
               <div 
                 key={t.id} 
-                className={`group relative rounded-[2.5rem] bg-slate-900/40 border transition-all ${
-                  isSelected ? 'border-indigo-500 bg-indigo-500/5 ring-1 ring-indigo-500/20' : 'border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40'
+                className={`group relative transition-colors ${
+                  isSelected ? 'bg-indigo-50' : 'hover:bg-slate-950'
                 }`}
               >
                 {/* Desktop Layout */}
-                <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-6 items-center">
+                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 items-center">
                   <div className="col-span-1 flex items-center justify-center">
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelection(t.id)}
-                      className="w-5 h-5 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 focus:ring-offset-slate-900 transition-all cursor-pointer"
+                      className="w-4 h-4 rounded border-slate-700 text-indigo-600 cursor-pointer"
                     />
                   </div>
 
                   {/* Date */}
                   <div className="col-span-2">
-                    <div className="flex items-center gap-2 text-sm font-black text-slate-100 uppercase tracking-tighter">
+                    <div className="flex items-center gap-2 text-[13px] text-slate-300 tabular-nums">
                       <StatusBadge t={t} />
                       {formatDateForDisplay(t.date, dateFormat)}
                     </div>
-                    <div className={`text-[9px] font-black uppercase tracking-widest mt-1 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
-                      {t.exported ? 'Transaction Exported' : 'Manifest Logged'}
+                    <div className={`text-[9px] font-black uppercase tracking-widest mt-1 ${t.exported ? 'text-emerald-500' : 'hidden'}`}>
+                      {t.exported ? 'Exported' : ''}
                     </div>
                   </div>
 
                   {/* Payee */}
                   <div className="col-span-2 truncate">
-                    <div className="text-sm font-black text-slate-100 uppercase tracking-tight truncate">
-                      {t.payee || 'Anonymous Entity'}
+                    <div className="text-sm font-medium text-slate-100 truncate">
+                      {t.payee || '(no payee)'}
                     </div>
                     {t.memo && (
-                      <div className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 mt-1 truncate max-w-full italic">
+                      <div className="text-xs text-slate-600 truncate max-w-full">
                         "{t.memo}"
                       </div>
                     )}
@@ -910,7 +910,7 @@ export function TransactionsView({
 
                   {/* Category & Account */}
                   <div className="col-span-2 truncate">
-                    <div className="text-[11px] font-black text-slate-200 truncate uppercase tracking-tight">
+                    <div className="text-[13px] text-slate-300 truncate">
                       {t.category_id ? categoryMap.get(t.category_id)?.replace(/:/g, ' : ') : 'Unassigned'}
                     </div>
                     <div className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-600 mt-1 flex items-center gap-1.5">
@@ -921,7 +921,7 @@ export function TransactionsView({
 
                   {/* Amount */}
                   <div className="col-span-2 text-right pr-4">
-                    <div className={`text-base font-black tracking-tighter ${
+                    <div className={`text-sm font-semibold tabular-nums ${
                       isExpense ? 'text-rose-400' : isIncome ? 'text-emerald-400' : 'text-indigo-400'
                     }`}>
                       {isAnonymized ? 'xxxx' : (
@@ -941,21 +941,21 @@ export function TransactionsView({
                   <div className="col-span-3 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 pr-2">
                     <button
                       onClick={() => startEditing(t)}
-                      className="p-3 rounded-2xl bg-slate-800 text-slate-400 hover:bg-indigo-600 hover:text-white hover:shadow-lg hover:shadow-indigo-600/20 transition-all"
+                      className="p-2 rounded-lg bg-slate-950 text-slate-500 hover:bg-indigo-600 hover:text-white transition-all"
                       title="Edit"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                     </button>
                     <button
                       onClick={() => startDuplicating(t)}
-                      className="p-3 rounded-2xl bg-slate-800 text-slate-400 hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-emerald-600/20 transition-all"
+                      className="p-2 rounded-lg bg-slate-950 text-slate-500 hover:bg-emerald-600 hover:text-white transition-all"
                       title="Duplicate"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                     </button>
                     <button
                       onClick={() => requestDelete(t)}
-                      className="p-3 rounded-2xl bg-slate-800 text-slate-400 hover:bg-rose-600 hover:text-white hover:shadow-lg hover:shadow-rose-600/20 transition-all"
+                      className="p-2 rounded-lg bg-slate-950 text-slate-500 hover:bg-rose-600 hover:text-white transition-all"
                       title="Delete"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -978,8 +978,8 @@ export function TransactionsView({
                         <div className="text-xs font-black text-indigo-400 uppercase tracking-tighter">
                           {formatDateForDisplay(t.date, dateFormat)}
                         </div>
-                        <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${t.exported ? 'text-emerald-500' : 'text-slate-600'}`}>
-                          {t.exported ? 'Transaction Exported' : 'Manifest Logged'}
+                        <div className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${t.exported ? 'text-emerald-500' : 'hidden'}`}>
+                          {t.exported ? 'Exported' : ''}
                         </div>
                       </div>
                     </div>
@@ -1001,7 +1001,7 @@ export function TransactionsView({
 
                   <div className="space-y-1">
                     <div className="text-base font-black text-slate-100 uppercase tracking-tight truncate">
-                      {t.payee || 'Anonymous Entity'}
+                      {t.payee || '(no payee)'}
                     </div>
                     <div className="flex flex-wrap gap-2">
                        <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-800/50 px-2 py-0.5 rounded-md">
@@ -1023,21 +1023,21 @@ export function TransactionsView({
                   <div className="flex gap-2 pt-2">
                     <button
                       onClick={() => startEditing(t)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all hover:text-white"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       Edit
                     </button>
                     <button
                       onClick={() => startDuplicating(t)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all hover:text-white"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                       Duplicate
                     </button>
                     <button
                       onClick={() => requestDelete(t)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-rose-600 transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800 text-slate-200 font-black text-[10px] uppercase tracking-widest hover:bg-rose-600 transition-all hover:text-white"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       Delete
@@ -1051,14 +1051,14 @@ export function TransactionsView({
 
         {/* Empty State */}
         {visibleTransactions.length === 0 && !isLoading && (
-          <div className="text-center py-20 bg-slate-900/40 border-2 border-dashed border-slate-800 rounded-[3rem]">
+          <div className="text-center py-20 bg-slate-900 border-2 border-dashed border-slate-800 rounded-[3rem]">
             <div className="w-20 h-20 bg-slate-800/50 text-slate-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
               <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             </div>
-            <p className="text-xl font-black text-slate-400 uppercase tracking-tight">Zero matching entries</p>
-            <p className="text-sm text-slate-600 mt-2">Adjust filters or create a new ledger record</p>
+            <p className="text-xl font-black text-slate-400 uppercase tracking-tight">No matching transactions</p>
+            <p className="text-sm text-slate-600 mt-2">Adjust the filters or add a transaction</p>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="mt-8">Reset Constraints</Button>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="mt-8">Clear filters</Button>
             )}
           </div>
         )}
@@ -1072,7 +1072,7 @@ export function TransactionsView({
               onClick={() => setItemsToShow(prev => prev + 25)}
               className="w-full h-20 rounded-[2rem] border-2 border-dashed border-slate-800 hover:border-indigo-500/50 hover:bg-indigo-500/5"
             >
-              Expose More Data ({filteredAndSortedTransactions.length - itemsToShow} remaining)
+              Load more ({filteredAndSortedTransactions.length - itemsToShow} remaining)
             </Button>
           </div>
         )}

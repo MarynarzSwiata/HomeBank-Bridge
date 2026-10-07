@@ -40,10 +40,10 @@ interface DashboardViewProps {
 const UPCOMING_DAYS = 14;
 const UPCOMING_LIMIT = 6;
 
-// Chart series colours (validated for CVD separation and contrast on the dark surface).
+// Chart series colours (validated for CVD separation and contrast on the light surface).
 // Colour follows the entity: income is always blue, expense always orange.
-const INCOME_COLOR = '#3987e5';
-const EXPENSE_COLOR = '#d95926';
+const INCOME_COLOR = '#2a78d6';
+const EXPENSE_COLOR = '#eb6834';
 
 const TOP_CATEGORIES = 8;
 const MONTHS_IN_TREND = 6;
@@ -144,7 +144,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   if (accounts.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto text-center py-24 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-[3rem] space-y-6">
+      <div className="max-w-3xl mx-auto text-center py-24 bg-slate-900 border-2 border-dashed border-slate-800 rounded-[3rem] space-y-6">
         <p className="text-lg font-black uppercase tracking-widest text-slate-400">Welcome</p>
         <p className="text-sm text-slate-500">Create an account first, then add transactions to see your summary here.</p>
         <button
@@ -172,7 +172,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className={`px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                 period === p.id
                   ? 'bg-indigo-600 border-indigo-500 text-white'
-                  : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-100'
               }`}
             >
               {p.name}
@@ -185,7 +185,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <select
               value={currency}
               onChange={e => setPickedCurrency(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500"
+              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {currencies.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -193,7 +193,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         )}
         <button
           onClick={onAddTransaction}
-          className="md:ml-auto px-5 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all"
+          className="md:ml-auto px-5 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all hover:text-white"
         >
           + Add transaction
         </button>
@@ -212,7 +212,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top spending */}
-        <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-5">
+        <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-5">
           <header>
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Top spending</h2>
             <p className="text-[10px] font-bold text-slate-500 mt-1">
@@ -250,7 +250,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </section>
 
         {/* Monthly trend */}
-        <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-5">
+        <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-5">
           <header className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Income vs expense</h2>
@@ -268,7 +268,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <UpcomingScheduled scheduled={scheduled} dateFormat={dateFormat} fmt={fmt} onOpenScheduled={onOpenScheduled} />
 
       {/* Account summary */}
-      <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+      <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-4">
         <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Your accounts</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -354,7 +354,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 };
 
 const StatTile: React.FC<{ label: string; value: string; currency: string; swatch?: string }> = ({ label, value, currency, swatch }) => (
-  <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+  <div className="p-6 bg-slate-900 border border-slate-800 rounded-[2rem]">
     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
       {swatch && <span className="w-2.5 h-2.5 rounded-sm" style={{ background: swatch }} aria-hidden="true" />}
       {label}
@@ -401,17 +401,17 @@ const MonthlyChart: React.FC<{ months: MonthPoint[]; fmt: (v: number) => string;
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={`Income and expense per month in ${currency}`}>
         {[0.5, 1].map(f => (
-          <line key={f} x1={M.left} x2={W - M.right} y1={baseline - plotH * f} y2={baseline - plotH * f} stroke="#1e293b" strokeWidth={1} />
+          <line key={f} x1={M.left} x2={W - M.right} y1={baseline - plotH * f} y2={baseline - plotH * f} stroke="#EDEFF2" strokeWidth={1} />
         ))}
-        <line x1={M.left} x2={W - M.right} y1={baseline} y2={baseline} stroke="#334155" strokeWidth={1} />
+        <line x1={M.left} x2={W - M.right} y1={baseline} y2={baseline} stroke="#C9CDD4" strokeWidth={1} />
         {months.map((m, i) => {
           const cx = M.left + band * i + band / 2;
           return (
             <g key={m.key}>
-              {hover === i && <rect x={cx - band / 2} y={M.top} width={band} height={plotH} fill="#ffffff" opacity={0.04} />}
+              {hover === i && <rect x={cx - band / 2} y={M.top} width={band} height={plotH} fill="#16181D" opacity={0.04} />}
               <path d={column(cx - barW - GAP / 2, y(m.income))} fill={INCOME_COLOR} />
               <path d={column(cx + GAP / 2, y(m.expense))} fill={EXPENSE_COLOR} />
-              <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="#94a3b8" fontWeight={700}>{m.label}</text>
+              <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill="#5B616E" fontWeight={700}>{m.label}</text>
               {/* Hit target: the whole month band */}
               <rect
                 x={cx - band / 2}
@@ -472,7 +472,7 @@ const UpcomingScheduled: React.FC<{
   if (recurring.length === 0) return null;
 
   return (
-    <section className="p-6 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-4">
+    <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-4">
       <header className="flex flex-wrap items-center gap-3">
         <div>
           <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Scheduled</h2>
@@ -480,7 +480,7 @@ const UpcomingScheduled: React.FC<{
         </div>
         <div className="flex gap-2 md:ml-auto">
           {dueCount > 0 && <PostAllDueButton scheduled={scheduled} dueCount={dueCount} />}
-          <button onClick={onOpenScheduled} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-white">
+          <button onClick={onOpenScheduled} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-slate-100">
             Manage
           </button>
         </div>

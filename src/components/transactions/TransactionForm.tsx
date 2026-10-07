@@ -399,7 +399,7 @@ export function TransactionForm({
   }, [validate, amount, entryType, accountId, targetAccountId, date, memo, payee, mainCategoryId, subCategoryId, paymentType, editingId, onSave, targetAmount, isCurrencyMismatch, tags]);
 
   return (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 space-y-6">
+    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6">
       {mode === 'create' && templateOptions.length > 0 && (
         <SearchableSelect
           label="From template"
@@ -470,7 +470,7 @@ export function TransactionForm({
             onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
             placeholder="0,00"
             disabled={isSaving}
-            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-xl font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-white placeholder:text-slate-700"
+            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-xl font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-slate-100 placeholder:text-slate-600"
           />
         </div>
 
@@ -486,7 +486,7 @@ export function TransactionForm({
               onChange={(e) => setDate(e.target.value)}
               onClick={(e) => e.currentTarget.showPicker?.()}
               disabled={isSaving}
-              className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-5 text-sm font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-white cursor-pointer"
+              className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 py-5 text-sm font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-slate-100 cursor-pointer"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600 group-hover:text-indigo-400 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -499,7 +499,7 @@ export function TransactionForm({
 
         {/* Account */}
         <SearchableSelect
-          label={entryType === 'transfer' ? 'Source Vault' : 'Target Vault'}
+          label={entryType === 'transfer' ? 'From account' : 'To account'}
           options={accountOptions}
           value={accountId}
           onChange={setAccountId}
@@ -547,7 +547,7 @@ export function TransactionForm({
               onChange={(e) => setTargetAmount(sanitizeAmountInput(e.target.value))}
               placeholder="0,00"
               disabled={isSaving}
-              className="w-full h-[60px] bg-indigo-500/5 border-2 border-indigo-500/30 rounded-2xl px-6 text-xl font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-white"
+              className="w-full h-[60px] bg-indigo-500/5 border-2 border-indigo-500/30 rounded-2xl px-6 text-xl font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-100"
             />
           </div>
         )}
@@ -555,7 +555,7 @@ export function TransactionForm({
         {/* Entity / Payee (not for transfer) */}
         {entryType !== 'transfer' && (
           <SearchableSelect
-            label="Entity / Payee"
+            label="Payee"
             options={payeeOptions}
             value={payee}
             onChange={(val) => handlePayeeChange(val)}
@@ -636,7 +636,7 @@ export function TransactionForm({
             onChange={(e) => handleMemoChange(e.target.value)}
             placeholder="Add a brief description..."
             disabled={isSaving}
-            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-white uppercase placeholder:lowercase"
+            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-black outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-slate-100 uppercase placeholder:lowercase"
           />
         </div>
 
@@ -653,7 +653,7 @@ export function TransactionForm({
             onBlur={() => setTags(normalizeTags(tags))}
             placeholder="e.g. vacation2026 car (separate with spaces)"
             disabled={isSaving}
-            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-white"
+            className="w-full h-[60px] bg-slate-950/50 border border-slate-800 rounded-2xl px-6 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 transition-all text-slate-100"
           />
         </div>
       </div>
@@ -669,7 +669,7 @@ export function TransactionForm({
             className="flex-1 h-[60px]"
             icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>}
           >
-            {mode === 'edit' ? 'Commit Update' : 'Finalize Record'}
+            {mode === 'edit' ? 'Save changes' : 'Save'}
           </Button>
           
           {mode === 'create' && (

@@ -168,7 +168,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
           <button
             onClick={() => shiftMonth(-1)}
             aria-label="Previous month"
-            className="w-9 h-9 rounded-xl bg-slate-900/50 border border-slate-800 text-slate-300 hover:text-white"
+            className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100"
           >‹</button>
           <div className="min-w-[8.5rem] text-center text-sm font-black uppercase tracking-widest text-slate-100">
             {MONTH_NAMES[month.month0]} {month.year}
@@ -176,7 +176,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
           <button
             onClick={() => shiftMonth(1)}
             aria-label="Next month"
-            className="w-9 h-9 rounded-xl bg-slate-900/50 border border-slate-800 text-slate-300 hover:text-white"
+            className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100"
           >›</button>
         </div>
         {currencies.length > 1 && (
@@ -185,7 +185,7 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
             <select
               value={currency}
               onChange={e => setPickedCurrency(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500"
+              className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {currencies.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -209,11 +209,11 @@ export const BudgetView: React.FC<BudgetViewProps> = ({ accounts, transactions, 
       </div>
 
       {/* Table */}
-      <section className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+      <section className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem]">
         {isLoading ? (
           <p className="text-sm text-slate-500 py-8 text-center">Loading budget…</p>
         ) : categories.length === 0 ? (
-          <p className="text-sm text-slate-500 py-8 text-center">Create categories first (Taxonomy tab), then set a budget for them here.</p>
+          <p className="text-sm text-slate-500 py-8 text-center">Create categories first (Categories tab), then set a budget for them here.</p>
         ) : (
           <div>
             <div className="hidden md:grid grid-cols-[minmax(0,1.6fr)_1fr_1fr_1fr_minmax(0,1.2fr)_auto] gap-3 px-3 pb-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -264,7 +264,7 @@ const TotalTile: React.FC<{
 }> = ({ label, budget, actual, fmt, currency, kind }) => {
   const over = kind === 'expense' && budget > 0 && actual > budget;
   return (
-    <div className="p-6 bg-slate-900/40 border border-slate-800 rounded-[2rem] space-y-3">
+    <div className="p-6 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-3">
       <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</div>
       <div className="text-2xl font-black text-slate-100 tabular-nums">
         {fmt(actual)} <span className="text-sm text-slate-500">/ {fmt(budget)} {currency}</span>
@@ -378,7 +378,7 @@ const BudgetEditor: React.FC<{
     setIsSaving(false);
   };
 
-  const inputClass = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500';
+  const inputClass = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
 
   return (
     <div className="mx-3 mb-4 p-5 rounded-2xl border border-indigo-500/30 bg-slate-950/40 space-y-4">
@@ -422,7 +422,7 @@ const BudgetEditor: React.FC<{
         <button
           onClick={submit}
           disabled={isSaving}
-          className="px-5 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40"
+          className="px-5 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40 hover:text-white"
         >
           {isSaving ? 'Saving…' : 'Save'}
         </button>

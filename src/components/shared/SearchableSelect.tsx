@@ -127,7 +127,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
             <div className="relative mb-2">
               <input
                 autoFocus
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 pr-10 text-white"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 pr-10 text-slate-100"
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -168,11 +168,11 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
                   setIsOpen(false);
                   setSearch("");
                 }}
-                className="px-4 py-3 rounded-xl hover:bg-indigo-600 text-sm font-bold cursor-pointer transition-colors text-white flex items-center gap-3"
+                className="px-4 py-3 rounded-xl hover:bg-indigo-600 text-sm font-bold cursor-pointer transition-colors text-slate-100 flex items-center gap-3 hover:text-white"
               >
                 {o.icon && (
                   <svg
-                    className="w-4 h-4 text-indigo-400 group-hover:text-white"
+                    className="w-4 h-4 text-indigo-400 group-hover:text-slate-100"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

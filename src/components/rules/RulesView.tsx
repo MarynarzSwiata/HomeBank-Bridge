@@ -92,14 +92,14 @@ export const RulesView: React.FC<RulesViewProps> = ({ rules, categories, onChang
             <button
               onClick={previewApply}
               disabled={isBusy}
-              className="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-white disabled:opacity-40"
+              className="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-slate-100 disabled:opacity-40"
             >
               Apply to uncategorised…
             </button>
           )}
           <button
             onClick={() => setEditing('new')}
-            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500"
+            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white"
           >
             + Add rule
           </button>
@@ -117,7 +117,7 @@ export const RulesView: React.FC<RulesViewProps> = ({ rules, categories, onChang
         />
       )}
 
-      <section className="p-4 md:p-8 bg-slate-900/40 border border-slate-800 rounded-[2rem]">
+      <section className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem]">
         {rules.length === 0 ? (
           <p className="text-sm text-slate-500 py-10 text-center">
             No rules yet. Example: payee contains “biedronka” → Food: Groceries, tag “shop”.
@@ -152,7 +152,7 @@ export const RulesView: React.FC<RulesViewProps> = ({ rules, categories, onChang
       <ConfirmModal
         isOpen={!!confirmDelete}
         title="Delete rule?"
-        message={<>The rule for <span className="text-white font-bold">“{confirmDelete?.pattern}”</span> will be removed. Transactions it already changed stay as they are.</>}
+        message={<>The rule for <span className="text-slate-100 font-bold">“{confirmDelete?.pattern}”</span> will be removed. Transactions it already changed stay as they are.</>}
         confirmLabel="Delete"
         onConfirm={() => confirmDelete && remove(confirmDelete)}
         onCancel={() => setConfirmDelete(null)}
@@ -219,11 +219,11 @@ const RuleForm: React.FC<{
     });
   };
 
-  const input = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-indigo-500';
+  const input = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
   const label = 'block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1';
 
   return (
-    <section className="p-6 md:p-8 bg-slate-900/50 border border-indigo-500/30 rounded-[2rem] space-y-5">
+    <section className="p-6 md:p-8 bg-slate-900 border border-indigo-500/30 rounded-[2rem] space-y-5">
       <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">{rule ? 'Edit rule' : 'New rule'}</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <label>
@@ -272,7 +272,7 @@ const RuleForm: React.FC<{
       </div>
       {localError && <p className="text-xs font-bold text-rose-400">{localError}</p>}
       <div className="flex gap-3">
-        <button onClick={submit} disabled={isSaving} className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40">
+        <button onClick={submit} disabled={isSaving} className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 disabled:opacity-40 hover:text-white">
           {isSaving ? 'Saving…' : 'Save'}
         </button>
         <button onClick={onCancel} className="px-6 py-3 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest">Cancel</button>

@@ -178,7 +178,7 @@ export const PayeeForm: React.FC<PayeeFormProps> = ({
             placeholder="e.g. Amazon, Landlord..."
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-white h-[60px] uppercase placeholder:lowercase"
+            className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-100 h-[60px] uppercase placeholder:lowercase"
           />
         </div>
         <div>
@@ -241,7 +241,7 @@ export const PayeeForm: React.FC<PayeeFormProps> = ({
             </svg>
           }
         >
-          {editingPayee ? "Commit Update" : "Establish Payee"}
+          {editingPayee ? "Save changes" : "Create payee"}
         </Button>
         {editingPayee && (
           <Button

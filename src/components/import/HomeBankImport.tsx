@@ -87,7 +87,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
   const canImport = !!preview && !busy && (!mustConfirmReplace || replace);
 
   return (
-    <div className="md:col-span-2 bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-6">
+    <div className="md:col-span-2 bg-slate-900 p-10 rounded-[3rem] border border-slate-800 space-y-6">
       <div className="flex flex-wrap items-start gap-4">
         <div className="w-12 h-12 shrink-0 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-400">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -95,7 +95,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
           </svg>
         </div>
         <div>
-          <h3 className="text-xl font-black text-white uppercase italic">HomeBank file (.xhb)</h3>
+          <h3 className="text-xl font-black text-slate-100 uppercase italic">HomeBank file (.xhb)</h3>
           <p className="text-slate-400 text-sm leading-relaxed mt-2">
             Move your history from HomeBank desktop: choose your <span className="text-emerald-400 font-bold">.xhb</span> file.
             You will see what will be imported before anything is saved. The import is all-or-nothing.
@@ -119,7 +119,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
           accept=".xhb,application/xml,text/xml"
           onChange={e => pick(e.target.files?.[0] || null)}
           disabled={!!busy}
-          className="block w-full text-sm text-slate-300 file:mr-4 file:py-3 file:px-5 file:rounded-xl file:border-0 file:bg-slate-800 file:text-slate-200 file:font-black file:uppercase file:tracking-widest file:text-[10px] hover:file:bg-slate-700"
+          className="block w-full text-sm text-slate-500 bg-slate-950 border border-slate-800 rounded-xl p-1.5 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-900 file:text-slate-100 file:font-medium file:text-sm hover:file:bg-slate-800"
         />
       </label>
 
@@ -167,7 +167,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
             <button
               onClick={runImport}
               disabled={!canImport}
-              className="px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.3em] disabled:opacity-30"
+              className="px-8 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-[0.3em] disabled:opacity-30 hover:text-white"
             >
               {busy === 'import' ? 'Importing…' : 'Import'}
             </button>

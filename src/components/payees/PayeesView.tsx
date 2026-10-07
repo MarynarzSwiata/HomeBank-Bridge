@@ -151,7 +151,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
     colSpan: string;
   }) => (
     <div
-      className={`${colSpan} flex items-center justify-center gap-1 cursor-pointer hover:text-white transition-colors group px-2`}
+      className={`${colSpan} flex items-center justify-center gap-1 cursor-pointer hover:text-slate-100 transition-colors group px-2`}
       onClick={() => handleSort(field)}
     >
       {label}
@@ -289,7 +289,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
               ? "Edit Payee"
               : isFormExpanded
               ? "New Payee"
-              : "Entity Management"
+              : "Payees"
           }
           subtitle={
             editingPayee
@@ -387,7 +387,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
       />
 
       {/* Global Filter Bar */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6">
         <div className="relative group">
           <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">
             Refine Dictionary
@@ -397,7 +397,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
               placeholder="Search by name or category..."
               value={filterSearch}
               onChange={(e) => setFilterSearch(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl px-12 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-white h-[60px] transition-all"
+              className="w-full bg-slate-950/50 border border-slate-800 rounded-2xl px-12 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-slate-100 h-[60px] transition-all"
             />
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-500 transition-colors">
               <svg
@@ -443,7 +443,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all ${
                 isAnonymized
                   ? "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                  : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
+                  : "bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-100"
               }`}
               title={isAnonymized ? "Reveal Values" : "Hide Values"}
             >
@@ -484,7 +484,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
 
             <button
               onClick={toggleAll}
-              className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-white transition-all active:scale-95"
+              className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-100 transition-all active:scale-95"
             >
               <svg
                 className="w-4 h-4"
@@ -535,7 +535,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
 
       <div className="space-y-4">
         {/* Table Header (Desktop Only) */}
-        <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900/30 rounded-3xl border border-slate-800/50">
+        <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900 rounded-3xl border border-slate-800/50">
           <div className="col-span-1 flex items-center justify-center">
             <input
               type="checkbox"
@@ -571,7 +571,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
 
         {/* List */}
         {filteredPayees.length === 0 ? (
-          <div className="text-center py-24 bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-[3rem]">
+          <div className="text-center py-24 bg-slate-900 border-2 border-dashed border-slate-800 rounded-[3rem]">
             <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
                 className="w-8 h-8 text-slate-600"
@@ -590,7 +590,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
             <p className="text-lg font-black uppercase tracking-widest text-slate-500">
               No Entities Found
             </p>
-            <p className="text-xs font-bold text-slate-700 uppercase mt-2">
+            <p className="text-xs font-bold text-slate-600 uppercase mt-2">
               Try refining your search terms
             </p>
           </div>
@@ -605,7 +605,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
               return (
                 <div
                   key={payee.id}
-                  className={`group grid grid-cols-12 gap-4 px-5 md:px-8 py-4 md:py-6 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900/40 border transition-all items-center ${
+                  className={`group grid grid-cols-12 gap-4 px-5 md:px-8 py-4 md:py-6 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border transition-all items-center ${
                     isSelected
                       ? "border-indigo-500 bg-indigo-500/5 ring-1 ring-indigo-500/20"
                       : "border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40"
@@ -674,7 +674,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
                         ))}
                       </div>
                     ) : (
-                      <span className="text-slate-700 text-[10px] font-black">
+                      <span className="text-slate-600 text-[10px] font-black">
                         -
                       </span>
                     )}
@@ -685,7 +685,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
                     {payee.default_payment_type !== null ? (
                       PAYMENT_LEXICON[payee.default_payment_type]?.name
                     ) : (
-                      <span className="text-slate-700">-</span>
+                      <span className="text-slate-600">-</span>
                     )}
                   </div>
 
@@ -789,7 +789,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
         message={
           <>
             Are you sure you want to delete{" "}
-            <span className="text-white font-bold">{confirmDelete?.name}</span>?
+            <span className="text-slate-100 font-bold">{confirmDelete?.name}</span>?
             {confirmDelete?.id === -1
               ? "This action is permanent and will remove them from the dictionary."
               : "This action is permanent and will remove them from the dictionary."}
@@ -798,7 +798,7 @@ export const PayeesView: React.FC<PayeesViewProps> = ({
         confirmLabel={
           confirmDelete?.id === -1
             ? `Burn ${selectedIds.size} Records`
-            : "Confirm Erasure"
+            : "Delete"
         }
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(null)}
