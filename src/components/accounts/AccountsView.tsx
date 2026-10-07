@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AccountForm } from './AccountForm';
-import type { Account } from '../../types';
+import type { Account, AccountInput } from '../../types';
 import { 
   Button, 
   ActionBar, 
@@ -9,12 +9,13 @@ import {
   Alert 
 } from '../common';
 import { transactionsService } from '../../api/services';
+import { ACCOUNT_TYPE_OPTIONS, ACCOUNT_TYPE_LABELS } from '../../constants';
 
 interface AccountsViewProps {
   accounts: Account[];
   isAnonymized: boolean;
-  createAccount: (data: { name: string; currency: string; initialBalance: number }) => Promise<number | null>;
-  updateAccount: (id: number, data: { name?: string; currency?: string; initialBalance?: number }) => Promise<boolean>;
+  createAccount: (data: AccountInput) => Promise<number | null>;
+  updateAccount: (id: number, data: Partial<AccountInput>) => Promise<boolean>;
   deleteAccount: (id: number) => Promise<boolean>;
   isSaving: boolean;
   error: string | null;
@@ -45,6 +46,22 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     const [isFormExpanded, setIsFormExpanded] = useState(false);
     const [editingAccount, setEditingAccount] = useState<Account | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<Account | null>(null);
+    const [showClosed, setShowClosed] = useState(false);
+
+    const closedCount = accounts.filter(a => a.closed).length;
+
+    // Group accounts by type (HomeBank order), closed ones last in each group
+    const groupedAccounts = useMemo(() => {
+        const visible = accounts.filter(a => showClosed || !a.closed);
+        return ACCOUNT_TYPE_OPTIONS
+            .map(t => ({ type: t.id, label: t.name, items: visible.filter(a => a.type === t.id) }))
+            .filter(g => g.items.length > 0);
+    }, [accounts, showClosed]);
+
+    const fmt = (v: number) => isAnonymized
+        ? '••••••'
+        : v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const tone = (v: number) => v < 0 ? 'text-rose-400' : 'text-emerald-400';
 
     const startEditing = (acc: Account) => {
         setEditingAccount(acc);
@@ -143,6 +160,17 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 </svg>
                 <span className="font-black text-[10px] uppercase tracking-widest hidden md:inline">{isAnonymized ? 'HIDDEN' : 'VISIBLE'}</span>
               </button>
+              {closedCount > 0 && (
+                <button
+                  onClick={() => setShowClosed(!showClosed)}
+                  className={`px-3 py-1.5 rounded-xl border font-black text-[10px] uppercase tracking-widest transition-all ${
+                    showClosed ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                  }`}
+                  title="Show or hide closed accounts"
+                >
+                  {showClosed ? 'Hide' : 'Show'} closed ({closedCount})
+                </button>
+              )}
               {accounts.length > 0 && (
                 <Button
                   variant="ghost"
@@ -179,9 +207,11 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       <div className="space-y-2">
             {/* Header (Desktop Only) */}
             <div className="hidden md:grid grid-cols-12 gap-2 px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 bg-slate-900/30 rounded-3xl border border-slate-800/50">
-                <div className="col-span-6">Account / Vault</div>
-                <div className="col-span-3 text-right">Liquidity</div>
-                <div className="col-span-3 text-right">Actions</div>
+                <div className="col-span-4">Account / Vault</div>
+                <div className="col-span-2 text-right" title="Reconciled transactions only">Reconciled</div>
+                <div className="col-span-2 text-right" title="All transactions up to today">Today</div>
+                <div className="col-span-2 text-right" title="All transactions, including future-dated">Future</div>
+                <div className="col-span-2 text-right">Actions</div>
             </div>
 
             {/* List */}
@@ -191,27 +221,37 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     <p className="text-xs font-bold text-slate-700 uppercase mt-2">Establish your first account to begin tracking.</p>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {accounts.map(acc => (
+                <div className="space-y-6">
+                  {groupedAccounts.map(group => (
+                    <div key={group.type} className="space-y-3">
+                    <div className="px-8 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400/70">{group.label}</div>
+                    {group.items.map(acc => (
                         <div 
                             key={acc.id} 
                             onClick={() => viewAccountHistory?.(acc.id)}
-                            className="group relative rounded-[2.5rem] bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40 transition-all cursor-pointer overflow-hidden"
+                            className={`group relative rounded-[2.5rem] bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-800/40 transition-all cursor-pointer overflow-hidden ${acc.closed ? 'opacity-50' : ''}`}
                         >
                             {/* Desktop Layout */}
                             <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-6 items-center">
-                                <div className="col-span-6">
+                                <div className="col-span-4">
                                     <div className="text-sm font-black text-slate-100 uppercase tracking-tight truncate">
                                         {acc.name} <span className="text-indigo-400/60 ml-1 text-[10px]">({acc.currency})</span>
                                     </div>
+                                    {acc.closed && (
+                                        <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">Closed</div>
+                                    )}
                                 </div>
-                                <div className={`col-span-3 text-right text-base font-black tracking-tight ${
-                                    acc.current_balance < 0 ? 'text-rose-400' : 'text-emerald-400'
-                                }`}>
-                                    {isAnonymized ? '••••••' : acc.current_balance.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                <div className={`col-span-2 text-right text-sm font-bold tracking-tight ${tone(acc.reconciled_balance)}`}>
+                                    {fmt(acc.reconciled_balance)}
+                                </div>
+                                <div className={`col-span-2 text-right text-sm font-bold tracking-tight ${tone(acc.today_balance)}`}>
+                                    {fmt(acc.today_balance)}
+                                </div>
+                                <div className={`col-span-2 text-right text-base font-black tracking-tight ${tone(acc.current_balance)}`}>
+                                    {fmt(acc.current_balance)}
                                     <span className="ml-1.5 text-[10px] text-slate-600 uppercase font-black">{acc.currency}</span>
                                 </div>
-                                <div className="col-span-3 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                <div className="col-span-2 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); handleExportAccount(acc.id); }} 
                                         className="w-10 h-10 rounded-xl bg-slate-800 text-slate-400 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center shadow-lg" 
@@ -237,7 +277,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                             <div className="md:hidden flex flex-col p-6 space-y-4">
                                 <div className="flex justify-between items-start">
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Account / Vault</span>
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
+                                            {ACCOUNT_TYPE_LABELS[acc.type]}{acc.closed ? ' · Closed' : ''}
+                                        </span>
                                         <span className="text-lg font-black text-slate-100 uppercase tracking-tight truncate leading-none">
                                             {acc.name}
                                         </span>
@@ -260,12 +302,13 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
                                 <div className="flex justify-between items-end bg-slate-950/30 rounded-2xl p-4 border border-slate-800/50">
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Liquidity Status</span>
-                                        <div className={`text-xl font-black tracking-tighter ${
-                                            acc.current_balance < 0 ? 'text-rose-400' : 'text-emerald-400'
-                                        }`}>
-                                            {isAnonymized ? '••••••' : acc.current_balance.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Future balance</span>
+                                        <div className={`text-xl font-black tracking-tighter ${tone(acc.current_balance)}`}>
+                                            {fmt(acc.current_balance)}
                                             <span className="ml-2 text-[10px] text-slate-600 uppercase font-black">{acc.currency}</span>
+                                        </div>
+                                        <div className="text-[10px] font-bold text-slate-500">
+                                            Reconciled {fmt(acc.reconciled_balance)} · Today {fmt(acc.today_balance)}
                                         </div>
                                     </div>
                                     <button 
@@ -278,6 +321,8 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                             </div>
                         </div>
                     ))}
+                    </div>
+                  ))}
                 </div>
             )}
       </div>

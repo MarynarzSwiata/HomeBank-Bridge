@@ -153,9 +153,12 @@ export function TransactionForm({
   }, [categories, mainCategoryId]);
 
   // Account options
+  // Closed accounts are hidden, except ones already used by the edited entry
   const accountOptions = useMemo(() => 
-    accounts.map(a => ({ id: a.id, name: `${a.name} (${a.currency})` })),
-    [accounts]
+    accounts
+      .filter(a => !a.closed || String(a.id) === accountId || String(a.id) === targetAccountId)
+      .map(a => ({ id: a.id, name: `${a.name} (${a.currency})` })),
+    [accounts, accountId, targetAccountId]
   );
 
   // Payee suggestions

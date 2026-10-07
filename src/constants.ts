@@ -1,3 +1,4 @@
+import type { AccountType, TransactionStatus } from "./types";
 export const PAYMENT_LEXICON: Record<number, { name: string; icon: string }> = {
     0: {
       name: "None",
@@ -67,3 +68,24 @@ export const PAYMENT_LEXICON: Record<number, { name: string; icon: string }> = {
     { id: "YYYY-MM-DD", name: "YYYY-MM-DD (ISO/Database)" },
     { id: "MM-DD-YYYY", name: "MM-DD-YYYY (US)" },
   ];
+
+  export const ACCOUNT_TYPE_OPTIONS: { id: AccountType; name: string }[] = [
+    { id: "bank", name: "Bank" },
+    { id: "checking", name: "Checking" },
+    { id: "savings", name: "Savings" },
+    { id: "cash", name: "Cash" },
+    { id: "creditcard", name: "Credit Card" },
+    { id: "asset", name: "Asset" },
+    { id: "liability", name: "Liability" },
+  ];
+
+  export const ACCOUNT_TYPE_LABELS = Object.fromEntries(
+    ACCOUNT_TYPE_OPTIONS.map((o) => [o.id, o.name])
+  ) as Record<AccountType, string>;
+
+  /** Transaction status as in HomeBank: none / cleared (C) / reconciled (R) */
+  export const TRANSACTION_STATUS: Record<TransactionStatus, { name: string; short: string }> = {
+    0: { name: "None", short: "" },
+    1: { name: "Cleared", short: "C" },
+    2: { name: "Reconciled", short: "R" },
+  };

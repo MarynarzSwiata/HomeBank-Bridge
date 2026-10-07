@@ -3,7 +3,12 @@ export interface ApiAccount {
   id: number;
   name: string;
   currency: string;
+  type: 'bank' | 'checking' | 'savings' | 'cash' | 'creditcard' | 'asset' | 'liability';
+  closed: number;
   initial_balance: number;
+  reconciled_balance: number;
+  cleared_balance: number;
+  today_balance: number;
   current_balance: number;
 }
 
@@ -39,6 +44,7 @@ export interface ApiTransaction {
   payment_type: number;
   memo: string;
   transfer_id?: string;
+  status: 0 | 1 | 2;
   exported: number;
   export_log_id?: number | null;
 }
@@ -62,12 +68,15 @@ export interface CreateTransactionRequest {
   paymentType?: number;
   targetAccountId?: number; // For transfers
   targetAmount?: number; // For mixed-currency transfers
+  status?: 0 | 1 | 2;
 }
 
 export interface CreateAccountRequest {
   name: string;
   currency: string;
   initialBalance?: number;
+  type?: ApiAccount['type'];
+  closed?: boolean;
 }
 
 export interface CreateCategoryRequest {

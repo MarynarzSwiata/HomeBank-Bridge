@@ -10,6 +10,8 @@ import { useAuth } from "./src/hooks/useAuth";
 import { AuthScreen } from "./src/components/Auth/AuthScreen";
 import type {
   Account,
+  AccountInput,
+  TransactionStatus,
   Category,
   CategoryType,
   Payee,
@@ -371,7 +373,21 @@ const App: React.FC = () => {
     [transactionsHook, accountsHook, categoriesHook, payeesHook, showToast]
   );
 
-  const handleCreateAccount = useCallback(async (data: { name: string; currency: string; initialBalance?: number }) => {
+  const handleSetTransactionStatus = useCallback(
+    async (ids: number[], status: TransactionStatus): Promise<boolean> => {
+      const success = await transactionsHook.setStatus(ids, status);
+      if (success) {
+        // Reconciled/cleared balances depend on status
+        await accountsHook.refresh().catch(() => {});
+      } else {
+        showToast(transactionsHook.error || "Failed to update status", "error");
+      }
+      return success;
+    },
+    [transactionsHook, accountsHook, showToast]
+  );
+
+  const handleCreateAccount = useCallback(async (data: AccountInput) => {
     const id = await accountsHook.createAccount(data);
     if (id) {
       showToast(`Account "${data.name}" created successfully`, "success");
@@ -381,7 +397,7 @@ const App: React.FC = () => {
     return id;
   }, [accountsHook, showToast]);
 
-  const handleUpdateAccount = useCallback(async (id: number, data: { name?: string; currency?: string; initialBalance?: number }) => {
+  const handleUpdateAccount = useCallback(async (id: number, data: Partial<AccountInput>) => {
     const success = await accountsHook.updateAccount(id, data);
     if (success) {
       showToast("Account updated successfully", "success");
@@ -897,7 +913,7 @@ const App: React.FC = () => {
             </button>
             {isAccountListExpanded && (
               <div className="mt-2 space-y-1 px-4 animate-in fade-in slide-in-from-top-1 duration-300 max-h-40 overflow-y-auto no-scrollbar">
-                {accountsHook.accounts.map((acc) => (
+                {accountsHook.accounts.filter((acc) => !acc.closed).map((acc) => (
                   <div
                     key={acc.id}
                     className="px-3 py-2 flex justify-between items-center hover:bg-white/5 rounded-xl transition-all"
@@ -1716,6 +1732,7 @@ const App: React.FC = () => {
                       });
                     }}
                     onExportLogged={handleRefreshTransactions}
+                    onSetStatus={handleSetTransactionStatus}
                   />
 
                   {/* Import Button (Temporary location until ImportView is refactored) */}

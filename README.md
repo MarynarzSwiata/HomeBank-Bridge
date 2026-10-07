@@ -144,6 +144,13 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 
 ## 📜 Changelog
 
+### Unreleased
+- **✅ Transaction Status (HomeBank-style)**: Each entry can be *None*, *Cleared (C)* or *Reconciled (R)*. Click the badge to change it, or mark many entries at once. New status filter in the ledger.
+- **🏦 Account Types & Closing**: Accounts now have a type (Bank, Checking, Savings, Cash, Credit Card, Asset, Liability) and can be closed — closed accounts are hidden from lists and new entries, history is kept.
+- **📊 HomeBank Balances**: Account list shows *Reconciled*, *Today* and *Future* balances, grouped by account type.
+- **📒 Running Balance**: When the ledger is filtered to one account, each entry shows the account balance after it.
+- **🛠️ Restore Upgrade**: Restoring an older database backup now applies pending schema migrations automatically.
+
 ### Version 1.0.3 (2026-01-15)
 - **🔔 Interactive Notifications**: Implemented a global toast system for instant feedback on all data operations (success and errors).
 - **👯 Transaction Duplication**: Added a "Duplicate" button in ledger actions to quickly clone existing records.

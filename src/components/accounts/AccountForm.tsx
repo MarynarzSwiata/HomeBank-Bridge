@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SearchableSelect from '../shared/SearchableSelect';
-import type { Account } from '../../types';
+import type { Account, AccountInput, AccountType } from '../../types';
+import { ACCOUNT_TYPE_OPTIONS } from '../../constants';
 
 interface AccountFormProps {
   isExpanded: boolean;
@@ -8,8 +9,8 @@ interface AccountFormProps {
   editingAccount: Account | null;
   onSuccess: () => void;
   // Data props
-  createAccount: (data: { name: string; currency: string; initialBalance: number }) => Promise<number | null>;
-  updateAccount: (id: number, data: { name?: string; currency?: string; initialBalance?: number }) => Promise<boolean>;
+  createAccount: (data: AccountInput) => Promise<number | null>;
+  updateAccount: (id: number, data: Partial<AccountInput>) => Promise<boolean>;
   isSaving: boolean;
   error?: string | null;
   currencies: string[];
@@ -31,6 +32,8 @@ export const AccountForm: React.FC<AccountFormProps> = ({
     const [name, setName] = useState('');
     const [currency, setCurrency] = useState('EUR');
     const [initialBalance, setInitialBalance] = useState('0');
+    const [type, setType] = useState<AccountType>('bank');
+    const [closed, setClosed] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
     // Use passed currencies
@@ -41,10 +44,14 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             setName(editingAccount.name);
             setCurrency(editingAccount.currency);
             setInitialBalance(String(editingAccount.initial_balance));
+            setType(editingAccount.type);
+            setClosed(editingAccount.closed);
         } else {
             setName('');
             setCurrency('EUR');
             setInitialBalance('0');
+            setType('bank');
+            setClosed(false);
         }
         setLocalError(null);
     }, [editingAccount, isExpanded]);
@@ -58,7 +65,9 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             const payload = {
                 name: name.trim(),
                 currency,
-                initialBalance: bal
+                initialBalance: bal,
+                type,
+                closed
             };
             
             let success = false;
@@ -74,6 +83,8 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                 if (!editingAccount) {
                     setName('');
                     setInitialBalance('0');
+                    setType('bank');
+                    setClosed(false);
                 }
             }
         } catch (err) {
@@ -153,6 +164,34 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                         className="w-full bg-slate-950/50 border border-slate-800 rounded-3xl px-8 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none text-white h-[60px]"
                      />
                 </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                     <SearchableSelect
+                        label="Account Type"
+                        options={ACCOUNT_TYPE_OPTIONS}
+                        value={type}
+                        onChange={(v) => setType((v || 'bank') as AccountType)}
+                        placeholder="Type"
+                        showAllOption={false}
+                        searchable={false}
+                     />
+                </div>
+                {editingAccount && (
+                    <label className="md:col-span-2 flex items-center gap-4 h-[60px] mt-auto px-6 bg-slate-950/50 border border-slate-800 rounded-3xl cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={closed}
+                            onChange={(e) => setClosed(e.target.checked)}
+                            className="w-5 h-5 rounded-lg border-slate-700 bg-slate-800 text-indigo-600 cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-300">
+                            Closed account
+                            <span className="block text-[10px] font-medium text-slate-500">Hidden from lists and new entries; history is kept.</span>
+                        </span>
+                    </label>
+                )}
             </div>
             
              <div className="flex gap-4 mt-8">

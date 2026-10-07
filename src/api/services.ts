@@ -272,6 +272,10 @@ export const transactionsService = {
     return api.delete(`/transactions/${id}`);
   },
 
+  async setStatus(ids: number[], status: 0 | 1 | 2): Promise<{ updated: number }> {
+    return api.post('/transactions/status', { ids, status });
+  },
+
   async checkDuplicates(candidates: { date: string; payee: string; amount: number }[], dateFormat?: string): Promise<any[]> {
     const API_BASE = import.meta.env.VITE_API_URL || '/api';
     const response = await fetch(`${API_BASE}/transactions/import-check`, {

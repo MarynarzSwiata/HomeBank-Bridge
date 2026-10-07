@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import config from '../config/database.js';
 import db, { initDb, closeDb } from '../db/index.js';
+import runMigrations from '../db/migrate.js';
 
 import multer from 'multer';
 
@@ -93,6 +94,9 @@ router.post('/restore', upload.single('database'), async (req, res) => {
       await initDb();
       if (tempPath && fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
     }
+
+    // Older backups may predate recent migrations
+    await runMigrations();
 
     console.log('🎉 Database restored successfully');
     res.json({ message: 'Database restored successfully.' });

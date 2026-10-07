@@ -5,12 +5,30 @@
 
 export type CategoryType = '+' | '-' | ' ';
 
+export type AccountType = 'bank' | 'checking' | 'savings' | 'cash' | 'creditcard' | 'asset' | 'liability';
+
+/** 0 = none, 1 = cleared, 2 = reconciled (HomeBank semantics) */
+export type TransactionStatus = 0 | 1 | 2;
+
 export interface Account {
   id: number;
   name: string;
   currency: string;
+  type: AccountType;
+  closed: boolean;
   initial_balance: number;
+  reconciled_balance: number;
+  cleared_balance: number;
+  today_balance: number;
   current_balance: number;
+}
+
+export interface AccountInput {
+  name: string;
+  currency: string;
+  initialBalance?: number;
+  type?: AccountType;
+  closed?: boolean;
 }
 
 export interface Category {
@@ -45,6 +63,7 @@ export interface Transaction {
   payment_type: number;
   memo: string;
   transfer_id?: string;
+  status: TransactionStatus;
   exported: number;
   export_log_id?: number | null;
 }

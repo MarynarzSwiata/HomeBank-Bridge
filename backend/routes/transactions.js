@@ -30,6 +30,7 @@ router.get('/',
           t.category_id,
           t.account_id,
           t.transfer_id,
+          t.status,
           t.exported,
           t.export_log_id
         FROM transactions t
@@ -76,11 +77,12 @@ router.post('/',
     body('paymentType').optional({ nullable: true }).isInt(),
     body('targetAccountId').optional({ nullable: true }).isInt(),
     body('targetAmount').optional({ nullable: true }).isFloat({ min: 0 }),
+    body('status').optional().isIn([0, 1, 2]).withMessage('Invalid status'),
     validate
   ],
   async (req, res, next) => {
     try {
-      const { type, accountId, targetAccountId, amount, date, payee, memo, categoryId, paymentType, targetAmount } = req.body;
+      const { type, accountId, targetAccountId, amount, date, payee, memo, categoryId, paymentType, targetAmount, status = 0 } = req.body;
 
       if (type === 'transfer') {
         if (!targetAccountId) {
@@ -102,14 +104,14 @@ router.post('/',
           const transferCategoryId = transferCategoryResult?.id || null;
 
           await db.run(`
-            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo)
-            VALUES (?, ?, ?, ?, ?, 4, ?, ?)
-          `, accountId, date, `Transfer to ${sourceAccount?.name || 'Account'}`, -amount, transferCategoryId, uuid, memo || '');
+            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status)
+            VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)
+          `, accountId, date, `Transfer to ${sourceAccount?.name || 'Account'}`, -amount, transferCategoryId, uuid, memo || '', status);
 
           await db.run(`
-            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo)
-            VALUES (?, ?, ?, ?, ?, 4, ?, ?)
-          `, targetAccountId, date, `Transfer from ${targetAccount?.name || 'Account'}`, targetAmount || amount, transferCategoryId, uuid, memo || '');
+            INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, transfer_id, memo, status)
+            VALUES (?, ?, ?, ?, ?, 4, ?, ?, ?)
+          `, targetAccountId, date, `Transfer from ${targetAccount?.name || 'Account'}`, targetAmount || amount, transferCategoryId, uuid, memo || '', status);
 
           await db.exec('COMMIT');
 
@@ -122,9 +124,9 @@ router.post('/',
         // Single transaction
         const finalAmount = type === 'expense' ? -amount : amount;
         const result = await db.run(`
-          INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, memo)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-        `, accountId, date, payee || '', finalAmount, categoryId || null, paymentType || 0, memo || '');
+          INSERT INTO transactions (account_id, date, payee, amount, category_id, payment_type, memo, status)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `, accountId, date, payee || '', finalAmount, categoryId || null, paymentType || 0, memo || '', status);
 
         // Auto-create/update payee if provided
         if (payee && categoryId) {
@@ -161,12 +163,13 @@ router.put('/:id',
     body('paymentType').optional({ nullable: true }).isInt(),
     body('memo').optional().trim(),
     body('accountId').optional().isInt(),
+    body('status').optional().isIn([0, 1, 2]).withMessage('Invalid status'),
     validate
   ],
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { date, payee, amount, categoryId, paymentType, memo, accountId, targetAccountId, targetAmount } = req.body;
+      const { date, payee, amount, categoryId, paymentType, memo, accountId, targetAccountId, targetAmount, status } = req.body;
 
       const transaction = await db.get('SELECT * FROM transactions WHERE id = ?', id);
       if (!transaction) {
@@ -191,6 +194,8 @@ router.put('/:id',
           if (date !== undefined) { pUpdates.push('date = ?'); pValues.push(date); }
           if (memo !== undefined) { pUpdates.push('memo = ?'); pValues.push(memo); }
           if (accountId !== undefined) { pUpdates.push('account_id = ?'); pValues.push(accountId); }
+          // Status is per side: each account is reconciled against its own statement
+          if (status !== undefined) { pUpdates.push('status = ?'); pValues.push(status); }
           if (amount !== undefined) { 
             pUpdates.push('amount = ?'); 
             // In transfers, the source is negative
@@ -233,6 +238,7 @@ router.put('/:id',
       if (paymentType !== undefined) { updates.push('payment_type = ?'); values.push(paymentType); }
       if (memo !== undefined) { updates.push('memo = ?'); values.push(memo); }
       if (accountId !== undefined) { updates.push('account_id = ?'); values.push(accountId); }
+      if (status !== undefined) { updates.push('status = ?'); values.push(status); }
 
       if (updates.length > 0) {
         values.push(id);
@@ -240,6 +246,29 @@ router.put('/:id',
       }
 
       res.json({ message: 'Transaction updated successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/transactions/status - Set status (0 none, 1 cleared, 2 reconciled) for many rows
+router.post('/status',
+  [
+    body('ids').isArray({ min: 1, max: 10000 }).withMessage('ids must be a non-empty array'),
+    body('ids.*').isInt(),
+    body('status').isIn([0, 1, 2]).withMessage('Invalid status'),
+    validate
+  ],
+  async (req, res, next) => {
+    try {
+      const { ids, status } = req.body;
+      const placeholders = ids.map(() => '?').join(',');
+      const result = await db.run(
+        `UPDATE transactions SET status = ? WHERE id IN (${placeholders})`,
+        status, ...ids
+      );
+      res.json({ updated: result.changes });
     } catch (err) {
       next(err);
     }
