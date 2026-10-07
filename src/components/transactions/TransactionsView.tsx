@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { Transaction, Account, Category, Payee, Rule, ScheduledItem, TransactionStatus } from '../../types';
 import { splitTags } from '../../utils/tagUtils';
 import { TRANSACTION_STATUS } from '../../constants';
@@ -426,12 +427,22 @@ export function TransactionsView({
     };
   }, [transactions]);
 
+  const isDrawerOpen = isFormExpanded || !!editingTransaction || !!duplicatingTransaction;
+
   // Cancel form
   const handleCancel = useCallback(() => {
     setIsFormExpanded(false);
     setEditingTransaction(null);
     setDuplicatingTransaction(null);
   }, []);
+
+  // Escape closes the form drawer
+  React.useEffect(() => {
+    if (!isDrawerOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleCancel(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDrawerOpen, handleCancel]);
 
   // Save handler
   const handleSave = useCallback(async (data: TransactionSaveData, keepOpen: boolean = false): Promise<boolean> => {
@@ -502,8 +513,8 @@ export function TransactionsView({
       {/* Actions & Form Section */}
       <div className="space-y-4">
         <ActionBar
-          title={editingTransaction ? 'Edit Transaction' : isFormExpanded ? 'New Transaction' : 'Transactions'}
-          subtitle={editingTransaction ? 'Modifying existing entry' : 'All your entries'}
+          title="Transactions"
+          subtitle={`${filteredAndSortedTransactions.length} entries`}
           isExpanded={isFormExpanded || !!editingTransaction}
           onToggle={() => {
             if (editingTransaction || duplicatingTransaction) handleCancel();
@@ -599,8 +610,34 @@ export function TransactionsView({
           className={editingTransaction ? 'border-amber-500/50 bg-amber-950/10' : ''}
         />
 
-        {(isFormExpanded || editingTransaction || duplicatingTransaction) && (
-          <div className="animate-in slide-in-from-top-4 duration-500">
+        {isDrawerOpen && createPortal(
+          <div className="fixed inset-0 z-[300] flex justify-end">
+            <button
+              type="button"
+              aria-label="Close form"
+              tabIndex={-1}
+              onClick={handleCancel}
+              className="absolute inset-0 bg-slate-50/30 cursor-default"
+            />
+            <aside
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tx-drawer-title"
+              className="relative w-full sm:w-[480px] h-full overflow-y-auto bg-slate-900 border-l border-slate-800 shadow-2xl animate-in slide-in-from-right duration-300"
+            >
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 px-6 py-4 bg-slate-900 border-b border-slate-800">
+                <h2 id="tx-drawer-title" className="text-lg font-semibold text-slate-100">
+                  {editingTransaction ? 'Edit transaction' : duplicatingTransaction ? 'Duplicate transaction' : 'New transaction'}
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  aria-label="Close"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-950 text-slate-400 hover:text-slate-100"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeWidth="2.2" d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              </div>
             <TransactionForm
               key={editingTransaction ? `edit-${editingTransaction.id}` : duplicatingTransaction ? `dup-${duplicatingTransaction.id}` : 'new'}
               mode={editingTransaction ? 'edit' : 'create'}
@@ -622,7 +659,9 @@ export function TransactionsView({
               rules={rules}
               templates={templates}
             />
-          </div>
+            </aside>
+          </div>,
+          document.body
         )}
       </div>
 
@@ -637,7 +676,7 @@ export function TransactionsView({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
             </div>
             <div>
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">Filters</h3>
+              <h3 className="text-[15px] font-semibold text-slate-100">Filters</h3>
               <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5">Filter by account, category, date or entity</p>
             </div>
           </div>
@@ -708,7 +747,7 @@ export function TransactionsView({
               allLabel="ALL TAGS"
             />
             <div className="relative">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">Payee</label>
+              <label className="block text-[13px] font-medium text-slate-500 mb-2 px-2">Payee</label>
               <input
                 type="text"
                 placeholder="Search entity..."
@@ -718,7 +757,7 @@ export function TransactionsView({
               />
             </div>
             <div className="relative group">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">From Date</label>
+              <label className="block text-[13px] font-medium text-slate-500 mb-2 px-2">From Date</label>
               <div className="relative">
                 <input
                   type="date"
@@ -736,7 +775,7 @@ export function TransactionsView({
               </div>
             </div>
             <div className="relative group">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 px-2">To Date</label>
+              <label className="block text-[13px] font-medium text-slate-500 mb-2 px-2">To Date</label>
               <div className="relative">
                 <input
                   type="date"

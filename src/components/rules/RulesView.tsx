@@ -82,7 +82,7 @@ export const RulesView: React.FC<RulesViewProps> = ({ rules, categories, onChang
 
       <div className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Assignment rules</h2>
+          <h2 className="text-[15px] font-semibold text-slate-100">Assignment rules</h2>
           <p className="text-[10px] font-bold text-slate-500 mt-1">
             Automatically fill category, payment and tags. Used in the entry form, on CSV import, and on demand below.
           </p>
@@ -220,11 +220,11 @@ const RuleForm: React.FC<{
   };
 
   const input = 'w-full bg-slate-950/50 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
-  const label = 'block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1';
+  const label = 'block text-[13px] font-medium text-slate-500 mb-1';
 
   return (
     <section className="p-6 md:p-8 bg-slate-900 border border-indigo-500/30 rounded-[2rem] space-y-5">
-      <h3 className="text-xs font-black uppercase tracking-widest text-slate-200">{rule ? 'Edit rule' : 'New rule'}</h3>
+      <h3 className="text-[15px] font-semibold text-slate-100">{rule ? 'Edit rule' : 'New rule'}</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <label>
           <span className={label}>When</span>

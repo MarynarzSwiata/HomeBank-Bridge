@@ -134,7 +134,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
   };
 
   const selectClass = 'bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500';
-  const labelClass = 'flex flex-col gap-1 text-[10px] font-black uppercase tracking-widest text-slate-500';
+  const labelClass = 'flex flex-col gap-1 text-[13px] font-medium text-slate-500';
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 max-w-6xl mx-auto">
@@ -213,7 +213,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
       {/* Result */}
       <section className="p-4 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-4">
         <header>
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">
+          <h2 className="text-[15px] font-semibold text-slate-100">
             {flow === 'expense' ? 'Expense' : 'Income'} by {GROUPS.find(g => g.id === groupBy)?.name.toLowerCase()}
           </h2>
           <p className="text-[10px] font-bold text-slate-500 mt-1">
@@ -226,7 +226,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
         ) : (
           <table className="w-full text-sm">
             <thead className="sr-only md:table-header-group md:not-sr-only">
-              <tr className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <tr className="text-[13px] font-medium text-slate-500">
                 <th className="text-left py-2 font-black">{GROUPS.find(g => g.id === groupBy)?.name}</th>
                 <th className="hidden md:table-cell py-2" aria-hidden="true" />
                 <th className="text-right py-2 font-black">Amount</th>
@@ -256,7 +256,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-700">
-                <td className="py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Total</td>
+                <td className="py-2.5 text-[13px] font-medium text-slate-500">Total</td>
                 <td className="hidden md:table-cell" />
                 <td className="py-2.5 text-right tabular-nums font-black text-slate-100 whitespace-nowrap">{fmt(report.total)}</td>
                 <td className="py-2.5 text-right tabular-nums text-slate-500">100%</td>
@@ -277,7 +277,7 @@ const StatisticsReport: React.FC<ReportsViewProps> = ({ accounts, transactions, 
 
 const Tile: React.FC<{ label: string; value: string; swatch?: string }> = ({ label, value, swatch }) => (
   <div className="p-6 bg-slate-900 border border-slate-800 rounded-[2rem]">
-    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+    <div className="flex items-center gap-2 text-[13px] font-medium text-slate-500">
       {swatch && <span className="w-2.5 h-2.5 rounded-sm" style={{ background: swatch }} aria-hidden="true" />}
       {label}
     </div>

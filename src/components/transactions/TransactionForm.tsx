@@ -399,7 +399,7 @@ export function TransactionForm({
   }, [validate, amount, entryType, accountId, targetAccountId, date, memo, payee, mainCategoryId, subCategoryId, paymentType, editingId, onSave, targetAmount, isCurrencyMismatch, tags]);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-6">
+    <div className="p-6 space-y-5">
       {mode === 'create' && templateOptions.length > 0 && (
         <SearchableSelect
           label="From template"
@@ -458,7 +458,7 @@ export function TransactionForm({
       )}
 
       {/* Form Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Amount */}
         <div className="relative">
           <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 px-2">
@@ -477,7 +477,7 @@ export function TransactionForm({
         {/* Date */}
         <div className="relative group">
           <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 px-2">
-            Operation Date
+            Date
           </label>
           <div className="relative">
             <input
@@ -499,7 +499,7 @@ export function TransactionForm({
 
         {/* Account */}
         <SearchableSelect
-          label={entryType === 'transfer' ? 'From account' : 'To account'}
+          label={entryType === 'transfer' ? 'From account' : 'Account'}
           options={accountOptions}
           value={accountId}
           onChange={setAccountId}
@@ -573,14 +573,14 @@ export function TransactionForm({
         {entryType !== 'transfer' && (
           <>
             <SearchableSelect
-              label="Main Category"
+              label="Category"
               options={mainCategoryOptions}
               value={mainCategoryId}
               onChange={(id) => {
                 setMainCategoryId(id);
                 setSubCategoryId(''); // Reset sub when main changes
               }}
-              placeholder="Select Main Category"
+              placeholder="Select category"
               className="w-full"
               onAddNew={async (name) => {
                 if (onCategoryCreate) {
@@ -598,7 +598,7 @@ export function TransactionForm({
                 options={subCategoryOptions}
                 value={subCategoryId}
                 onChange={setSubCategoryId}
-                placeholder="Select Subcategory"
+                placeholder="Select subcategory"
                 className="w-full animate-in slide-in-from-top-2"
                 onAddNew={async (name) => {
                   if (onCategoryCreate && mainCategoryId) {
@@ -628,7 +628,7 @@ export function TransactionForm({
         {/* Memo */}
         <div className={entryType === 'transfer' ? 'md:col-span-2' : ''}>
           <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 px-2">
-            Narrative / Memo
+            Memo
           </label>
           <input
             type="text"
@@ -681,7 +681,7 @@ export function TransactionForm({
               className="flex-1 h-[60px] border-2 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-500"
               icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>}
             >
-              Finalize & Repeat
+              Save & add another
             </Button>
           )}
         </div>

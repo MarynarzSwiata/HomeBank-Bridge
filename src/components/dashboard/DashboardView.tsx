@@ -161,6 +161,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 max-w-6xl mx-auto">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Overview</h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          {PERIODS.find(p => p.id === period)?.name} · {currency}
+        </p>
+      </header>
+
       {/* Filters: one row above all charts */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Period">
@@ -180,7 +187,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           ))}
         </div>
         {currencies.length > 1 && (
-          <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <label className="flex items-center gap-2 text-[13px] font-medium text-slate-500">
             Currency
             <select
               value={currency}
@@ -200,7 +207,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Stat tiles */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${grandTotal ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+        {grandTotal && (
+          <StatTile
+            label={`Net worth${grandTotal.missing.length ? ` (without ${grandTotal.missing.join(', ')})` : ''}`}
+            value={fmt(grandTotal.totals.today)}
+            currency={rates.base}
+            swatch="#16181D"
+          />
+        )}
         <StatTile label="Income" value={fmt(periodStats.income)} currency={currency} swatch={INCOME_COLOR} />
         <StatTile label="Expense" value={fmt(periodStats.expense)} currency={currency} swatch={EXPENSE_COLOR} />
         <StatTile
@@ -214,7 +229,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Top spending */}
         <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-5">
           <header>
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Top spending</h2>
+            <h2 className="text-[15px] font-semibold text-slate-100">Top spending</h2>
             <p className="text-[10px] font-bold text-slate-500 mt-1">
               By category · {PERIODS.find(p => p.id === period)?.name} · {currency}
             </p>
@@ -253,7 +268,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-5">
           <header className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Income vs expense</h2>
+              <h2 className="text-[15px] font-semibold text-slate-100">Income vs expense</h2>
               <p className="text-[10px] font-bold text-slate-500 mt-1">Last {MONTHS_IN_TREND} months · {currency}</p>
             </div>
             <div className="flex gap-4 text-[10px] font-bold text-slate-400" aria-hidden="true">
@@ -269,11 +284,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Account summary */}
       <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-4">
-        <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Your accounts</h2>
+        <h2 className="text-[15px] font-semibold text-slate-100">Your accounts</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <tr className="text-[13px] font-medium text-slate-500">
                 <th className="text-left py-2 font-black">Account</th>
                 <th className="hidden sm:table-cell text-right py-2 font-black">Reconciled</th>
                 <th className="hidden sm:table-cell text-right py-2 font-black">Today</th>
@@ -310,7 +325,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 ))}
                 {group.converted && (
                   <tr className="border-t border-slate-700/80">
-                    <td className="py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <td className="py-2 text-[13px] font-medium text-slate-500">
                       Total {rates.base}{group.converted.missing.length > 0 ? ` (without ${group.converted.missing.join(', ')})` : ''}
                     </td>
                     <BalanceCell value={group.converted.totals.reconciled} fmt={fmt} wideOnly />
@@ -333,7 +348,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               )}
               {!grandTotal && totalsByCurrency.map(([cur, t]) => (
                 <tr key={cur} className="border-t-2 border-slate-700">
-                  <td className="py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-400">Total {cur}</td>
+                  <td className="py-2.5 text-[13px] font-medium text-slate-500">Total {cur}</td>
                   <BalanceCell value={t.reconciled} fmt={fmt} wideOnly />
                   <BalanceCell value={t.today} fmt={fmt} wideOnly />
                   <BalanceCell value={t.future} fmt={fmt} strong />
@@ -355,7 +370,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
 const StatTile: React.FC<{ label: string; value: string; currency: string; swatch?: string }> = ({ label, value, currency, swatch }) => (
   <div className="p-6 bg-slate-900 border border-slate-800 rounded-[2rem]">
-    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+    <div className="flex items-center gap-2 text-[13px] font-medium text-slate-500">
       {swatch && <span className="w-2.5 h-2.5 rounded-sm" style={{ background: swatch }} aria-hidden="true" />}
       {label}
     </div>
@@ -475,7 +490,7 @@ const UpcomingScheduled: React.FC<{
     <section className="p-6 md:p-8 bg-slate-900 border border-slate-800 rounded-[2rem] space-y-4">
       <header className="flex flex-wrap items-center gap-3">
         <div>
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-200">Scheduled</h2>
+          <h2 className="text-[15px] font-semibold text-slate-100">Scheduled</h2>
           <p className="text-[10px] font-bold text-slate-500 mt-1">Due now and in the next {UPCOMING_DAYS} days</p>
         </div>
         <div className="flex gap-2 md:ml-auto">

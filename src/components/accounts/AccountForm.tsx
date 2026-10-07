@@ -147,7 +147,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2 mb-1.5 block">Account Name</label>
+                     <label className="text-[13px] font-medium text-slate-500 ml-2 mb-1.5 block">Account Name</label>
                      <input 
                         placeholder="e.g. Main Checking"
                         value={name}
@@ -172,7 +172,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
                      />
                 </div>
                  <div>
-                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2 mb-1.5 block">Initial Balance</label>
+                     <label className="text-[13px] font-medium text-slate-500 ml-2 mb-1.5 block">Initial Balance</label>
                      <input 
                         type="text"
                         value={initialBalance}
@@ -211,7 +211,7 @@ export const AccountForm: React.FC<AccountFormProps> = ({
             </div>
 
             <fieldset className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <legend className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2 mb-2">Options (as in HomeBank)</legend>
+                <legend className="text-[13px] font-medium text-slate-500 ml-2 mb-2">Options (as in HomeBank)</legend>
                 {([
                     [noSummary, setNoSummary, 'Exclude from summary', 'Hidden on Home and in totals'],
                     [noBudget, setNoBudget, 'Exclude from budget', 'Not counted in the Budget tab'],

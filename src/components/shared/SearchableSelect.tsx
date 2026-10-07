@@ -69,7 +69,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     >
       {label && (
         <div className="flex justify-between items-center mb-1.5 px-2">
-          <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+          <label className="text-[13px] font-medium text-slate-500">
             {label}
           </label>
         </div>

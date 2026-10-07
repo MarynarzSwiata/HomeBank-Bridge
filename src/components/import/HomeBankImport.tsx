@@ -131,7 +131,7 @@ export const HomeBankImport: React.FC<HomeBankImportProps> = ({ onBackup, onImpo
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {LABELS.map(([key, label]) => (
               <div key={key} className="p-4 rounded-2xl bg-slate-950/50 border border-slate-800">
-                <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</div>
+                <div className="text-[13px] font-medium text-slate-500">{label}</div>
                 <div className="text-xl font-black text-slate-100 tabular-nums">{(preview.summary[key] as number | undefined) ?? 0}</div>
               </div>
             ))}
