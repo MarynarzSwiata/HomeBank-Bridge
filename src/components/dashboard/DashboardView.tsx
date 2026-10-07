@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import type { Account, Category, Transaction } from '../../types';
 import { ACCOUNT_TYPE_OPTIONS } from '../../constants';
 import type { UseScheduledResult } from '../../hooks/useScheduled';
-import { describeItem } from '../scheduled/ScheduledView';
+import { describeItem, PostAllDueButton } from '../scheduled/ScheduledView';
 import { formatDateForDisplay } from '../../utils/dateUtils';
 import {
   PERIODS,
@@ -445,15 +445,7 @@ const UpcomingScheduled: React.FC<{
           <p className="text-[10px] font-bold text-slate-500 mt-1">Due now and in the next {UPCOMING_DAYS} days</p>
         </div>
         <div className="flex gap-2 md:ml-auto">
-          {dueCount > 0 && (
-            <button
-              onClick={() => scheduled.postDue()}
-              disabled={scheduled.isSaving}
-              className="px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/25 disabled:opacity-40"
-            >
-              Post all due ({dueCount})
-            </button>
-          )}
+          {dueCount > 0 && <PostAllDueButton scheduled={scheduled} dueCount={dueCount} />}
           <button onClick={onOpenScheduled} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-white">
             Manage
           </button>

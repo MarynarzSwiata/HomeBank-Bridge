@@ -145,6 +145,8 @@ The Bridge is strictly configured to satisfy the HomeBank CSV import parser:
 ## 📜 Changelog
 
 ### Unreleased
+- **📂 Import from HomeBank (.xhb)**: Options → Import from HomeBank reads your desktop file and moves accounts (types, closed state, currencies), categories, payees, transactions (status, tags, info), transfers, budgets, scheduled transactions and assignment rules. A preview shows what will be imported first; replacing existing data needs explicit confirmation and offers a backup download. Split transactions become one entry per part (tag `split`); void entries and regex rules are skipped.
+- **🛡️ Safer "Post all due"**: Shows how many transactions will be created before posting, with a warning when old schedules would create many entries.
 - **🏷️ Tags**: Add tags to any entry (space-separated, exported in the HomeBank CSV `tags` column and read back on import). Click a tag to filter the ledger; Reports can group by tag.
 - **⚡ Assignment Rules**: "If payee/memo contains X → set category, payment type and tags." Rules fill the entry form as you type, run automatically on CSV import for rows without a category, and can be applied on demand to existing uncategorised entries (with a preview count first).
 - **🔁 Scheduled Transactions**: Recurring expenses, income and transfers (every N days / weeks / months / years, optional end date). Due items are shown on Home and in the Scheduled tab; post or skip them one by one, or post all due at once. Nothing is posted automatically, so using the app on several computers never creates duplicates. Monthly items keep their day (e.g. the 31st falls back to the 30th/28th in shorter months).

@@ -34,6 +34,7 @@ import { BudgetView } from "./src/components/budget/BudgetView";
 import { ReportsView } from "./src/components/reports/ReportsView";
 import { ScheduledView } from "./src/components/scheduled/ScheduledView";
 import { RulesView } from "./src/components/rules/RulesView";
+import { HomeBankImport } from "./src/components/import/HomeBankImport";
 import { useScheduled } from "./src/hooks/useScheduled";
 import {
   PAYMENT_LEXICON,
@@ -1972,6 +1973,14 @@ const App: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                <HomeBankImport
+                  onBackup={handleBackup}
+                  onImported={async () => {
+                    await Promise.all([refreshAll(), refreshScheduled(), refreshRules()]).catch(() => {});
+                  }}
+                  notify={(msg, type) => showToast(msg, type)}
+                />
 
                 {/* Localization Settings */}
                 <div className="bg-slate-900/50 p-10 rounded-[3rem] border border-slate-800 space-y-8 flex flex-col justify-between">
