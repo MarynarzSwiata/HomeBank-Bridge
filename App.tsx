@@ -824,7 +824,7 @@ const App: React.FC = () => {
     );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
+    <div className="h-screen h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 flex flex-col md:flex-row font-sans">
       <aside
         className={`hidden md:flex flex-col shrink-0 bg-slate-900 border-slate-800 transition-all duration-300 overflow-hidden ${
           isSidebarOpen ? "w-64 border-r" : "w-0 border-r-0"
@@ -958,7 +958,7 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <main className="flex-1 min-h-0 flex flex-col h-full overflow-hidden relative">
         {/* Desktop Sidebar Toggle (Open) */}
         {!isSidebarOpen && (
           <button
